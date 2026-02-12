@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>DATSPACE</title>
+
 <style>
 html, body {
     margin:0;
@@ -43,10 +44,19 @@ canvas {
     bottom:120px;
     left:50%;
     transform:translateX(-50%);
-    font-size:24px;
+    font-size:20px;
     text-align:center;
     z-index:10;
-    max-width:90%;
+    max-width:900px;
+    transition: opacity 0.6s ease;
+}
+
+.fade-out { opacity:0; }
+.fade-in { opacity:1; }
+
+.clickable {
+    cursor:pointer;
+    text-decoration:underline;
 }
 </style>
 </head>
@@ -67,7 +77,7 @@ canvas {
 <script>
 
 // ==========================
-// CANVAS FULLSCREEN FIX
+// CANVAS SETUP
 // ==========================
 
 const canvas = document.getElementById("canvas");
@@ -99,6 +109,8 @@ let glitchFrames = 0;
 let frequency = 300;
 let volume = 0.05;
 let currentTab = "HOME";
+let showTitle = true;
+let homeExpanded = false;
 
 const tabs = document.querySelectorAll(".tab");
 const content = document.getElementById("content");
@@ -108,26 +120,64 @@ tabs.forEach(tab=>{
         tabs.forEach(t=>t.classList.remove("active"));
         tab.classList.add("active");
         currentTab = tab.innerText;
+
+        showTitle = true;
+        homeExpanded = false;
+
         updateContent();
         glitchFrames = 12;
         triggerSound();
     });
 });
 
+
+// ==========================
+// CONTENT UPDATE
+// ==========================
+
 function updateContent(){
+
     if(currentTab==="HOME") {
-        content.innerHTML = "//DATSPACE";
+
+        content.classList.remove("fade-out");
+        content.classList.remove("fade-in");
+
+        content.innerHTML = `<span id="homeTrigger" class="clickable">//DATSPACE</span>`;
+
+        document.getElementById("homeTrigger").addEventListener("click", ()=>{
+
+            if(homeExpanded) return;
+            homeExpanded = true;
+
+            content.classList.add("fade-out");
+
+            setTimeout(()=>{
+
+                showTitle = false;
+
+                content.innerHTML = `
+                DATs (Data Space) adalah ruang eksplorasi kreatif di bawah Meai Studio yang lahir dari kebutuhan akan ruang main dan ruang uji.<br><br>
+                Di DATs, data, suara, dan cahaya dibongkar, dimainkan, dan dirakit menjadi karya yang terus bergerak.<br><br>
+                Ruang ini menjadi titik temu visual artist, pelaku audio eksperimental, dan praktisi audiovisual dalam satu ekosistem.<br><br>
+                Proses di DATs lekat dengan eksperimen, trial-error dan noise sebagai bagian dari praktik berkarya.<br><br>
+                Melalui visual mapping dan performa audiovisual, DATs mendorong lahirnya bahasa visual sekaligus membangun ekosistem kreatif alternatif di Bali.
+                `;
+
+                content.classList.remove("fade-out");
+                content.classList.add("fade-in");
+
+            },600);
+        });
     }
+
     if(currentTab==="EVENT") {
-        // Embed Instagram
         content.innerHTML = `
             <blockquote class="instagram-media" 
                 data-instgrm-permalink="https://www.instagram.com/p/DUh0t-7AWl9/?igsh=MWU0eTJ4amwzNmRjdg==" 
                 data-instgrm-version="14" 
                 style="width:100%; max-width:600px; margin:auto;">
             </blockquote>`;
-        
-        // Load Instagram embed script if not already loaded
+
         if(!document.getElementById("insta-script")) {
             const script = document.createElement("script");
             script.src = "https://www.instagram.com/embed.js";
@@ -135,13 +185,24 @@ function updateContent(){
             script.id = "insta-script";
             document.body.appendChild(script);
         } else {
-            // Re-initialize embed jika script sudah ada
             window.instgrm?.Embeds?.process();
         }
     }
-    if(currentTab==="LOCATION") content.innerText="Jalan Gatsu Timur No.88X, Denpasar, Bali, Indonesia";
-    if(currentTab==="PROGRAM") content.innerText="DatIn — Indoor AV / DatOut — Outdoor AV";
-    if(currentTab==="CONTACT") content.innerText="info@datspace.club";
+
+    if(currentTab==="LOCATION") {
+        content.innerHTML = `
+            <a href="https://maps.app.goo.gl/e7eK7yZ6L4t8fkuk7" 
+               target="_blank" 
+               class="clickable">
+               Jalan Gatsu Timur No.88X, Denpasar, Bali, Indonesia
+            </a>`;
+    }
+
+    if(currentTab==="PROGRAM")
+        content.innerText="DatIn — Indoor AV / DatOut — Outdoor AV";
+
+    if(currentTab==="CONTACT")
+        content.innerText="info@datspace.club";
 }
 
 
@@ -173,15 +234,13 @@ function draw(){
     ctx.fillStyle="black";
     ctx.fillRect(0,0,window.innerWidth,window.innerHeight);
 
-    // TITLE
-    if(currentTab!=="EVENT"){
+    if(currentTab!=="EVENT" && showTitle){
         ctx.fillStyle="white";
         ctx.textAlign="center";
         ctx.font = Math.min(window.innerWidth/6, 180) + "px Consolas";
         ctx.fillText("DATs", window.innerWidth/2, window.innerHeight/2);
     }
 
-    // DRAG VISUAL
     if(dragging){
         ctx.strokeStyle="white";
         for(let r=50;r<Math.min(window.innerWidth, window.innerHeight)/1.2;r+=40){
@@ -198,7 +257,6 @@ function draw(){
         }
     }
 
-    // GLITCH
     if(glitchFrames>0){
         for(let i=0;i<120;i++){
             ctx.fillStyle=Math.random()>0.5?"white":"black";
@@ -219,7 +277,7 @@ draw();
 
 
 // ==========================
-// AUDIO ENGINE (WebAudio)
+// AUDIO ENGINE
 // ==========================
 
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -252,7 +310,7 @@ function triggerSound(){
 
 
 // ==========================
-// DOUBLE CLICK FULLSCREEN
+// FULLSCREEN
 // ==========================
 
 canvas.addEventListener("dblclick", ()=>{
@@ -266,7 +324,3 @@ canvas.addEventListener("dblclick", ()=>{
 </script>
 </body>
 </html>
-
-
-
-
