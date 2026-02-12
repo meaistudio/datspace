@@ -39,7 +39,7 @@ canvas {
     padding:6px 12px;
 }
 
-/* ===== POSISI DEFAULT (SEMUA DI BAWAH) ===== */
+/* DEFAULT POSISI BAWAH */
 .content {
     position:fixed;
     bottom:120px;
@@ -52,7 +52,7 @@ canvas {
     transition: opacity 0.6s ease;
 }
 
-/* ===== KHUSUS DESKRIPSI DATs SAJA (NAIK KE TENGAH) ===== */
+/* KHUSUS DESKRIPSI DATs */
 .content.home-desc {
     position:fixed;
     top:50%;
@@ -94,6 +94,10 @@ a, a:visited, a:hover, a:active {
 
 <script>
 
+// ==========================
+// CANVAS SETUP
+// ==========================
+
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
 
@@ -112,6 +116,11 @@ function resizeCanvas() {
 
 window.addEventListener("resize", resizeCanvas);
 resizeCanvas();
+
+
+// ==========================
+// STATE
+// ==========================
 
 let dragging = false;
 let glitchFrames = 0;
@@ -136,14 +145,21 @@ tabs.forEach(tab=>{
         content.classList.remove("home-desc");
 
         updateContent();
+        glitchFrames = 12;
+        triggerSound();
     });
 });
+
+
+// ==========================
+// CONTENT UPDATE
+// ==========================
 
 function updateContent(){
 
     if(currentTab==="HOME") {
 
-        content.classList.remove("home-desc");
+        content.classList.remove("home-desc","fade-in","fade-out");
 
         content.innerHTML = `<span id="homeTrigger" class="clickable">//DATSPACE</span>`;
 
@@ -159,8 +175,6 @@ function updateContent(){
             setTimeout(()=>{
 
                 showTitle = false;
-
-                /* hanya deskripsi yang pindah posisi */
                 content.classList.add("home-desc");
 
                 content.innerHTML = `
@@ -182,8 +196,9 @@ Through visual mapping and audiovisual performances, DATs encourages the emergen
         };
     }
 
-    if(currentTab==="EVENT")
+    if(currentTab==="EVENT") {
         content.innerText="Instagram Event Embed";
+    }
 
     if(currentTab==="LOCATION") {
         content.innerHTML = `
@@ -201,7 +216,32 @@ Through visual mapping and audiovisual performances, DATs encourages the emergen
 
 updateContent();
 
+
+// ==========================
+// MOUSE INTERACTION (KEMBALI)
+// ==========================
+
+canvas.addEventListener("mousedown",()=>{
+    dragging = true;
+    glitchFrames = 12;
+    triggerSound();
+});
+
+canvas.addEventListener("mouseup",()=> dragging=false);
+
+canvas.addEventListener("mousemove",(e)=>{
+    frequency = 100 + (e.clientX/window.innerWidth)*1200;
+    let yNorm = 1 - (e.clientY/window.innerHeight);
+    volume = Math.pow(yNorm,2.2)*0.5;
+});
+
+
+// ==========================
+// DRAW LOOP (KEMBALI)
+// ==========================
+
 function draw(){
+
     ctx.fillStyle="black";
     ctx.fillRect(0,0,window.innerWidth,window.innerHeight);
 
@@ -212,10 +252,85 @@ function draw(){
         ctx.fillText("DATs", window.innerWidth/2, window.innerHeight/2);
     }
 
+    if(dragging){
+        ctx.strokeStyle="white";
+        for(let r=50;r<Math.min(window.innerWidth, window.innerHeight)/1.2;r+=40){
+            let offset = Math.sin(Date.now()*0.002 + r*0.05)*20;
+            ctx.beginPath();
+            ctx.arc(
+                window.innerWidth/2 + offset,
+                window.innerHeight/2,
+                r,
+                0,
+                Math.PI*2
+            );
+            ctx.stroke();
+        }
+    }
+
+    if(glitchFrames>0){
+        for(let i=0;i<120;i++){
+            ctx.fillStyle=Math.random()>0.5?"white":"black";
+            ctx.fillRect(
+                Math.random()*window.innerWidth,
+                Math.random()*window.innerHeight,
+                Math.random()*400,
+                Math.random()*80
+            );
+        }
+        glitchFrames--;
+    }
+
     requestAnimationFrame(draw);
 }
 
 draw();
+
+
+// ==========================
+// AUDIO ENGINE (KEMBALI)
+// ==========================
+
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+function triggerSound(){
+
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    const delay = audioCtx.createDelay();
+    const feedbackGain = audioCtx.createGain();
+
+    osc.type="sine";
+    osc.frequency.value = frequency;
+
+    gain.gain.value = volume;
+
+    delay.delayTime.value = 0.3;
+    feedbackGain.gain.value = 0.4;
+
+    osc.connect(gain);
+    gain.connect(delay);
+    delay.connect(feedbackGain);
+    feedbackGain.connect(delay);
+    delay.connect(audioCtx.destination);
+    gain.connect(audioCtx.destination);
+
+    osc.start();
+    osc.stop(audioCtx.currentTime + 0.35);
+}
+
+
+// ==========================
+// FULLSCREEN (TETAP ADA)
+// ==========================
+
+canvas.addEventListener("dblclick", ()=>{
+    if (!document.fullscreenElement) {
+        document.body.requestFullscreen();
+    } else {
+        document.exitFullscreen();
+    }
+});
 
 </script>
 </body>
