@@ -39,15 +39,18 @@ canvas {
     padding:6px 12px;
 }
 
+/* ===== CONTENT LAYOUT (LEFT + NAIK) ===== */
 .content {
     position:fixed;
-    bottom:120px;
-    left:50%;
-    transform:translateX(-50%);
+    bottom:220px;        /* lebih naik */
+    left:120px;          /* rata kiri */
+    transform:none;
     font-size:20px;
-    text-align:center;
+    text-align:left;
     z-index:10;
-    max-width:900px;
+    max-width:700px;
+    line-height:1.6;
+    letter-spacing:0.4px;
     transition: opacity 0.6s ease;
 }
 
@@ -56,6 +59,12 @@ canvas {
 
 .clickable {
     cursor:pointer;
+    text-decoration:underline;
+}
+
+/* ===== LINK MAPS TETAP PUTIH ===== */
+a, a:visited, a:hover, a:active {
+    color:white;
     text-decoration:underline;
 }
 </style>
@@ -156,11 +165,15 @@ function updateContent(){
                 showTitle = false;
 
                 content.innerHTML = `
-                DATs (Data Space) adalah ruang eksplorasi kreatif di bawah Meai Studio yang lahir dari kebutuhan akan ruang main dan ruang uji.<br><br>
-                Di DATs, data, suara, dan cahaya dibongkar, dimainkan, dan dirakit menjadi karya yang terus bergerak.<br><br>
-                Ruang ini menjadi titik temu visual artist, pelaku audio eksperimental, dan praktisi audiovisual dalam satu ekosistem.<br><br>
-                Proses di DATs lekat dengan eksperimen, trial-error dan noise sebagai bagian dari praktik berkarya.<br><br>
-                Melalui visual mapping dan performa audiovisual, DATs mendorong lahirnya bahasa visual sekaligus membangun ekosistem kreatif alternatif di Bali.
+DATs (Data Space) is a creative exploration space under Meai Studio, born from the need for a playground and a testing ground.
+
+At DATs, data, sound, and light are deconstructed, played with, and reassembled into works that are constantly in motion.
+
+This space becomes a meeting point where visual artists, experimental audio practitioners, and audiovisual creators come together within one ecosystem.
+
+The process at DATs is closely tied to experimentation, trial and error, and noise as an essential part of artistic practice.
+
+Through visual mapping and audiovisual performances, DATs encourages the emergence of new visual languages while building an alternative creative ecosystem in Bali.
                 `;
 
                 content.classList.remove("fade-out");
@@ -175,7 +188,7 @@ function updateContent(){
             <blockquote class="instagram-media" 
                 data-instgrm-permalink="https://www.instagram.com/p/DUh0t-7AWl9/?igsh=MWU0eTJ4amwzNmRjdg==" 
                 data-instgrm-version="14" 
-                style="width:100%; max-width:600px; margin:auto;">
+                style="width:100%; max-width:600px;">
             </blockquote>`;
 
         if(!document.getElementById("insta-script")) {
