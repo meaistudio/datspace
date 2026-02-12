@@ -39,28 +39,29 @@ canvas {
     padding:6px 12px;
 }
 
-/* ===== DEFAULT CONTENT (CENTER ABSOLUTE) ===== */
+/* ===== POSISI DEFAULT (SEMUA DI BAWAH) ===== */
 .content {
     position:fixed;
-    top:50%;
+    bottom:120px;
     left:50%;
-    transform:translate(-50%,-50%);
+    transform:translateX(-50%);
     font-size:20px;
     text-align:center;
     z-index:10;
     max-width:900px;
-    transition: opacity 0.6s ease, transform 0.6s ease;
+    transition: opacity 0.6s ease;
 }
 
-/* ===== KHUSUS DESKRIPSI DATs ===== */
+/* ===== KHUSUS DESKRIPSI DATs SAJA (NAIK KE TENGAH) ===== */
 .content.home-desc {
+    position:fixed;
+    top:50%;
+    left:50%;
+    transform:translate(-50%,-50%);
     text-align:left;
     max-width:720px;
     line-height:1.6;
     letter-spacing:0.4px;
-
-    /* INI YANG BIKIN NAIK TANPA GANGGU YANG LAIN */
-    transform:translate(-50%,-70%);
 }
 
 .fade-out { opacity:0; }
@@ -71,7 +72,6 @@ canvas {
     text-decoration:underline;
 }
 
-/* LINK MAPS TETAP PUTIH */
 a, a:visited, a:hover, a:active {
     color:white;
     text-decoration:underline;
@@ -94,10 +94,6 @@ a, a:visited, a:hover, a:active {
 
 <script>
 
-// ==========================
-// CANVAS SETUP
-// ==========================
-
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
 
@@ -116,11 +112,6 @@ function resizeCanvas() {
 
 window.addEventListener("resize", resizeCanvas);
 resizeCanvas();
-
-
-// ==========================
-// STATE
-// ==========================
 
 let dragging = false;
 let glitchFrames = 0;
@@ -145,21 +136,14 @@ tabs.forEach(tab=>{
         content.classList.remove("home-desc");
 
         updateContent();
-        glitchFrames = 12;
-        triggerSound();
     });
 });
-
-
-// ==========================
-// CONTENT UPDATE
-// ==========================
 
 function updateContent(){
 
     if(currentTab==="HOME") {
 
-        content.classList.remove("fade-out","fade-in","home-desc");
+        content.classList.remove("home-desc");
 
         content.innerHTML = `<span id="homeTrigger" class="clickable">//DATSPACE</span>`;
 
@@ -176,6 +160,7 @@ function updateContent(){
 
                 showTitle = false;
 
+                /* hanya deskripsi yang pindah posisi */
                 content.classList.add("home-desc");
 
                 content.innerHTML = `
@@ -197,9 +182,8 @@ Through visual mapping and audiovisual performances, DATs encourages the emergen
         };
     }
 
-    if(currentTab==="EVENT") {
+    if(currentTab==="EVENT")
         content.innerText="Instagram Event Embed";
-    }
 
     if(currentTab==="LOCATION") {
         content.innerHTML = `
@@ -215,20 +199,9 @@ Through visual mapping and audiovisual performances, DATs encourages the emergen
         content.innerText="info@datspace.club";
 }
 
-
-// ==========================
-// INIT
-// ==========================
-
 updateContent();
 
-
-// ==========================
-// DRAW LOOP
-// ==========================
-
 function draw(){
-
     ctx.fillStyle="black";
     ctx.fillRect(0,0,window.innerWidth,window.innerHeight);
 
