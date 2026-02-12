@@ -39,26 +39,28 @@ canvas {
     padding:6px 12px;
 }
 
-/* ===== POSISI DEFAULT (SEMUA DI TENGAH) ===== */
+/* ===== DEFAULT CONTENT (CENTER ABSOLUTE) ===== */
 .content {
     position:fixed;
-    bottom:120px;
+    top:50%;
     left:50%;
-    transform:translateX(-50%);
+    transform:translate(-50%,-50%);
     font-size:20px;
     text-align:center;
     z-index:10;
     max-width:900px;
-    transition: opacity 0.6s ease;
+    transition: opacity 0.6s ease, transform 0.6s ease;
 }
 
-/* ===== KHUSUS DESKRIPSI DATs SAJA ===== */
+/* ===== KHUSUS DESKRIPSI DATs ===== */
 .content.home-desc {
     text-align:left;
     max-width:720px;
     line-height:1.6;
     letter-spacing:0.4px;
-    margin-top:-140px; /* HANYA DESKRIPSI YANG NAIK */
+
+    /* INI YANG BIKIN NAIK TANPA GANGGU YANG LAIN */
+    transform:translate(-50%,-70%);
 }
 
 .fade-out { opacity:0; }
@@ -174,7 +176,6 @@ function updateContent(){
 
                 showTitle = false;
 
-                /* aktifkan style khusus */
                 content.classList.add("home-desc");
 
                 content.innerHTML = `
@@ -197,22 +198,7 @@ Through visual mapping and audiovisual performances, DATs encourages the emergen
     }
 
     if(currentTab==="EVENT") {
-        content.innerHTML = `
-            <blockquote class="instagram-media" 
-                data-instgrm-permalink="https://www.instagram.com/p/DUh0t-7AWl9/?igsh=MWU0eTJ4amwzNmRjdg==" 
-                data-instgrm-version="14" 
-                style="width:100%; max-width:600px; margin:auto;">
-            </blockquote>`;
-
-        if(!document.getElementById("insta-script")) {
-            const script = document.createElement("script");
-            script.src = "https://www.instagram.com/embed.js";
-            script.async = true;
-            script.id = "insta-script";
-            document.body.appendChild(script);
-        } else {
-            window.instgrm?.Embeds?.process();
-        }
+        content.innerText="Instagram Event Embed";
     }
 
     if(currentTab==="LOCATION") {
@@ -231,29 +217,10 @@ Through visual mapping and audiovisual performances, DATs encourages the emergen
 
 
 // ==========================
-// INIT (BIAR //DATSPACE LANGSUNG BISA DIKLIK)
+// INIT
 // ==========================
 
 updateContent();
-
-
-// ==========================
-// MOUSE INTERACTION
-// ==========================
-
-canvas.addEventListener("mousedown",()=>{
-    dragging = true;
-    glitchFrames = 12;
-    triggerSound();
-});
-
-canvas.addEventListener("mouseup",()=> dragging=false);
-
-canvas.addEventListener("mousemove",(e)=>{
-    frequency = 100 + (e.clientX/window.innerWidth)*1200;
-    let yNorm = 1 - (e.clientY/window.innerHeight);
-    volume = Math.pow(yNorm,2.2)*0.5;
-});
 
 
 // ==========================
@@ -272,85 +239,10 @@ function draw(){
         ctx.fillText("DATs", window.innerWidth/2, window.innerHeight/2);
     }
 
-    if(dragging){
-        ctx.strokeStyle="white";
-        for(let r=50;r<Math.min(window.innerWidth, window.innerHeight)/1.2;r+=40){
-            let offset = Math.sin(Date.now()*0.002 + r*0.05)*20;
-            ctx.beginPath();
-            ctx.arc(
-                window.innerWidth/2 + offset,
-                window.innerHeight/2,
-                r,
-                0,
-                Math.PI*2
-            );
-            ctx.stroke();
-        }
-    }
-
-    if(glitchFrames>0){
-        for(let i=0;i<120;i++){
-            ctx.fillStyle=Math.random()>0.5?"white":"black";
-            ctx.fillRect(
-                Math.random()*window.innerWidth,
-                Math.random()*window.innerHeight,
-                Math.random()*400,
-                Math.random()*80
-            );
-        }
-        glitchFrames--;
-    }
-
     requestAnimationFrame(draw);
 }
 
 draw();
-
-
-// ==========================
-// AUDIO ENGINE
-// ==========================
-
-const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-
-function triggerSound(){
-
-    const osc = audioCtx.createOscillator();
-    const gain = audioCtx.createGain();
-    const delay = audioCtx.createDelay();
-    const feedbackGain = audioCtx.createGain();
-
-    osc.type="sine";
-    osc.frequency.value = frequency;
-
-    gain.gain.value = volume;
-
-    delay.delayTime.value = 0.3;
-    feedbackGain.gain.value = 0.4;
-
-    osc.connect(gain);
-    gain.connect(delay);
-    delay.connect(feedbackGain);
-    feedbackGain.connect(delay);
-    delay.connect(audioCtx.destination);
-    gain.connect(audioCtx.destination);
-
-    osc.start();
-    osc.stop(audioCtx.currentTime + 0.35);
-}
-
-
-// ==========================
-// FULLSCREEN
-// ==========================
-
-canvas.addEventListener("dblclick", ()=>{
-    if (!document.fullscreenElement) {
-        document.body.requestFullscreen();
-    } else {
-        document.exitFullscreen();
-    }
-});
 
 </script>
 </body>
