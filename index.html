@@ -4,6 +4,9 @@
 <meta charset="UTF-8">
 <title>DATSPACE</title>
 
+<!-- ===== LOGO TAB CHROME (FAVICON) ===== -->
+<link rel="icon" type="image/png" href="https://raw.githubusercontent.com/meaistudio/datspace/main/dats.png">
+
 <style>
 html, body {
     margin:0;
@@ -218,7 +221,6 @@ Through visual mapping and audiovisual performances, DATs encourages the emergen
         };
     }
 
-    // ===== EVENT WITH REGISTER LINK =====
     if(currentTab==="EVENT") {
 
         content.innerHTML = `
@@ -271,7 +273,7 @@ updateContent();
 
 
 // ==========================
-// MOUSE INTERACTION
+// AUDIO ENGINE + INTERACTION (tetap sama)
 // ==========================
 
 canvas.addEventListener("mousedown",()=>{
@@ -287,11 +289,6 @@ canvas.addEventListener("mousemove",(e)=>{
     let yNorm = 1 - (e.clientY/window.innerHeight);
     volume = Math.pow(yNorm,2.2)*0.5;
 });
-
-
-// ==========================
-// DRAW LOOP
-// ==========================
 
 function draw(){
 
@@ -310,13 +307,7 @@ function draw(){
         for(let r=50;r<Math.min(window.innerWidth, window.innerHeight)/1.2;r+=40){
             let offset = Math.sin(Date.now()*0.002 + r*0.05)*20;
             ctx.beginPath();
-            ctx.arc(
-                window.innerWidth/2 + offset,
-                window.innerHeight/2,
-                r,
-                0,
-                Math.PI*2
-            );
+            ctx.arc(window.innerWidth/2 + offset,window.innerHeight/2,r,0,Math.PI*2);
             ctx.stroke();
         }
     }
@@ -324,12 +315,7 @@ function draw(){
     if(glitchFrames>0){
         for(let i=0;i<120;i++){
             ctx.fillStyle=Math.random()>0.5?"white":"black";
-            ctx.fillRect(
-                Math.random()*window.innerWidth,
-                Math.random()*window.innerHeight,
-                Math.random()*400,
-                Math.random()*80
-            );
+            ctx.fillRect(Math.random()*window.innerWidth,Math.random()*window.innerHeight,Math.random()*400,Math.random()*80);
         }
         glitchFrames--;
     }
@@ -338,11 +324,6 @@ function draw(){
 }
 
 draw();
-
-
-// ==========================
-// AUDIO ENGINE
-// ==========================
 
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
@@ -371,11 +352,6 @@ function triggerSound(){
     osc.start();
     osc.stop(audioCtx.currentTime + 0.35);
 }
-
-
-// ==========================
-// FULLSCREEN
-// ==========================
 
 canvas.addEventListener("dblclick", ()=>{
     if (!document.fullscreenElement) {
