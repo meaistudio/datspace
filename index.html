@@ -46,6 +46,7 @@ canvas {
     font-size:24px;
     text-align:center;
     z-index:10;
+    max-width:90%;
 }
 </style>
 </head>
@@ -114,8 +115,30 @@ tabs.forEach(tab=>{
 });
 
 function updateContent(){
-    if(currentTab==="HOME") content.innerText="//DATSPACE";
-    if(currentTab==="EVENT") content.innerText="EVENT DOCUMENTATION";
+    if(currentTab==="HOME") {
+        content.innerHTML = "//DATSPACE";
+    }
+    if(currentTab==="EVENT") {
+        // Embed Instagram
+        content.innerHTML = `
+            <blockquote class="instagram-media" 
+                data-instgrm-permalink="https://www.instagram.com/p/DUiLTc_k01M/" 
+                data-instgrm-version="14" 
+                style="width:100%; max-width:540px; margin:auto;">
+            </blockquote>`;
+        
+        // Load Instagram embed script if not already loaded
+        if(!document.getElementById("insta-script")) {
+            const script = document.createElement("script");
+            script.src = "https://www.instagram.com/embed.js";
+            script.async = true;
+            script.id = "insta-script";
+            document.body.appendChild(script);
+        } else {
+            // Re-initialize embed jika script sudah ada
+            window.instgrm?.Embeds?.process();
+        }
+    }
     if(currentTab==="LOCATION") content.innerText="Jalan Gatsu Timur No.88X, Denpasar, Bali, Indonesia";
     if(currentTab==="PROGRAM") content.innerText="DatIn — Indoor AV / DatOut — Outdoor AV";
     if(currentTab==="CONTACT") content.innerText="info@datspace.club";
@@ -243,5 +266,3 @@ canvas.addEventListener("dblclick", ()=>{
 </script>
 </body>
 </html>
-
-
