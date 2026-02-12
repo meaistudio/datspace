@@ -39,12 +39,12 @@ canvas {
     padding:6px 12px;
 }
 
-/* ===== DEFAULT CONTENT (CENTER) ===== */
+/* ===== POSISI DEFAULT (SEMUA DI TENGAH) ===== */
 .content {
     position:fixed;
-    top:58%;                    /* LEBIH NAIK dari sebelumnya */
+    bottom:120px;
     left:50%;
-    transform:translate(-50%,-50%);
+    transform:translateX(-50%);
     font-size:20px;
     text-align:center;
     z-index:10;
@@ -52,12 +52,13 @@ canvas {
     transition: opacity 0.6s ease;
 }
 
-/* ===== KHUSUS DESKRIPSI DATs ===== */
+/* ===== KHUSUS DESKRIPSI DATs SAJA ===== */
 .content.home-desc {
     text-align:left;
     max-width:720px;
     line-height:1.6;
     letter-spacing:0.4px;
+    margin-top:-140px; /* HANYA DESKRIPSI YANG NAIK */
 }
 
 .fade-out { opacity:0; }
@@ -172,6 +173,8 @@ function updateContent(){
             setTimeout(()=>{
 
                 showTitle = false;
+
+                /* aktifkan style khusus */
                 content.classList.add("home-desc");
 
                 content.innerHTML = `
@@ -228,7 +231,7 @@ Through visual mapping and audiovisual performances, DATs encourages the emergen
 
 
 // ==========================
-// INIT (INI YANG BIKIN LANGSUNG BISA DIKLIK)
+// INIT (BIAR //DATSPACE LANGSUNG BISA DIKLIK)
 // ==========================
 
 updateContent();
