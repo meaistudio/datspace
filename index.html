@@ -39,7 +39,6 @@ canvas {
     padding:6px 12px;
 }
 
-/* DEFAULT POSISI BAWAH */
 .content {
     position:fixed;
     bottom:120px;
@@ -52,7 +51,6 @@ canvas {
     transition: opacity 0.6s ease;
 }
 
-/* KHUSUS DESKRIPSI DATs */
 .content.home-desc {
     position:fixed;
     top:50%;
@@ -75,6 +73,30 @@ canvas {
 a, a:visited, a:hover, a:active {
     color:white;
     text-decoration:underline;
+}
+
+/* ===== EVENT LAYOUT ===== */
+.event-wrap{
+    display:flex;
+    gap:40px;
+    align-items:flex-start;
+    text-align:left;
+}
+
+.event-flyer{
+    width:220px;
+    border:1px solid white;
+}
+
+.event-info{
+    max-width:420px;
+    font-size:16px;
+    line-height:1.6;
+}
+
+.event-title{
+    font-size:20px;
+    margin-bottom:10px;
 }
 </style>
 </head>
@@ -196,8 +218,37 @@ Through visual mapping and audiovisual performances, DATs encourages the emergen
         };
     }
 
+    /* ===== EVENT PLACEHOLDER BARU ===== */
     if(currentTab==="EVENT") {
-        content.innerText="Instagram Event Embed";
+
+        content.innerHTML = `
+        <div class="event-wrap">
+
+            <img class="event-flyer"
+            src="https://via.placeholder.com/400x600?text=EVENT+FLYER">
+
+            <div class="event-info">
+                <div class="event-title">DATs OUT — BYOB SESSION</div>
+
+                <div>// Description</div>
+                Open audiovisual playground. Bring your own projector and collide visuals, sound, and light in one raw collective night.
+
+                <br><br>
+                <div>// Time</div>
+                Saturday — 19:00 WITA
+
+                <br><br>
+                <div>// Location</div>
+                DATSPACE — Denpasar, Bali
+
+                <br><br>
+                <div>// Fee</div>
+                Free Entry / Donation Based
+
+            </div>
+
+        </div>
+        `;
     }
 
     if(currentTab==="LOCATION") {
@@ -218,7 +269,7 @@ updateContent();
 
 
 // ==========================
-// MOUSE INTERACTION (KEMBALI)
+// MOUSE INTERACTION
 // ==========================
 
 canvas.addEventListener("mousedown",()=>{
@@ -237,7 +288,7 @@ canvas.addEventListener("mousemove",(e)=>{
 
 
 // ==========================
-// DRAW LOOP (KEMBALI)
+// DRAW LOOP
 // ==========================
 
 function draw(){
@@ -288,7 +339,7 @@ draw();
 
 
 // ==========================
-// AUDIO ENGINE (KEMBALI)
+// AUDIO ENGINE
 // ==========================
 
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -321,7 +372,7 @@ function triggerSound(){
 
 
 // ==========================
-// FULLSCREEN (TETAP ADA)
+// FULLSCREEN
 // ==========================
 
 canvas.addEventListener("dblclick", ()=>{
