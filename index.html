@@ -39,12 +39,12 @@ canvas {
     padding:6px 12px;
 }
 
-/* ===== DEFAULT CONTENT (SEMUA TENGAH) ===== */
+/* ===== DEFAULT CONTENT (CENTER) ===== */
 .content {
     position:fixed;
-    bottom:120px;
+    top:58%;                    /* LEBIH NAIK dari sebelumnya */
     left:50%;
-    transform:translateX(-50%);
+    transform:translate(-50%,-50%);
     font-size:20px;
     text-align:center;
     z-index:10;
@@ -55,7 +55,7 @@ canvas {
 /* ===== KHUSUS DESKRIPSI DATs ===== */
 .content.home-desc {
     text-align:left;
-    max-width:700px;
+    max-width:720px;
     line-height:1.6;
     letter-spacing:0.4px;
 }
@@ -68,7 +68,7 @@ canvas {
     text-decoration:underline;
 }
 
-/* LINK TETAP PUTIH */
+/* LINK MAPS TETAP PUTIH */
 a, a:visited, a:hover, a:active {
     color:white;
     text-decoration:underline;
@@ -87,7 +87,7 @@ a, a:visited, a:hover, a:active {
     <span class="tab">CONTACT</span>
 </div>
 
-<div class="content" id="content">//DATSPACE</div>
+<div class="content" id="content"></div>
 
 <script>
 
@@ -139,7 +139,7 @@ tabs.forEach(tab=>{
         showTitle = true;
         homeExpanded = false;
 
-        content.classList.remove("home-desc"); // reset style
+        content.classList.remove("home-desc");
 
         updateContent();
         glitchFrames = 12;
@@ -156,13 +156,13 @@ function updateContent(){
 
     if(currentTab==="HOME") {
 
-        content.classList.remove("fade-out");
-        content.classList.remove("fade-in");
-        content.classList.remove("home-desc");
+        content.classList.remove("fade-out","fade-in","home-desc");
 
         content.innerHTML = `<span id="homeTrigger" class="clickable">//DATSPACE</span>`;
 
-        document.getElementById("homeTrigger").addEventListener("click", ()=>{
+        const trigger = document.getElementById("homeTrigger");
+
+        trigger.onclick = ()=>{
 
             if(homeExpanded) return;
             homeExpanded = true;
@@ -172,8 +172,6 @@ function updateContent(){
             setTimeout(()=>{
 
                 showTitle = false;
-
-                // aktifkan rata kiri tapi tetap posisi tengah
                 content.classList.add("home-desc");
 
                 content.innerHTML = `
@@ -191,8 +189,8 @@ Through visual mapping and audiovisual performances, DATs encourages the emergen
                 content.classList.remove("fade-out");
                 content.classList.add("fade-in");
 
-            },600);
-        });
+            },400);
+        };
     }
 
     if(currentTab==="EVENT") {
@@ -216,9 +214,7 @@ Through visual mapping and audiovisual performances, DATs encourages the emergen
 
     if(currentTab==="LOCATION") {
         content.innerHTML = `
-            <a href="https://maps.app.goo.gl/e7eK7yZ6L4t8fkuk7" 
-               target="_blank" 
-               class="clickable">
+            <a href="https://maps.app.goo.gl/e7eK7yZ6L4t8fkuk7" target="_blank">
                Jalan Gatsu Timur No.88X, Denpasar, Bali, Indonesia
             </a>`;
     }
@@ -229,6 +225,13 @@ Through visual mapping and audiovisual performances, DATs encourages the emergen
     if(currentTab==="CONTACT")
         content.innerText="info@datspace.club";
 }
+
+
+// ==========================
+// INIT (INI YANG BIKIN LANGSUNG BISA DIKLIK)
+// ==========================
+
+updateContent();
 
 
 // ==========================
