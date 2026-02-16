@@ -27,7 +27,7 @@ canvas {
     position:fixed;
     top:40px;
     right:80px;
-    font-size:18px;
+    font-size:30px;
     z-index:10;
 }
 
@@ -81,9 +81,12 @@ a, a:visited, a:hover, a:active {
 /* EVENT LAYOUT */
 .event-wrap{
     display:flex;
-    gap:40px;
+    gap:50px;
     align-items:flex-start;
     text-align:left;
+    bottom:120px;
+    left:50%;
+    transform:translateX(-0%,-150%);
 }
 
 .event-flyer{
@@ -93,12 +96,12 @@ a, a:visited, a:hover, a:active {
 
 .event-info{
     max-width:420px;
-    font-size:16px;
+    font-size:32px;
     line-height:1.6;
 }
 
 .event-title{
-    font-size:20px;
+    font-size:40px;
     margin-bottom:10px;
 }
 </style>
@@ -222,33 +225,24 @@ Through visual mapping and audiovisual performances, DATs encourages the emergen
     }
 
     if(currentTab==="EVENT") {
+        if(homeExpanded) return;
+        homeExpanded = true;
 
         content.innerHTML = `
         <div class="event-wrap">
 
-            <video class="event-flyer" autoplay loop muted playsinline>
-                <source src="https://raw.githubusercontent.com/meaistudio/datspace/main/1.mp4" type="video/mp4">
-            </video>
-
             <div class="event-info">
-                <div class="event-title">DATs OUT — BYOB SESSION</div>
+                <div class="event-title">NO ACTIVE TRANSMISSION</div>
 
-                <div>// Description</div>
-                Open audiovisual playground. Bring your own projector and collide visuals, sound, and light in one raw collective night.
-
-                <br><br>
-                <div>// Time</div>
-                Saturday 16:00 — 22:30 WITA
+                There is no public event scheduled at this moment.
 
                 <br><br>
-                <div>// Location</div>
-                KROMA 1984 MADAHUIS — Jl. Gajah Mada No.9, Denpasar, Bali
+                // System idle<br>
+                // Awaiting next activation<br>
+                // Signal will reappear unexpectedly
 
                 <br><br>
-                <div>// Fee</div>
-                Free Entry
-                <br>
-                <a href="https://tally.so/r/9qQyrX" target="_blank">register here</a>
+                DAT SPACE operates in irregular frequencies.
             </div>
 
         </div>
@@ -265,8 +259,23 @@ Through visual mapping and audiovisual performances, DATs encourages the emergen
     if(currentTab==="PROGRAM")
         content.innerText="DatIn — Indoor AV / DatOut — Outdoor AV";
 
-    if(currentTab==="CONTACT")
-        content.innerText="info@datspace.club";
+        if(currentTab==="CONTACT")
+    content.innerHTML = `
+        <div style="text-align:center; line-height:1.8;">
+            <div>
+                <a href="mailto:info@datspace.club" style="color:white; text-decoration:none;">
+                    info@datspace.club
+                </a>
+            </div>
+
+            <div style="margin-top:10px;">
+                <a href="https://instagram.com/_____dats" target="_blank" style="color:white; text-decoration:none;">
+                    ig: @_____dats
+                </a>
+            </div>
+        </div>
+    `;
+
 }
 
 updateContent();
@@ -364,4 +373,3 @@ canvas.addEventListener("dblclick", ()=>{
 </script>
 </body>
 </html>
-
