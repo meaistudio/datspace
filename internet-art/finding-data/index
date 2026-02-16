@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Finding Data</title>
+<style>
+    body {
+        margin: 0;
+        overflow: hidden;
+        font-family: 'Courier New', Courier, monospace;
+        touch-action: none;
+    }
+    canvas {
+        display: block;
+    }
+</style>
+</head>
+<body>
+<canvas id="canvas"></canvas>
+
+<script>
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
+
+let mouseX = 0;
+let mouseY = 0;
+let blocks = [];
+
+const circleRadius = 80;
+let schemeIndex = 0;
+
+const cmykColors = ["cyan", "magenta", "yellow", "black"];
+
+// ==== SKEMA WARNA GLOBAL ====
+const schemes = [
+    { bg: "black", text: "cyan", block: "magenta" },
+    { bg: "cyan", text: "black", block: "yellow" },
+    { bg: "magenta", text: "yellow", block: "black" },
+    { bg: "yellow", text: "cyan", block: "black" }
+];
+
+function resize() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    buildGrid();
+}
+window.addEventListener("resize", resize);
+
+// ==== MOUSE ====
+window.addEventListener("mousemove", (e) => {
+    mouseX = e.clientX;
+    mouseY = e.clientY;
+});
+
+// ==== TOUCH SUPPORT (HP / TABLET) ====
+canvas.addEventListener("touchstart", function(e) {
+    e.preventDefault();
+    const touch = e.touches[0];
+    mouseX = touch.clientX;
+    mouseY = touch.clientY;
+
+    // Tap untuk ganti skema warna
+    schemeIndex = (schemeIndex + 1) % schemes.length;
+}, { passive: false });
+
+canvas.addEventListener("touchmove", function(e) {
+    e.preventDefault();
+    const touch = e.touches[0];
+    mouseX = touch.clientX;
+    mouseY = touch.clientY;
+}, { passive: false });
+
+// ==== CLICK DESKTOP ====
+window.addEventListener("click", () => {
+    schemeIndex = (schemeIndex + 1) % schemes.length;
+});
+
+// Collision detection
+function circleRectCollision(cx, cy, radius, rect) {
+    const closestX = Math.max(rect.x, Math.min(cx, rect.x + rect.width));
+    const closestY = Math.max(rect.y, Math.min(cy, rect.y + rect.height));
+    const dx = cx - closestX;
+    const dy = cy - closestY;
+    return (dx * dx + dy * dy) < radius * radius;
+}
+
+function buildGrid() {
+    ctx.font = "24px monospace";
+
+    const sampleText = `(0000,0000)(0000,0000)(0000,0000)(0000,0000)   (0000,0000)`;
+    const textWidth = ctx.measureText(sampleText).width;
+    const textHeight = 24;
+
+    const spacingX = textWidth + 20;
+    const spacingY = textHeight + 1;
+
+    blocks = [];
+
+    for (let y = spacingY; y < canvas.height; y += spacingY) {
+        for (let x = 0; x < canvas.width; x += spacingX) {
+
+            blocks.push({
+                x: x,
+                y: y - textHeight,
+                width: textWidth,
+                height: textHeight,
+                highlight: 0,
+                glitchTimer: 0
+            });
+        }
+    }
+}
+
+function updateAndDrawBlocks() {
+    const scheme = schemes[schemeIndex];
+
+    blocks.forEach(block => {
+
+        const hit = circleRectCollision(mouseX, mouseY, circleRadius, block);
+
+        if (hit) {
+            block.highlight = 1;
+            block.glitchTimer = 0;
+        } else {
+            if (block.highlight > 1) {
+                block.highlight *= 0.99;
+            } else if (block.highlight > 0) {
+                block.highlight = 0;
+                block.glitchTimer = 100;
+            }
+        }
+
+        // === WARNA BLOCK ===
+        let blockColor = scheme.block;
+
+        if (block.glitchTimer > 0) {
+            blockColor = cmykColors[Math.floor(Math.random() * cmykColors.length)];
+            block.glitchTimer--;
+        }
+
+        // block highlight
+        if (block.highlight > 0 || block.glitchTimer > 0) {
+            ctx.fillStyle = blockColor;
+            ctx.globalAlpha = block.highlight > 0 ? block.highlight : 1;
+            ctx.fillRect(block.x, block.y, block.width + 1, block.height + 2);
+            ctx.globalAlpha = 1;
+        }
+
+        // text
+        const x1 = Math.floor(mouseX);
+        const x2 = x1 + 10;
+        const x3 = x1 + 20;
+        const x4 = x1 + 30;
+        const x5 = x1 + 40;
+
+        const text = `(${x1},${mouseY}) (${x2},${mouseY}) (${x3},${mouseY}) (${x4},${mouseY}) (${x5},${mouseY})`;
+
+        ctx.fillStyle = scheme.text;
+        ctx.fillText(text, block.x, block.y + block.height);
+    });
+}
+
+function drawCursorCircle() {
+    ctx.strokeStyle = schemes[schemeIndex].text;
+    ctx.lineWidth = 10;
+    ctx.beginPath();
+    ctx.arc(mouseX, mouseY, circleRadius, 0, Math.PI * 2);
+    ctx.stroke();
+}
+
+function animate() {
+    const scheme = schemes[schemeIndex];
+
+    ctx.fillStyle = scheme.bg;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    updateAndDrawBlocks();
+    drawCursorCircle();
+
+    requestAnimationFrame(animate);
+}
+
+resize();
+animate();
+</script>
+</body>
+</html>
