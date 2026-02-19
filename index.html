@@ -24,8 +24,6 @@ canvas {
     left:0;
 }
 
-/* ================= DESKTOP NAV ================= */
-
 .tabs {
     position:fixed;
     top:40px;
@@ -45,7 +43,7 @@ canvas {
     padding:6px 12px;
 }
 
-/* INTERNET ART TAB (LEFT SIDE) */
+/* INTERNET ART TAB (LEFT) */
 .internet-art-tab{
     position:fixed;
     top:40px;
@@ -58,8 +56,6 @@ canvas {
     color:white;
     text-decoration:none;
 }
-
-/* ================= CONTENT ================= */
 
 .content {
     position:fixed;
@@ -77,33 +73,6 @@ canvas {
 .fade-in { opacity:1; }
 
 a { color:white; text-decoration:none; }
-
-/* ================= MOBILE VERSION ================= */
-
-@media (max-width: 768px){
-
-    .internet-art-tab{
-        top:85px;          /* turun agar tidak tabrakan */
-        left:20px;
-        font-size:18px;
-    }
-
-    .tabs{
-        top:30px;
-        right:20px;
-        font-size:18px;
-    }
-
-    .tab{
-        margin-left:15px;
-    }
-
-    .content{
-        font-size:16px;
-        bottom:80px;
-        padding:0 20px;
-    }
-}
 </style>
 </head>
 <body>
@@ -115,7 +84,6 @@ a { color:white; text-decoration:none; }
     <a href="/internet-art/">INTERNET-ART</a>
 </div>
 
-<!-- MAIN NAV -->
 <div class="tabs">
     <span class="tab active">HOME</span>
     <span class="tab">EVENT</span>
@@ -127,29 +95,20 @@ a { color:white; text-decoration:none; }
 <div class="content" id="content"></div>
 
 <script>
-
-/* ================= CANVAS ================= */
-
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
 
 function resizeCanvas() {
     const dpr = window.devicePixelRatio || 1;
-
     canvas.style.width = window.innerWidth + "px";
     canvas.style.height = window.innerHeight + "px";
-
     canvas.width = window.innerWidth * dpr;
     canvas.height = window.innerHeight * dpr;
-
     ctx.setTransform(1,0,0,1,0,0);
     ctx.scale(dpr, dpr);
 }
-
 window.addEventListener("resize", resizeCanvas);
 resizeCanvas();
-
-/* ================= STATE ================= */
 
 let dragging = false;
 let glitchFrames = 0;
@@ -168,10 +127,7 @@ tabs.forEach(tab=>{
     });
 });
 
-/* ================= CONTENT ================= */
-
 function updateContent(){
-
     if(currentTab==="HOME")
         content.innerHTML = "//DATSPACE";
 
@@ -179,8 +135,7 @@ function updateContent(){
         content.innerHTML = "NO ACTIVE TRANSMISSION";
 
     if(currentTab==="LOCATION")
-        content.innerHTML = `
-        <a href="https://maps.app.goo.gl/e7eK7yZ6L4t8fkuk7" target="_blank">
+        content.innerHTML = `<a href="https://maps.app.goo.gl/e7eK7yZ6L4t8fkuk7" target="_blank">
         Jalan Gatsu Timur No.88X, Denpasar, Bali
         </a>`;
 
@@ -195,10 +150,7 @@ function updateContent(){
 
 updateContent();
 
-/* ================= DRAW LOOP ================= */
-
 function draw(){
-
     ctx.fillStyle="black";
     ctx.fillRect(0,0,window.innerWidth,window.innerHeight);
 
@@ -219,10 +171,7 @@ function draw(){
     if(glitchFrames>0){
         for(let i=0;i<120;i++){
             ctx.fillStyle=Math.random()>0.5?"white":"black";
-            ctx.fillRect(Math.random()*window.innerWidth,
-                         Math.random()*window.innerHeight,
-                         Math.random()*400,
-                         Math.random()*80);
+            ctx.fillRect(Math.random()*window.innerWidth,Math.random()*window.innerHeight,Math.random()*400,Math.random()*80);
         }
         glitchFrames--;
     }
@@ -234,7 +183,7 @@ canvas.addEventListener("mousedown",()=>dragging=true);
 canvas.addEventListener("mouseup",()=>dragging=false);
 
 draw();
-
 </script>
+
 </body>
 </html>
