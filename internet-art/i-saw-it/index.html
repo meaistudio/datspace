@@ -13,36 +13,44 @@ html, body {
     background: black;
 }
 
-/* Background sawit */
+/* =========================
+   BACKGROUND SAWIT
+========================= */
+
 .scene {
     position: fixed;
     width: 100vw;
     height: 100vh;
-    background: url("https://raw.githubusercontent.com/meaistudio/datspace/main/internet-art/i-saw-it/png/sawit.png
-") 
-    center center no-repeat;
-    background-size: contain;
+    background: url("png/sawit.png") center center no-repeat;
+    background-size: contain; /* ganti ke cover kalau ingin fullscreen */
 }
 
-/* Dark overlay */
+/* =========================
+   DARKNESS OVERLAY
+========================= */
+
 .darkness {
     position: fixed;
     width: 100vw;
     height: 100vh;
     pointer-events: none;
-    background: radial-gradient(circle 150px at 50% 50%, 
+    background: radial-gradient(
+        circle 200px at 50% 50%, 
         rgba(0,0,0,0) 0%, 
-        rgba(0,0,0,0.2) 40%, 
-        rgba(0,0,0,0.95) 100%);
-    mix-blend-mode: multiply;
+        rgba(0,0,0,0.4) 40%, 
+        rgba(0,0,0,0.98) 100%
+    );
 }
 
-/* Custom Cursor */
+/* =========================
+   CUSTOM CURSOR
+========================= */
+
 .cursor {
     position: fixed;
     width: 180px;
     height: 180px;
-    background: url("internet-art/i-saw-it/png/tangan.png") center center no-repeat;
+    background: url("png/tangan.png") center center no-repeat;
     background-size: contain;
     pointer-events: none;
     transform: translate(-50%, -50%);
@@ -70,13 +78,13 @@ document.addEventListener("mousemove", (e) => {
     const x = e.clientX;
     const y = e.clientY;
 
-    // Move custom cursor
+    /* Move custom cursor */
     cursor.style.left = x + "px";
     cursor.style.top = y + "px";
 
-    // Update flashlight position
+    /* Update flashlight position */
     darkness.style.background = `
-        radial-gradient(circle 200px at ${x}px ${y}px,
+        radial-gradient(circle 220px at ${x}px ${y}px,
         rgba(0,0,0,0) 0%,
         rgba(0,0,0,0.4) 40%,
         rgba(0,0,0,0.98) 100%)
