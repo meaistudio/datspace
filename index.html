@@ -116,16 +116,24 @@ a, a:visited, a:hover, a:active {
 
     /* ================= HOME DESCRIPTION FIX ================= */
 
-    .content.home-desc{
-        top:30%;
-        left:50%;
-        transform:translate(-50%,-50%);
-        width:100%;
-        max-width:100%;
-        padding:0 32px;   /* tambah breathing space */
-        font-size:10px;   /* sedikit lebih kecil agar nyaman */
-        line-height:1.8;  /* lebih readable */
-    }
+.content.home-desc{
+    position:fixed;
+    top:50%;
+    left:50%;
+    transform:translate(-50%,-50%);
+
+    width:82%;          /* tidak full width */
+    max-width:420px;    /* batas maksimum agar tidak terlalu lebar */
+
+    padding:0 10px;
+
+    font-size:12px;     /* 10px terlalu kecil dan padat */
+    line-height:1.9;
+
+    max-height:70vh;    /* tidak memenuhi layar */
+    overflow-y:auto;    /* bisa scroll kalau panjang */
+}
+
 
     /* ================= EVENT FIX ================= */
 
@@ -445,6 +453,7 @@ canvas.addEventListener("dblclick", ()=>{
 </script>
 </body>
 </html>
+
 
 
 
