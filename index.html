@@ -137,10 +137,19 @@ a, a:visited, a:hover, a:active {
 
     /* ================= EVENT FIX ================= */
 
-.event-wrap{
+.content{
     position:fixed;
-    top:140px;          /* mulai sedikit di bawah tabs */
+    top:120px;
+    bottom:auto;
     left:0;
+    width:100%;
+    transform:none;
+}
+
+.event-wrap{
+    position:relative;
+    top:auto;
+    left:auto;
     transform:none;
 
     display:flex;
@@ -151,17 +160,6 @@ a, a:visited, a:hover, a:active {
     padding:0 20px;
 
     text-align:left;
-}
-
-.event-info{
-    font-size:17px;
-    line-height:1.8;
-    width:100%;
-}
-
-.event-title{
-    font-size:22px;
-    margin-bottom:14px;
 }
 
 </style>
@@ -458,6 +456,7 @@ canvas.addEventListener("dblclick", ()=>{
 </script>
 </body>
 </html>
+
 
 
 
