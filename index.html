@@ -5,11 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>DATSPACE</title>
 
-<!-- FAVICON -->
 <link rel="icon" type="image/png" href="/dats.png">
 
 <style>
-html, body {
+html,body{
     margin:0;
     padding:0;
     background:black;
@@ -18,13 +17,13 @@ html, body {
     overflow:hidden;
 }
 
-canvas {
+canvas{
     position:fixed;
     top:0;
     left:0;
 }
 
-.tabs {
+.tabs{
     position:fixed;
     top:40px;
     right:80px;
@@ -32,18 +31,17 @@ canvas {
     z-index:10;
 }
 
-.tab {
+.tab{
     margin-left:30px;
     cursor:pointer;
     display:inline-block;
 }
 
-.active {
+.active{
     border:1px solid white;
     padding:6px 12px;
 }
 
-/* INTERNET ART TAB (LEFT) */
 .internet-art-tab{
     position:fixed;
     top:40px;
@@ -57,7 +55,7 @@ canvas {
     text-decoration:none;
 }
 
-.content {
+.content{
     position:fixed;
     bottom:120px;
     left:50%;
@@ -66,20 +64,40 @@ canvas {
     text-align:center;
     z-index:10;
     max-width:900px;
-    transition: opacity 0.6s ease;
 }
 
-.fade-out { opacity:0; }
-.fade-in { opacity:1; }
+a{ color:white; text-decoration:none; }
 
-a { color:white; text-decoration:none; }
+@media (max-width:768px){
+
+    .internet-art-tab{
+        top:85px;
+        left:20px;
+        font-size:18px;
+    }
+
+    .tabs{
+        top:30px;
+        right:20px;
+        font-size:18px;
+    }
+
+    .tab{
+        margin-left:15px;
+    }
+
+    .content{
+        font-size:16px;
+        bottom:80px;
+        padding:0 20px;
+    }
+}
 </style>
 </head>
 <body>
 
 <canvas id="canvas"></canvas>
 
-<!-- INTERNET ART TAB -->
 <div class="internet-art-tab">
     <a href="/internet-art/">INTERNET-ART</a>
 </div>
@@ -95,75 +113,111 @@ a { color:white; text-decoration:none; }
 <div class="content" id="content"></div>
 
 <script>
+
+/* ================= CANVAS SETUP ================= */
+
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
 
-function resizeCanvas() {
-    const dpr = window.devicePixelRatio || 1;
-    canvas.style.width = window.innerWidth + "px";
-    canvas.style.height = window.innerHeight + "px";
-    canvas.width = window.innerWidth * dpr;
-    canvas.height = window.innerHeight * dpr;
-    ctx.setTransform(1,0,0,1,0,0);
-    ctx.scale(dpr, dpr);
+function resizeCanvas(){
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
 }
-window.addEventListener("resize", resizeCanvas);
+window.addEventListener("resize",resizeCanvas);
 resizeCanvas();
 
-let dragging = false;
-let glitchFrames = 0;
-let currentTab = "HOME";
+/* ================= STATE ================= */
 
-const tabs = document.querySelectorAll(".tab");
-const content = document.getElementById("content");
+let dragging=false;
+let glitchFrames=0;
+let frequency=440;
+let volume=0.2;
+let currentTab="HOME";
+let showTitle=true;
+
+const tabs=document.querySelectorAll(".tab");
+const content=document.getElementById("content");
 
 tabs.forEach(tab=>{
     tab.addEventListener("click",()=>{
         tabs.forEach(t=>t.classList.remove("active"));
         tab.classList.add("active");
-        currentTab = tab.innerText;
+        currentTab=tab.innerText;
+        glitchFrames=12;
+        triggerSound();
         updateContent();
-        glitchFrames = 12;
     });
 });
 
 function updateContent(){
-    if(currentTab==="HOME")
-        content.innerHTML = "//DATSPACE";
 
-    if(currentTab==="EVENT")
-        content.innerHTML = "NO ACTIVE TRANSMISSION";
+    if(currentTab==="HOME"){
+        content.innerHTML="//DATSPACE";
+        showTitle=true;
+    }
 
-    if(currentTab==="LOCATION")
-        content.innerHTML = `<a href="https://maps.app.goo.gl/e7eK7yZ6L4t8fkuk7" target="_blank">
-        Jalan Gatsu Timur No.88X, Denpasar, Bali
-        </a>`;
+    if(currentTab==="EVENT"){
+        content.innerHTML="NO ACTIVE TRANSMISSION";
+        showTitle=false;
+    }
 
-    if(currentTab==="PROGRAM")
+    if(currentTab==="LOCATION"){
+        content.innerHTML=`<a href="https://maps.app.goo.gl/e7eK7yZ6L4t8fkuk7" target="_blank">
+        Jalan Gatsu Timur No.88X, Denpasar, Bali</a>`;
+        showTitle=true;
+    }
+
+    if(currentTab==="PROGRAM"){
         content.innerText="DatIn — Indoor AV / DatOut — Outdoor AV";
+        showTitle=true;
+    }
 
-    if(currentTab==="CONTACT")
-        content.innerHTML = `
-        info@datspace.club<br>
-        ig: @_____dats`;
+    if(currentTab==="CONTACT"){
+        content.innerHTML="info@datspace.club<br>ig: @_____dats";
+        showTitle=true;
+    }
 }
 
 updateContent();
 
+/* ========================== */
+/* AUDIO ENGINE + INTERACTION (tetap sama) */
+/* ========================== */
+
+canvas.addEventListener("mousedown",()=>{
+    dragging = true;
+    glitchFrames = 12;
+    triggerSound();
+});
+
+canvas.addEventListener("mouseup",()=> dragging=false);
+
+canvas.addEventListener("mousemove",(e)=>{
+    frequency = 100 + (e.clientX/window.innerWidth)*1200;
+    let yNorm = 1 - (e.clientY/window.innerHeight);
+    volume = Math.pow(yNorm,2.2)*0.5;
+});
+
 function draw(){
+
     ctx.fillStyle="black";
     ctx.fillRect(0,0,window.innerWidth,window.innerHeight);
 
-    ctx.fillStyle="white";
-    ctx.textAlign="center";
-    ctx.font = Math.min(window.innerWidth/6, 180) + "px Consolas";
-    ctx.fillText("DATs", window.innerWidth/2, window.innerHeight/2);
+    if(currentTab!=="EVENT" && showTitle){
+        ctx.fillStyle="white";
+        ctx.textAlign="center";
+        ctx.font = Math.min(window.innerWidth/6, 180) + "px Consolas";
+        ctx.fillText("DATs", window.innerWidth/2, window.innerHeight/2);
+    }
 
     if(dragging){
         ctx.strokeStyle="white";
         for(let r=50;r<Math.min(window.innerWidth, window.innerHeight)/1.2;r+=40){
+            let offset = Math.sin(Date.now()*0.002 + r*0.05)*20;
             ctx.beginPath();
-            ctx.arc(window.innerWidth/2,window.innerHeight/2,r,0,Math.PI*2);
+            ctx.arc(window.innerWidth/2 + offset,
+                    window.innerHeight/2,
+                    r,0,Math.PI*2);
             ctx.stroke();
         }
     }
@@ -171,19 +225,60 @@ function draw(){
     if(glitchFrames>0){
         for(let i=0;i<120;i++){
             ctx.fillStyle=Math.random()>0.5?"white":"black";
-            ctx.fillRect(Math.random()*window.innerWidth,Math.random()*window.innerHeight,Math.random()*400,Math.random()*80);
+            ctx.fillRect(
+                Math.random()*window.innerWidth,
+                Math.random()*window.innerHeight,
+                Math.random()*400,
+                Math.random()*80
+            );
         }
         glitchFrames--;
     }
 
     requestAnimationFrame(draw);
 }
-
-canvas.addEventListener("mousedown",()=>dragging=true);
-canvas.addEventListener("mouseup",()=>dragging=false);
-
 draw();
-</script>
 
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+function triggerSound(){
+
+    if(audioCtx.state==="suspended"){
+        audioCtx.resume();
+    }
+
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    const delay = audioCtx.createDelay();
+    const feedbackGain = audioCtx.createGain();
+
+    osc.type="sine";
+    osc.frequency.value = frequency;
+
+    gain.gain.value = volume;
+
+    delay.delayTime.value = 0.3;
+    feedbackGain.gain.value = 0.4;
+
+    osc.connect(gain);
+    gain.connect(delay);
+    delay.connect(feedbackGain);
+    feedbackGain.connect(delay);
+    delay.connect(audioCtx.destination);
+    gain.connect(audioCtx.destination);
+
+    osc.start();
+    osc.stop(audioCtx.currentTime + 0.35);
+}
+
+canvas.addEventListener("dblclick", ()=>{
+    if (!document.fullscreenElement) {
+        document.body.requestFullscreen();
+    } else {
+        document.exitFullscreen();
+    }
+});
+
+</script>
 </body>
 </html>
