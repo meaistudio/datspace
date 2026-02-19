@@ -137,27 +137,33 @@ a, a:visited, a:hover, a:active {
 
     /* ================= EVENT FIX ================= */
 
-    .event-wrap{
-        flex-direction:column;  /* jangan horizontal */
-        gap:20px;
-        bottom:100px;
-        transform:translateX(-50%);
-        width:100%;
-        padding:0 28px;
-    }
+.event-wrap{
+    position:fixed;          /* penting */
+    top:50%;
+    left:50%;
+    transform:translate(-50%,-50%);
 
-    .event-info{
-        font-size:16px;   /* sebelumnya 32px → terlalu besar */
-        line-height:1.7;
-        max-width:100%;
-    }
+    display:flex;
+    flex-direction:column;
+    gap:20px;
 
-    .event-title{
-        font-size:20px;   /* sebelumnya 40px */
-        margin-bottom:12px;
-    }
+    width:85%;
+    max-width:420px;
 
+    text-align:left;         /* rata kiri */
 }
+
+.event-info{
+    font-size:16px;
+    line-height:1.7;
+    width:100%;
+}
+
+.event-title{
+    font-size:20px;
+    margin-bottom:12px;
+}
+
 
 </style>
 </head>
@@ -453,6 +459,7 @@ canvas.addEventListener("dblclick", ()=>{
 </script>
 </body>
 </html>
+
 
 
 
