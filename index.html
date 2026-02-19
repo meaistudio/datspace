@@ -89,7 +89,13 @@ a, a:visited, a:hover, a:active {
     text-decoration:underline; 
 }
 
+/* =========================================
+   MOBILE VERSION
+========================================= */
+
 @media (max-width:768px){
+
+    /* ================= HEADER ================= */
 
     .internet-art-tab{
         top:100px;
@@ -107,31 +113,73 @@ a, a:visited, a:hover, a:active {
         margin-left:10px;
     }
 
+    /* ================= GLOBAL CONTENT ================= */
+
     .content{
-        font-size:16px;
+        position:fixed;
         bottom:80px;
-        padding:0 28px; /* margin kiri-kanan lebih lega */
-        max-width:100%;
+        left:50%;
+        transform:translateX(-50%);
+        width:100%;
+        padding:0 28px;
+        box-sizing:border-box;
+        font-size:16px;
     }
 
-    /* ================= HOME DESCRIPTION FIX ================= */
+    /* ================= HOME DESCRIPTION ================= */
 
-.content.home-desc{
-    position:fixed;
-    top:60%;
-    left:50%;
-    transform:translate(-50%,-50%);
+    .content.home-desc{
+        top:60%;
+        left:50%;
+        transform:translate(-50%,-50%);
 
-    width:82%;          /* tidak full width */
-    max-width:420px;    /* batas maksimum agar tidak terlalu lebar */
+        width:82%;
+        max-width:420px;
 
-    padding:0 10px;
+        padding:0 10px;
 
-    font-size:12px;     /* 10px terlalu kecil dan padat */
-    line-height:1.9;
+        font-size:12px;
+        line-height:1.9;
 
-    max-height:70vh;    /* tidak memenuhi layar */
-    overflow-y:auto;    /* bisa scroll kalau panjang */
+        max-height:70vh;
+        overflow-y:auto;
+    }
+
+    /* ================= EVENT PAGE ================= */
+
+    /* IMPORTANT:
+       Pastikan di HTML EVENT pakai:
+       <div class="content event-page">
+    */
+
+    .content.event-page{
+        position:fixed;
+        top:120px;
+        bottom:auto;
+        left:0;
+        transform:none;
+        width:100%;
+        padding:0;
+    }
+
+    .event-wrap{
+        width:100%;
+        padding:0 24px;
+        box-sizing:border-box;
+        text-align:left;
+    }
+
+    .event-title{
+        font-size:22px;
+        margin-bottom:14px;
+    }
+
+    .event-info{
+        font-size:17px;
+        line-height:1.8;
+        word-wrap:break-word;
+    }
+
 }
 
 
@@ -461,6 +509,7 @@ canvas.addEventListener("dblclick", ()=>{
 </script>
 </body>
 </html>
+
 
 
 
