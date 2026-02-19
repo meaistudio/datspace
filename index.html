@@ -154,13 +154,15 @@ a, a:visited, a:hover, a:active {
 
     .content.event-page{
         position:fixed;
-        bottom:100px;   /* atur jarak dari bawah */
-        top:auto;       /* matikan top */
-        left:0;
-        transform:none;
+        bottom:100px;
+        left:50%;
+        transform:translateX(-50%);
+
+        top:auto !important;   /* paksa matikan top */
         width:100%;
         padding:0;
     }
+
 
 
     .event-wrap{
@@ -510,6 +512,7 @@ canvas.addEventListener("dblclick", ()=>{
 </script>
 </body>
 </html>
+
 
 
 
