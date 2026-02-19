@@ -2,10 +2,11 @@
 <html>
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>DATSPACE</title>
 
-<!-- ===== LOGO TAB CHROME (FAVICON) ===== -->
-<link rel="icon" type="image/png" href="https://raw.githubusercontent.com/meaistudio/datspace/main/dats.png">
+<!-- FAVICON -->
+<link rel="icon" type="image/png" href="/dats.png">
 
 <style>
 html, body {
@@ -22,6 +23,8 @@ canvas {
     top:0;
     left:0;
 }
+
+/* ================= DESKTOP NAV ================= */
 
 .tabs {
     position:fixed;
@@ -42,6 +45,22 @@ canvas {
     padding:6px 12px;
 }
 
+/* INTERNET ART TAB (LEFT SIDE) */
+.internet-art-tab{
+    position:fixed;
+    top:40px;
+    left:80px;
+    font-size:30px;
+    z-index:10;
+}
+
+.internet-art-tab a{
+    color:white;
+    text-decoration:none;
+}
+
+/* ================= CONTENT ================= */
+
 .content {
     position:fixed;
     bottom:120px;
@@ -54,55 +73,36 @@ canvas {
     transition: opacity 0.6s ease;
 }
 
-.content.home-desc {
-    position:fixed;
-    top:50%;
-    left:50%;
-    transform:translate(-50%,-50%);
-    text-align:left;
-    max-width:720px;
-    line-height:1.6;
-    letter-spacing:0.4px;
-}
-
 .fade-out { opacity:0; }
 .fade-in { opacity:1; }
 
-.clickable {
-    cursor:pointer;
-    text-decoration:underline;
-}
+a { color:white; text-decoration:none; }
 
-a, a:visited, a:hover, a:active {
-    color:white;
-    text-decoration:underline;
-}
+/* ================= MOBILE VERSION ================= */
 
-/* EVENT LAYOUT */
-.event-wrap{
-    display:flex;
-    gap:50px;
-    align-items:flex-start;
-    text-align:left;
-    bottom:120px;
-    left:50%;
-    transform:translateX(-0%,-150%);
-}
+@media (max-width: 768px){
 
-.event-flyer{
-    width:240px;
-    border:1px solid white;
-}
+    .internet-art-tab{
+        top:85px;          /* turun agar tidak tabrakan */
+        left:20px;
+        font-size:18px;
+    }
 
-.event-info{
-    max-width:420px;
-    font-size:32px;
-    line-height:1.6;
-}
+    .tabs{
+        top:30px;
+        right:20px;
+        font-size:18px;
+    }
 
-.event-title{
-    font-size:40px;
-    margin-bottom:10px;
+    .tab{
+        margin-left:15px;
+    }
+
+    .content{
+        font-size:16px;
+        bottom:80px;
+        padding:0 20px;
+    }
 }
 </style>
 </head>
@@ -110,6 +110,12 @@ a, a:visited, a:hover, a:active {
 
 <canvas id="canvas"></canvas>
 
+<!-- INTERNET ART TAB -->
+<div class="internet-art-tab">
+    <a href="/internet-art/">INTERNET-ART</a>
+</div>
+
+<!-- MAIN NAV -->
 <div class="tabs">
     <span class="tab active">HOME</span>
     <span class="tab">EVENT</span>
@@ -117,24 +123,12 @@ a, a:visited, a:hover, a:active {
     <span class="tab">PROGRAM</span>
     <span class="tab">CONTACT</span>
 </div>
-<div style="
-    position:fixed;
-    top:40px;
-    left:80px;
-    font-size:30px;
-    z-index:10;
-">
-    <a href="/internet-art/" style="color:white; text-decoration:none;">
-        INTERNET-ART
-    </a>
-</div>
+
 <div class="content" id="content"></div>
 
 <script>
 
-// ==========================
-// CANVAS SETUP
-// ==========================
+/* ================= CANVAS ================= */
 
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
@@ -155,18 +149,11 @@ function resizeCanvas() {
 window.addEventListener("resize", resizeCanvas);
 resizeCanvas();
 
-
-// ==========================
-// STATE
-// ==========================
+/* ================= STATE ================= */
 
 let dragging = false;
 let glitchFrames = 0;
-let frequency = 300;
-let volume = 0.05;
 let currentTab = "HOME";
-let showTitle = true;
-let homeExpanded = false;
 
 const tabs = document.querySelectorAll(".tab");
 const content = document.getElementById("content");
@@ -176,157 +163,55 @@ tabs.forEach(tab=>{
         tabs.forEach(t=>t.classList.remove("active"));
         tab.classList.add("active");
         currentTab = tab.innerText;
-
-        showTitle = true;
-        homeExpanded = false;
-
-        content.classList.remove("home-desc");
-
         updateContent();
         glitchFrames = 12;
-        triggerSound();
     });
 });
 
-
-// ==========================
-// CONTENT UPDATE
-// ==========================
+/* ================= CONTENT ================= */
 
 function updateContent(){
 
-    if(currentTab==="HOME") {
+    if(currentTab==="HOME")
+        content.innerHTML = "//DATSPACE";
 
-        content.classList.remove("home-desc","fade-in","fade-out");
+    if(currentTab==="EVENT")
+        content.innerHTML = "NO ACTIVE TRANSMISSION";
 
-        content.innerHTML = `<span id="homeTrigger" class="clickable">//DATSPACE</span>`;
-
-        const trigger = document.getElementById("homeTrigger");
-
-        trigger.onclick = ()=>{
-
-            if(homeExpanded) return;
-            homeExpanded = true;
-
-            content.classList.add("fade-out");
-
-            setTimeout(()=>{
-
-                showTitle = false;
-                content.classList.add("home-desc");
-
-                content.innerHTML = `
-DATs (Data Space) is a creative exploration space under Meai Studio, born from the need for a playground and a testing ground.
-
-At DATs, data, sound, and light are deconstructed, played with, and reassembled into works that are constantly in motion.
-
-This space becomes a meeting point where visual artists, experimental audio practitioners, and audiovisual creators come together within one ecosystem.
-
-The process at DATs is closely tied to experimentation, trial and error, and noise as an essential part of artistic practice.
-
-Through visual mapping and audiovisual performances, DATs encourages the emergence of new visual languages while building an alternative creative ecosystem in Bali.
-                `;
-
-                content.classList.remove("fade-out");
-                content.classList.add("fade-in");
-
-            },400);
-        };
-    }
-
-    if(currentTab==="EVENT") {
-        if(homeExpanded) return;
-        homeExpanded = true;
-
+    if(currentTab==="LOCATION")
         content.innerHTML = `
-        <div class="event-wrap">
-
-            <div class="event-info">
-                <div class="event-title">NO ACTIVE TRANSMISSION</div>
-
-                There is no public event scheduled at this moment.
-
-                <br><br>
-                // System idle<br>
-                // Awaiting next activation<br>
-                // Signal will reappear unexpectedly
-
-                <br><br>
-                DAT SPACE operates in irregular frequencies.
-            </div>
-
-        </div>
-        `;
-    }
-
-    if(currentTab==="LOCATION") {
-        content.innerHTML = `
-            <a href="https://maps.app.goo.gl/e7eK7yZ6L4t8fkuk7" target="_blank">
-               Jalan Gatsu Timur No.88X, Denpasar, Bali, Indonesia
-            </a>`;
-    }
+        <a href="https://maps.app.goo.gl/e7eK7yZ6L4t8fkuk7" target="_blank">
+        Jalan Gatsu Timur No.88X, Denpasar, Bali
+        </a>`;
 
     if(currentTab==="PROGRAM")
         content.innerText="DatIn — Indoor AV / DatOut — Outdoor AV";
 
-        if(currentTab==="CONTACT")
-    content.innerHTML = `
-        <div style="text-align:center; line-height:1.8;">
-            <div>
-                <a href="mailto:info@datspace.club" style="color:white; text-decoration:none;">
-                    info@datspace.club
-                </a>
-            </div>
-
-            <div style="margin-top:10px;">
-                <a href="https://instagram.com/_____dats" target="_blank" style="color:white; text-decoration:none;">
-                    ig: @_____dats
-                </a>
-            </div>
-        </div>
-    `;
-
+    if(currentTab==="CONTACT")
+        content.innerHTML = `
+        info@datspace.club<br>
+        ig: @_____dats`;
 }
 
 updateContent();
 
-
-// ==========================
-// AUDIO ENGINE + INTERACTION (tetap sama)
-// ==========================
-
-canvas.addEventListener("mousedown",()=>{
-    dragging = true;
-    glitchFrames = 12;
-    triggerSound();
-});
-
-canvas.addEventListener("mouseup",()=> dragging=false);
-
-canvas.addEventListener("mousemove",(e)=>{
-    frequency = 100 + (e.clientX/window.innerWidth)*1200;
-    let yNorm = 1 - (e.clientY/window.innerHeight);
-    volume = Math.pow(yNorm,2.2)*0.5;
-});
+/* ================= DRAW LOOP ================= */
 
 function draw(){
 
     ctx.fillStyle="black";
     ctx.fillRect(0,0,window.innerWidth,window.innerHeight);
 
-    if(currentTab!=="EVENT" && showTitle){
-        ctx.fillStyle="white";
-        ctx.textAlign="center";
-        ctx.font = Math.min(window.innerWidth/6, 180) + "px Consolas";
-        ctx.fillText("DATs", window.innerWidth/2, window.innerHeight/2);
-    }
+    ctx.fillStyle="white";
+    ctx.textAlign="center";
+    ctx.font = Math.min(window.innerWidth/6, 180) + "px Consolas";
+    ctx.fillText("DATs", window.innerWidth/2, window.innerHeight/2);
 
     if(dragging){
         ctx.strokeStyle="white";
         for(let r=50;r<Math.min(window.innerWidth, window.innerHeight)/1.2;r+=40){
-            let offset = Math.sin(Date.now()*0.002 + r*0.05)*20;
             ctx.beginPath();
-            ctx.arc(window.innerWidth/2 + offset,window.innerHeight/2,r,0,Math.PI*2);
+            ctx.arc(window.innerWidth/2,window.innerHeight/2,r,0,Math.PI*2);
             ctx.stroke();
         }
     }
@@ -334,7 +219,10 @@ function draw(){
     if(glitchFrames>0){
         for(let i=0;i<120;i++){
             ctx.fillStyle=Math.random()>0.5?"white":"black";
-            ctx.fillRect(Math.random()*window.innerWidth,Math.random()*window.innerHeight,Math.random()*400,Math.random()*80);
+            ctx.fillRect(Math.random()*window.innerWidth,
+                         Math.random()*window.innerHeight,
+                         Math.random()*400,
+                         Math.random()*80);
         }
         glitchFrames--;
     }
@@ -342,46 +230,11 @@ function draw(){
     requestAnimationFrame(draw);
 }
 
+canvas.addEventListener("mousedown",()=>dragging=true);
+canvas.addEventListener("mouseup",()=>dragging=false);
+
 draw();
-
-const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-
-function triggerSound(){
-
-    const osc = audioCtx.createOscillator();
-    const gain = audioCtx.createGain();
-    const delay = audioCtx.createDelay();
-    const feedbackGain = audioCtx.createGain();
-
-    osc.type="sine";
-    osc.frequency.value = frequency;
-
-    gain.gain.value = 0.03;
-
-    delay.delayTime.value = 0.3;
-    feedbackGain.gain.value = 0.4;
-
-    osc.connect(gain);
-    gain.connect(delay);
-    delay.connect(feedbackGain);
-    feedbackGain.connect(delay);
-    delay.connect(audioCtx.destination);
-    gain.connect(audioCtx.destination);
-
-    osc.start();
-    osc.stop(audioCtx.currentTime + 0.35);
-}
-
-canvas.addEventListener("dblclick", ()=>{
-    if (!document.fullscreenElement) {
-        document.body.requestFullscreen();
-    } else {
-        document.exitFullscreen();
-    }
-});
 
 </script>
 </body>
 </html>
-
-
