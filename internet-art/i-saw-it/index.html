@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>I SAW IT</title>
+
+<style>
+html, body {
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background: black;
+}
+
+/* Background sawit */
+.scene {
+    position: fixed;
+    width: 100vw;
+    height: 100vh;
+    background: url("internet-art/i-saw-it/png/sawit.png") center center no-repeat;
+    background-size: contain;
+}
+
+/* Dark overlay */
+.darkness {
+    position: fixed;
+    width: 100vw;
+    height: 100vh;
+    pointer-events: none;
+    background: radial-gradient(circle 150px at 50% 50%, 
+        rgba(0,0,0,0) 0%, 
+        rgba(0,0,0,0.2) 40%, 
+        rgba(0,0,0,0.95) 100%);
+    mix-blend-mode: multiply;
+}
+
+/* Custom Cursor */
+.cursor {
+    position: fixed;
+    width: 180px;
+    height: 180px;
+    background: url("internet-art/i-saw-it/png/tangan.png") center center no-repeat;
+    background-size: contain;
+    pointer-events: none;
+    transform: translate(-50%, -50%);
+    z-index: 10;
+}
+
+body {
+    cursor: none;
+}
+</style>
+</head>
+
+<body>
+
+<div class="scene"></div>
+<div class="darkness" id="darkness"></div>
+<div class="cursor" id="cursor"></div>
+
+<script>
+const cursor = document.getElementById("cursor");
+const darkness = document.getElementById("darkness");
+
+document.addEventListener("mousemove", (e) => {
+
+    const x = e.clientX;
+    const y = e.clientY;
+
+    // Move custom cursor
+    cursor.style.left = x + "px";
+    cursor.style.top = y + "px";
+
+    // Update flashlight position
+    darkness.style.background = `
+        radial-gradient(circle 200px at ${x}px ${y}px,
+        rgba(0,0,0,0) 0%,
+        rgba(0,0,0,0.4) 40%,
+        rgba(0,0,0,0.98) 100%)
+    `;
+});
+</script>
+
+</body>
+</html>
