@@ -139,27 +139,32 @@ a, a:visited, a:hover, a:active {
 
 .content{
     position:fixed;
-    top:120px;
-    bottom:auto;
+    top:160px;          /* diturunkan sedikit dari sebelumnya */
     left:0;
     width:100%;
+    bottom:auto;
     transform:none;
 }
 
 .event-wrap{
     position:relative;
-    top:auto;
-    left:auto;
-    transform:none;
-
-    display:flex;
-    flex-direction:column;
-    gap:20px;
-
     width:100%;
-    padding:0 20px;
+
+    padding:0 24px;     /* margin kiri-kanan seimbang */
+    box-sizing:border-box;
 
     text-align:left;
+}
+
+.event-info{
+    font-size:17px;
+    line-height:1.8;
+    word-wrap:break-word;
+}
+
+.event-title{
+    font-size:22px;
+    margin-bottom:14px;
 }
 
 </style>
@@ -456,6 +461,7 @@ canvas.addEventListener("dblclick", ()=>{
 </script>
 </body>
 </html>
+
 
 
 
