@@ -100,41 +100,55 @@ a, a:visited, a:hover, a:active {
     .tabs{
         top:30px;
         right:20px;
-        font-size:12px; /* 20% lebih kecil dari 18px */
+        font-size:12px;
     }
 
     .tab{
-        margin-left:10px; /* sedikit diperkecil agar proporsional */
+        margin-left:10px;
     }
 
     .content{
         font-size:16px;
         bottom:80px;
-        padding:0 20px;
+        padding:0 28px; /* margin kiri-kanan lebih lega */
+        max-width:100%;
     }
-}
-/* EVENT LAYOUT */ 
-.event-wrap{ 
-    display:flex; 
-    gap:50px; 
-    align-items:flex-start; 
-    text-align:left; 
-    bottom:120px; 
-    left:50%; 
-    transform:translateX(-0%,-150%); 
-} 
-.event-flyer{ 
-    width:240px; 
-    border:1px solid white; 
-} 
-.event-info{ 
-    max-width:420px; 
-    font-size:32px; 
-    line-height:1.6; 
-} 
-.event-title{ 
-    font-size:40px; 
-    margin-bottom:10px; 
+
+    /* ================= HOME DESCRIPTION FIX ================= */
+
+    .content.home-desc{
+        top:50%;
+        left:50%;
+        transform:translate(-50%,-50%);
+        width:100%;
+        max-width:100%;
+        padding:0 32px;   /* tambah breathing space */
+        font-size:14px;   /* sedikit lebih kecil agar nyaman */
+        line-height:1.8;  /* lebih readable */
+    }
+
+    /* ================= EVENT FIX ================= */
+
+    .event-wrap{
+        flex-direction:column;  /* jangan horizontal */
+        gap:20px;
+        bottom:100px;
+        transform:translateX(-50%);
+        width:100%;
+        padding:0 28px;
+    }
+
+    .event-info{
+        font-size:16px;   /* sebelumnya 32px → terlalu besar */
+        line-height:1.7;
+        max-width:100%;
+    }
+
+    .event-title{
+        font-size:20px;   /* sebelumnya 40px */
+        margin-bottom:12px;
+    }
+
 }
 
 </style>
@@ -431,6 +445,7 @@ canvas.addEventListener("dblclick", ()=>{
 </script>
 </body>
 </html>
+
 
 
 
