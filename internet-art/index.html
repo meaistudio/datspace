@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>DATSPACE — INTERNET ART</title>
+
+<style>
+html, body{
+    margin:0;
+    padding:0;
+    background:black;
+    color:white;
+    font-family:Consolas, monospace;
+}
+
+.container{
+    max-width:1200px;
+    margin:120px auto;
+    padding:40px;
+}
+
+.title{
+    font-size:60px;
+    margin-bottom:60px;
+}
+
+.grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(300px,1fr));
+    gap:40px;
+}
+
+.card{
+    border:1px solid white;
+    padding:20px;
+    transition:0.4s ease;
+}
+
+.card:hover{
+    background:white;
+    color:black;
+}
+
+.card a{
+    color:inherit;
+    text-decoration:none;
+}
+
+.back{
+    position:fixed;
+    top:40px;
+    left:40px;
+    font-size:20px;
+}
+</style>
+</head>
+<body>
+
+<div class="back">
+    <a href="/" style="color:white;">← BACK</a>
+</div>
+
+<div class="container">
+
+    <div class="title">INTERNET ART ARCHIVE</div>
+
+    <div class="grid">
+
+        <!-- I SAW IT -->
+        <div class="card">
+            <a href="/internet-art/i-saw-it/">
+                <h2>I SAW IT</h2>
+                <p>Flashlight interface exploring palm monoculture visibility.</p>
+            </a>
+        </div>
+
+        <!-- Tambah karya lain di sini -->
+
+    </div>
+
+</div>
+
+</body>
+</html>
