@@ -1,3 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>CMYK Acid Network</title>
+<style>
+html,body{
+    margin:0;
+    padding:0;
+    overflow:hidden;
+    background:#f4f4f4;
+    touch-action:none;
+}
+canvas{display:block;}
+</style>
+</head>
+<body>
+<canvas id="canvas"></canvas>
+
 <script>
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
@@ -214,3 +233,5 @@ function animate(time){
 
 animate(0);
 </script>
+</body>
+</html>
