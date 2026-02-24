@@ -321,7 +321,20 @@ if(currentTab==="PROGRAM") {
     homeExpanded = false;
     content.classList.remove("home-desc");
 
-    content.innerText="DATs_In / DATs_Out";
+    content.innerHTML = `
+        <div class="program-menu">
+            <div class="program-item" onclick="goDATsIn()">DATs_In</div>
+            <div class="program-item" onclick="goDATsOut()">DATs_Out</div>
+        </div>
+    `;
+}
+
+function goDATsIn(){
+    window.location.href = "/DATs_In/";
+}
+
+function goDATsOut(){
+    window.location.href = "/DATs_Out/";
 }
 
 
@@ -452,6 +465,7 @@ canvas.addEventListener("dblclick", ()=>{
 </script>
 </body>
 </html>
+
 
 
 
