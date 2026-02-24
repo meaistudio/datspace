@@ -60,10 +60,48 @@ h1{
     opacity:1;
     letter-spacing:2px;
 }
+/* EVENT TABS */
+.events{
+    padding:80px 12vw;
+    border-top:1px solid #111;
+}
+
+.events h2{
+    font-size:28px;
+    margin-bottom:40px;
+    opacity:0.8;
+}
+
+.event-list{
+    display:flex;
+    flex-direction:column;
+    gap:20px;
+}
+
+.event-item{
+    font-size:22px;
+    text-decoration:none;
+    color:white;
+    opacity:0.6;
+    transition:0.3s;
+}
+
+.event-item:hover{
+    opacity:1;
+    letter-spacing:3px;
+}
 </style>
 </head>
 <body>
+    
+<div class="events">
+    <h2>Activations</h2>
 
+    <div class="event-list">
+        <a href="DATs_Out1/" class="event-item">DATs_Out1 — Field Projection Protocol</a>
+        <a href="DATs_Out2/" class="event-item">DATs_Out2 — Coming Soon</a>
+    </div>
+</div>
 <a href="../index.html" class="back">← BACK</a>
 
 <div class="section hero">
