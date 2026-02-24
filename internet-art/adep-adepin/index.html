@@ -57,7 +57,7 @@ button:hover {
   background: #ff0000;
 }
 
-/* STAMP SAH */
+/* STAMP */
 #stamp {
   position: fixed;
   top: 40%;
@@ -112,35 +112,34 @@ button:hover {
 
 <script>
 let tanahDibeli = 0;
+let rubyconSudahMuncul = false;
 
-/* RANDOM BACKGROUND 1-14 */
+/* RANDOM BACKGROUND */
 function setRandomBackground() {
   const totalImages = 14;
   const randomNumber = Math.floor(Math.random() * totalImages) + 1;
-
-  document.body.style.backgroundImage =
-    `url("internet-art/adep-adepin/png/${randomNumber}.png")`;
+  document.body.style.backgroundImage = `url("png/${randomNumber}.png")`;
 }
 
 setRandomBackground();
 
-/* UPDATE COUNTER */
+/* COUNTER */
 function updateCounter() {
   document.getElementById("counter").innerText =
     "Tanah dibeli: " + tanahDibeli;
 }
 
-/* PLAY MULTIPLE SOUNDS */
+/* SOUND */
 function playSound(src) {
   const audio = new Audio(src);
-  audio.play();
+  audio.currentTime = 0;
+  audio.play().catch(() => {});
 }
 
 /* STAMP */
 function showStamp() {
   const stamp = document.getElementById("stamp");
   stamp.style.display = "block";
-
   setTimeout(() => {
     stamp.style.display = "none";
   }, 800);
@@ -182,20 +181,21 @@ function beliTanah() {
   showStamp();
   setRandomBackground();
 
-  // SOUND BELI
-  playSound("internet-art/adep-adepin/sound/suksma.wav");
-  playSound("internet-art/adep-adepin/sound/money.mp3");
+  playSound("sound/suksma.wav");
+  playSound("sound/money.mp3");
 
-  if (tanahDibeli > 5) {
+  if (tanahDibeli > 5 && !rubyconSudahMuncul) {
     showIklan("rubycon");
-  } else if (tanahDibeli > 3) {
+    rubyconSudahMuncul = true;   // Rubycon hanya sekali
+  } 
+  else if (tanahDibeli > 3 && !rubyconSudahMuncul) {
     showIklan("harley");
   }
 }
 
 /* SKIP */
 function skipTanah() {
-  playSound("internet-art/adep-adepin/sound/nggih.wav");
+  playSound("sound/nggih.wav");
 }
 </script>
 
