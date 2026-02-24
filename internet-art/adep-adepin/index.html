@@ -14,8 +14,9 @@
 
 body {
   height: 100vh;
-  background: url("internet-art/adep-adepin/png/tanah.png") no-repeat center center;
   background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
   font-family: Arial, Helvetica, sans-serif;
   overflow: hidden;
 }
@@ -71,7 +72,7 @@ button:hover {
   z-index: 1000;
 }
 
-/* IKLAN OVERLAY */
+/* IKLAN */
 #iklan-overlay {
   position: fixed;
   inset: 0;
@@ -112,20 +113,40 @@ button:hover {
 <script>
 let tanahDibeli = 0;
 
+/* RANDOM BACKGROUND 1-14 */
+function setRandomBackground() {
+  const totalImages = 14;
+  const randomNumber = Math.floor(Math.random() * totalImages) + 1;
+
+  document.body.style.backgroundImage =
+    `url("internet-art/adep-adepin/png/${randomNumber}.png")`;
+}
+
+setRandomBackground();
+
+/* UPDATE COUNTER */
 function updateCounter() {
   document.getElementById("counter").innerText =
     "Tanah dibeli: " + tanahDibeli;
 }
 
+/* PLAY MULTIPLE SOUNDS */
+function playSound(src) {
+  const audio = new Audio(src);
+  audio.play();
+}
+
+/* STAMP */
 function showStamp() {
   const stamp = document.getElementById("stamp");
   stamp.style.display = "block";
-  new Audio("internet-art/adep-adepin/sound/stamp.mp3").play();
+
   setTimeout(() => {
     stamp.style.display = "none";
   }, 800);
 }
 
+/* IKLAN */
 function showIklan(type) {
   const overlay = document.getElementById("iklan-overlay");
   const text = document.getElementById("iklan-text");
@@ -153,16 +174,17 @@ function showIklan(type) {
   }, 3000);
 }
 
-function playSoundBeli() {
-  new Audio("internet-art/adep-adepin/sound/nggih.mp3").play();
-}
-
+/* BELI */
 function beliTanah() {
   tanahDibeli++;
 
   updateCounter();
   showStamp();
-  playSoundBeli();
+  setRandomBackground();
+
+  // SOUND BELI
+  playSound("internet-art/adep-adepin/sound/suksma.wav");
+  playSound("internet-art/adep-adepin/sound/money.mp3");
 
   if (tanahDibeli > 5) {
     showIklan("rubycon");
@@ -171,8 +193,9 @@ function beliTanah() {
   }
 }
 
+/* SKIP */
 function skipTanah() {
-  console.log("Tanah dilewati.");
+  playSound("internet-art/adep-adepin/sound/nggih.wav");
 }
 </script>
 
