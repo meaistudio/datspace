@@ -3,14 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <title>DATs_In — Internal Transmission</title>
+
 <style>
 html,body{
     margin:0;
     padding:0;
     background:#0a0a0a;
-    color:#fff;
+    color:white;
     font-family:monospace;
-    overflow-x:hidden;
 }
 
 .section{
@@ -22,79 +22,61 @@ html,body{
     display:flex;
     flex-direction:column;
     justify-content:center;
+    position:relative;
 }
 
 h1{
-    font-size:52px;
+    font-size:72px; /* DIPERBESAR */
     margin:0 0 20px 0;
 }
 
 .subtitle{
+    font-size:20px;
     opacity:0.6;
     margin-bottom:40px;
 }
 
 .manifesto{
-    max-width:700px;
+    max-width:750px;
     line-height:1.7;
-    opacity:0.85;
+    font-size:18px;
+    opacity:0.9;
 }
 
-.meta{
-    margin-top:50px;
+/* BACK BUTTON */
+.back{
+    position:fixed;
+    top:30px;
+    left:40px;
+    text-decoration:none;
+    color:white;
     font-size:14px;
-    opacity:0.5;
+    opacity:0.6;
+    transition:0.3s;
 }
 
-.divider{
-    height:1px;
-    background:#222;
-}
-
-.footer{
-    padding:60px 12vw;
-    font-size:12px;
-    opacity:0.4;
+.back:hover{
+    opacity:1;
+    letter-spacing:2px;
 }
 </style>
 </head>
 <body>
 
-<div class="section hero">
+<a href="../index.html" class="back">← BACK</a>
 
+<div class="section hero">
     <h1>DATs_In</h1>
     <div class="subtitle">INTERNAL TRANSMISSION PROTOCOL</div>
 
     <div class="manifesto">
         DATs_In is the internal program hosted inside MEAI Studio.
         <br><br>
-        It is a controlled environment for experimentation, testing,
-        rehearsals, research, workshops, and intimate showings.
+        It functions as a controlled laboratory for experimentation,
+        rehearsal, research, and intimate presentations.
         <br><br>
-        Within this enclosed space, ideas are refined,
-        systems are built, and audiovisual practices are developed
-        before expanding outward.
-        <br><br>
-        DATs_In functions as a laboratory —
-        a place for process, dialogue, and structural exploration.
+        Inside this space, systems are refined before expanding outward.
     </div>
-
-    <div class="meta">
-        Location: MEAI Studio, Denpasar<br>
-        Format: Workshop / Research / Studio Session / Closed Performance
-    </div>
-
-</div>
-
-<div class="divider"></div>
-
-<div class="section">
-    <h2>Documentation</h2>
-    <p>Studio experiments, rehearsal captures, and internal process archives will appear here.</p>
-</div>
-
-<div class="footer">
-    DATs_In © 2026 — MEAI Studio Internal Program
 </div>
 
 </body>
