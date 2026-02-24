@@ -323,18 +323,10 @@ if(currentTab==="PROGRAM") {
 
     content.innerHTML = `
         <div class="program-menu">
-            <div class="program-item" onclick="goDATsIn()">DATs_In</div>
-            <div class="program-item" onclick="goDATsOut()">DATs_Out</div>
+            <a href="./DATs_In/" class="program-item">DATs_In</a>
+            <a href="./DATs_Out/" class="program-item">DATs_Out</a>
         </div>
     `;
-}
-
-function goDATsIn(){
-    window.location.href = "/DATs_In/";
-}
-
-function goDATsOut(){
-    window.location.href = "/DATs_Out/";
 }
 
 
@@ -465,6 +457,7 @@ canvas.addEventListener("dblclick", ()=>{
 </script>
 </body>
 </html>
+
 
 
 
