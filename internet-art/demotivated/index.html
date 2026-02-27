@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>DEMOTIVATED</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+html,body{
+    margin:0;
+    padding:0;
+    background:#f0f0f0;
+    overflow:hidden;
+    font-family:monospace;
+}
+
+#container{
+    position:relative;
+    width:100vw;
+    height:100vh;
+}
+
+.slot{
+    position:absolute;
+    width:20vmin;
+    height:20vmin;
+    border:0.6vmin dashed black;
+}
+
+.piece{
+    position:absolute;
+    width:20vmin;
+    height:20vmin;
+    background:black;
+    cursor:grab;
+}
+
+#mock{
+    position:absolute;
+    top:8%;
+    width:100%;
+    text-align:center;
+    font-size:3vmin;
+    opacity:0;
+    transition:opacity 0.3s ease;
+}
+
+#instruction{
+    position:absolute;
+    top:50%;
+    left:50%;
+    transform:translate(-50%,-50%);
+    text-align:center;
+    font-size:3.2vmin;
+    width:80%;
+    max-width:600px;
+    line-height:1.6;
+    opacity:1;
+    transition:opacity 0.6s ease;
+}
+</style>
+</head>
+<body>
+
+<div id="container"></div>
+<div id="mock"></div>
+
+<div id="instruction">
+    Drag the black square into the empty frame.<br>
+    Complete the puzzle.<br><br>
+    It should be simple.
+</div>
+
+<script>
+const container = document.getElementById("container");
+const mock = document.getElementById("mock");
+const instruction = document.getElementById("instruction");
+
+const SLOT_SIZE = () => Math.min(window.innerWidth, window.innerHeight) * 0.2;
+const AVOID_RADIUS = () => Math.min(window.innerWidth, window.innerHeight) * 0.35;
+const SPEED = () => Math.min(window.innerWidth, window.innerHeight) * 0.01;
+
+const insults = [
+    "Nice try.",
+    "Almost. Not really.",
+    "You thought so?",
+    "Keep dreaming.",
+    "Too slow.",
+    "Predictable.",
+    "That was cute.",
+    "Still no.",
+    "Try harder.",
+    "You can't win."
+];
+
+let slotX, slotY;
+
+const slot = document.createElement("div");
+slot.className = "slot";
+container.appendChild(slot);
+
+const piece = document.createElement("div");
+piece.className = "piece";
+container.appendChild(piece);
+
+function init(){
+    const size = SLOT_SIZE();
+
+    slot.style.width = size+"px";
+    slot.style.height = size+"px";
+    slot.style.borderWidth = (size*0.03)+"px";
+
+    piece.style.width = size+"px";
+    piece.style.height = size+"px";
+
+    slotX = window.innerWidth * 0.55;
+    slotY = window.innerHeight * 0.45;
+
+    piece.style.left = "10vw";
+    piece.style.top = "10vh";
+
+    updateSlotPosition();
+}
+
+function updateSlotPosition(){
+    slot.style.left = slotX + "px";
+    slot.style.top = slotY + "px";
+}
+
+function clamp(value, min, max){
+    return Math.max(min, Math.min(max, value));
+}
+
+function teleport(){
+    const size = SLOT_SIZE();
+    slotX = Math.random() * (window.innerWidth - size);
+    slotY = Math.random() * (window.innerHeight - size);
+    updateSlotPosition();
+
+    mock.textContent = insults[Math.floor(Math.random()*insults.length)];
+    mock.style.opacity = 1;
+    setTimeout(()=> mock.style.opacity = 0, 1200);
+}
+
+function avoid(){
+    const pieceRect = piece.getBoundingClientRect();
+    const size = SLOT_SIZE();
+
+    const dx = slotX - pieceRect.left;
+    const dy = slotY - pieceRect.top;
+    const dist = Math.sqrt(dx*dx + dy*dy);
+
+    if(dist < AVOID_RADIUS()){
+        const angle = Math.atan2(dy, dx);
+
+        slotX += Math.cos(angle) * SPEED();
+        slotY += Math.sin(angle) * SPEED();
+
+        const clampedX = clamp(slotX, 0, window.innerWidth - size);
+        const clampedY = clamp(slotY, 0, window.innerHeight - size);
+
+        const hitWall = (clampedX !== slotX) || (clampedY !== slotY);
+
+        slotX = clampedX;
+        slotY = clampedY;
+
+        updateSlotPosition();
+
+        if(hitWall){
+            teleport();
+        }
+    }
+}
+
+let dragging=false, offsetX, offsetY;
+let started=false;
+
+function startInteraction(){
+    if(!started){
+        instruction.style.opacity = 0;
+        started = true;
+    }
+}
+
+piece.addEventListener("mousedown", e=>{
+    dragging=true;
+    offsetX=e.offsetX;
+    offsetY=e.offsetY;
+    startInteraction();
+});
+
+document.addEventListener("mouseup", ()=>dragging=false);
+
+document.addEventListener("mousemove", e=>{
+    if(!dragging) return;
+    piece.style.left=(e.clientX-offsetX)+"px";
+    piece.style.top=(e.clientY-offsetY)+"px";
+    avoid();
+});
+
+// touch
+piece.addEventListener("touchstart", e=>{
+    dragging=true;
+    const touch=e.touches[0];
+    const rect=piece.getBoundingClientRect();
+    offsetX=touch.clientX-rect.left;
+    offsetY=touch.clientY-rect.top;
+    startInteraction();
+});
+
+document.addEventListener("touchend", ()=>dragging=false);
+
+document.addEventListener("touchmove", e=>{
+    if(!dragging) return;
+    const touch=e.touches[0];
+    piece.style.left=(touch.clientX-offsetX)+"px";
+    piece.style.top=(touch.clientY-offsetY)+"px";
+    avoid();
+});
+
+window.addEventListener("resize", init);
+
+init();
+</script>
+
+</body>
+</html>
