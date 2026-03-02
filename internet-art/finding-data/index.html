@@ -153,18 +153,18 @@ function updateAndDrawBlocks() {
         }
 
         // text
-        const x1 = Math.floor(mouseX);
-        const x2 = x1 + 10;
-        const x3 = x1 + 20;
-        const x4 = x1 + 30;
-        const x5 = x1 + 40;
+const baseX = Math.floor(mouseX);
+const baseY = Math.floor(mouseY);
 
-        const text = `(${x1},${mouseY}) (${x2},${mouseY}) (${x3},${mouseY}) (${x4},${mouseY}) (${x5},${mouseY})`;
-
-        ctx.fillStyle = scheme.text;
-        ctx.fillText(text, block.x, block.y + block.height);
-    });
+function pad4(n) {
+    return String(n).padStart(4, "0");
 }
+
+const text = `(${pad4(baseX)},${pad4(baseY)}) `
+           + `(${pad4(baseX+10)},${pad4(baseY)}) `
+           + `(${pad4(baseX+20)},${pad4(baseY)}) `
+           + `(${pad4(baseX+30)},${pad4(baseY)}) `
+           + `(${pad4(baseX+40)},${pad4(baseY)})`;
 
 function drawCursorCircle() {
     ctx.strokeStyle = schemes[schemeIndex].text;
