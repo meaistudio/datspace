@@ -32,13 +32,6 @@ let schemeIndex = 0;
 
 const cmykColors = ["cyan", "magenta", "yellow", "black"];
 
-// ==== INTRO ZOOM ====
-let scale = 0.5;
-let introProgress = 0;
-let introDuration = 1200; // ms
-let introStart = performance.now();
-let introDone = false;
-
 // ==== SKEMA WARNA GLOBAL ====
 const schemes = [
     { bg: "black", text: "cyan", block: "magenta" },
@@ -60,12 +53,14 @@ window.addEventListener("mousemove", (e) => {
     mouseY = e.clientY;
 });
 
-// ==== TOUCH ====
+// ==== TOUCH SUPPORT (HP / TABLET) ====
 canvas.addEventListener("touchstart", function(e) {
     e.preventDefault();
     const touch = e.touches[0];
     mouseX = touch.clientX;
     mouseY = touch.clientY;
+
+    // Tap untuk ganti skema warna
     schemeIndex = (schemeIndex + 1) % schemes.length;
 }, { passive: false });
 
@@ -76,12 +71,12 @@ canvas.addEventListener("touchmove", function(e) {
     mouseY = touch.clientY;
 }, { passive: false });
 
-// ==== CLICK ====
+// ==== CLICK DESKTOP ====
 window.addEventListener("click", () => {
     schemeIndex = (schemeIndex + 1) % schemes.length;
 });
 
-// Collision
+// Collision detection
 function circleRectCollision(cx, cy, radius, rect) {
     const closestX = Math.max(rect.x, Math.min(cx, rect.x + rect.width));
     const closestY = Math.max(rect.y, Math.min(cy, rect.y + rect.height));
@@ -91,7 +86,7 @@ function circleRectCollision(cx, cy, radius, rect) {
 }
 
 function buildGrid() {
-    ctx.font = "24px monospace";
+    ctx.font = "12px monospace";
 
     const sampleText = `(0000,0000)(0000,0000)(0000,0000)(0000,0000)   (0000,0000)`;
     const textWidth = ctx.measureText(sampleText).width;
@@ -104,6 +99,7 @@ function buildGrid() {
 
     for (let y = spacingY; y < canvas.height; y += spacingY) {
         for (let x = 0; x < canvas.width; x += spacingX) {
+
             blocks.push({
                 x: x,
                 y: y - textHeight,
@@ -135,6 +131,7 @@ function updateAndDrawBlocks() {
             }
         }
 
+        // === WARNA BLOCK ===
         let blockColor = scheme.block;
 
         if (block.glitchTimer > 0) {
@@ -142,6 +139,7 @@ function updateAndDrawBlocks() {
             block.glitchTimer--;
         }
 
+        // block highlight
         if (block.highlight > 0 || block.glitchTimer > 0) {
             ctx.fillStyle = blockColor;
             ctx.globalAlpha = block.highlight > 0 ? block.highlight : 1;
@@ -149,8 +147,14 @@ function updateAndDrawBlocks() {
             ctx.globalAlpha = 1;
         }
 
+        // text
         const x1 = Math.floor(mouseX);
-        const text = `(${x1},${mouseY}) (${x1+10},${mouseY}) (${x1+20},${mouseY}) (${x1+30},${mouseY}) (${x1+40},${mouseY})`;
+        const x2 = x1 + 10;
+        const x3 = x1 + 20;
+        const x4 = x1 + 30;
+        const x5 = x1 + 40;
+
+        const text = `(${x1},${mouseY}) (${x2},${mouseY}) (${x3},${mouseY}) (${x4},${mouseY}) (${x5},${mouseY})`;
 
         ctx.fillStyle = scheme.text;
         ctx.fillText(text, block.x, block.y + block.height);
@@ -165,24 +169,7 @@ function drawCursorCircle() {
     ctx.stroke();
 }
 
-function animate(now) {
-
-    if (!introDone) {
-        introProgress = (now - introStart) / introDuration;
-        if (introProgress >= 1) {
-            introProgress = 1;
-            introDone = true;
-        }
-        scale = 0.5 + 0.5 * introProgress;
-    }
-
-    ctx.setTransform(1,0,0,1,0,0);
-    ctx.clearRect(0,0,canvas.width,canvas.height);
-
-    ctx.translate(canvas.width/2, canvas.height/2);
-    ctx.scale(scale, scale);
-    ctx.translate(-canvas.width/2, -canvas.height/2);
-
+function animate() {
     const scheme = schemes[schemeIndex];
 
     ctx.fillStyle = scheme.bg;
@@ -195,7 +182,7 @@ function animate(now) {
 }
 
 resize();
-requestAnimationFrame(animate);
+animate();
 </script>
 </body>
 </html>
