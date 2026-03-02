@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>ID????</title>
+<style>
+html,body{
+    margin:0;
+    padding:0;
+    background:#05070a;
+    overflow:hidden;
+}
+canvas{ display:block; }
+</style>
+</head>
+<body>
+
+<canvas id="c"></canvas>
+
+<script>
+const canvas = document.getElementById("c");
+const ctx = canvas.getContext("2d");
+
+let baseLayer;
+
+function resize(){
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+}
+resize();
+window.onresize = resize;
+
+function rand(min,max){ return Math.random()*(max-min)+min; }
+function randInt(min,max){ return Math.floor(Math.random()*(max-min+1))+min; }
+
+const colors = [
+    "rgb(255,0,0)",       // red
+    "rgb(0,255,0)",       // green
+    "rgb(0,0,255)",       // blue
+    "rgb(255,255,255)",   // white
+    "rgb(255,120,0)",     // orange
+    "rgb(0,255,255)",     // cyan
+    "rgb(255,0,255)",     // magenta
+    "rgb(255,255,0)"      // yellow
+];
+
+/* ========= GRID ========= */
+
+function drawGrid(){
+    ctx.strokeStyle="rgba(0,100,200,0.3)";
+    ctx.lineWidth=2;
+    ctx.setLineDash([]);
+    const step=40;
+
+    for(let x=0;x<canvas.width;x+=step){
+        ctx.beginPath();
+        ctx.moveTo(x,0);
+        ctx.lineTo(x,canvas.height);
+        ctx.stroke();
+    }
+    for(let y=0;y<canvas.height;y+=step){
+        ctx.beginPath();
+        ctx.moveTo(0,y);
+        ctx.lineTo(canvas.width,y);
+        ctx.stroke();
+    }
+
+    // fine secondary grid
+    ctx.strokeStyle="rgba(0,100,200,0.1)";
+    const fine=10;
+    for(let x=0;x<canvas.width;x+=fine){
+        ctx.beginPath();
+        ctx.moveTo(x,0);
+        ctx.lineTo(x,canvas.height);
+        ctx.stroke();
+    }
+    for(let y=0;y<canvas.height;y+=fine){
+        ctx.beginPath();
+        ctx.moveTo(0,y);
+        ctx.lineTo(canvas.width,y);
+        ctx.stroke();
+    }
+}
+
+/* ========= EXTRA SHAPES ========= */
+
+function drawConstructionShapes(){
+
+    // circles
+    ctx.strokeStyle="rgba(0,255,0,1)";
+    ctx.lineWidth=1.5;
+    ctx.setLineDash([4,6]);
+
+    for(let i=0;i<8;i++){
+        ctx.beginPath();
+        ctx.arc(
+            rand(0,canvas.width),
+            rand(0,canvas.height),
+            rand(40,200),
+            0,
+            Math.PI*2
+        );
+        ctx.stroke();
+    }
+
+    // rectangles
+    ctx.setLineDash([]);
+    ctx.strokeStyle="rgba(255,0,255,1)";
+    ctx.lineWidth=1.5;
+
+    for(let i=0;i<12;i++){
+        ctx.strokeRect(
+            rand(0,canvas.width-200),
+            rand(0,canvas.height-200),
+            rand(60,250),
+            rand(60,250)
+        );
+    }
+  
+    // rectangles
+    ctx.setLineDash([]);
+    ctx.strokeStyle="rgba(255,255,0,1)";
+    ctx.lineWidth=1.5;
+
+    for(let i=0;i<12;i++){
+        ctx.strokeRect(
+            rand(0,canvas.width-200),
+            rand(0,canvas.height-200),
+            rand(60,250),
+            rand(60,250)
+        );
+    }
+}
+
+/* ========= EXISTING ELEMENTS ========= */
+
+function drawPipe(){
+    ctx.strokeStyle = colors[randInt(0,colors.length-1)];
+    ctx.lineWidth = rand(1,5);
+    ctx.setLineDash([8,6]);
+
+    let x = rand(0,canvas.width);
+    let y = rand(0,canvas.height);
+
+    ctx.beginPath();
+    ctx.moveTo(x,y);
+
+    let segments = randInt(4,9);
+
+    for(let i=0;i<segments;i++){
+        if(Math.random()>0.5){ x += rand(-250,250); }
+        else{ y += rand(-250,250); }
+        ctx.lineTo(x,y);
+    }
+    ctx.stroke();
+    ctx.setLineDash([]);
+}
+
+function drawTextBox(){
+    let x = rand(0,canvas.width-200);
+    let y = rand(0,canvas.height-80);
+    let w = rand(100,200);
+    let h = rand(40,80);
+
+    let color = colors[randInt(0,colors.length-1)];
+
+    ctx.strokeStyle=color;
+    ctx.lineWidth=100;
+    ctx.setLineDash([1,4]);
+    ctx.strokeRect(x,y,w,h);
+    ctx.setLineDash([]);
+
+    ctx.fillStyle=color;
+    ctx.font="90px monospace";
+
+    let lines=randInt(1,2);
+    for(let i=0;i<lines;i++){
+        ctx.fillText(
+            "ID Ø"+randInt(40,200)+" Ft "+randInt(1,99),
+            x+8,
+            y+18+(i*14)
+        );
+    }
+}
+
+function drawNodes(){
+    let x=rand(0,canvas.width);
+    let y=rand(0,canvas.height);
+
+    ctx.fillStyle=colors[randInt(0,colors.length-1)];
+    ctx.beginPath();
+    ctx.arc(x,y,rand(2,5),0,Math.PI*2);
+    ctx.fill();
+}
+
+/* ========= GENERATE ========= */
+
+function generate(){
+    ctx.fillStyle="#05070a";
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+
+    drawGrid();
+    drawConstructionShapes();
+
+    for(let i=0;i<50;i++) drawPipe();
+    for(let i=0;i<60;i++) drawTextBox();
+    for(let i=0;i<120;i++) drawNodes();
+
+    baseLayer = ctx.getImageData(0,0,canvas.width,canvas.height);
+}
+
+/* ========= NEGATIVE SCAN ========= */
+
+let scanning=false;
+
+function scanAnimation(){
+    if(scanning) return;
+    scanning=true;
+
+    let scanY = 0;
+    const speed = 10;
+    const height = 1000;
+
+    function step(){
+        if(scanY > canvas.height){
+            scanning=false;
+            return;
+        }
+
+        ctx.putImageData(baseLayer,0,0);
+
+        // ambil area scan
+        let region = ctx.getImageData(
+            0,
+            Math.max(0,scanY),
+            canvas.width,
+            height
+        );
+
+        // invert color
+        let data = region.data;
+        for(let i=0;i<data.length;i+=4){
+            data[i]   = 255 - data[i];     // R
+            data[i+1] = 255 - data[i+1];   // G
+            data[i+2] = 255 - data[i+2];   // B
+        }
+
+        ctx.putImageData(region,0,scanY);
+
+        scanY += speed;
+        requestAnimationFrame(step);
+    }
+
+    step();
+}
+
+canvas.onclick = () => {
+    generate();
+    scanAnimation();
+};
+
+//generate();
+</script>
+</body>
+</html>
