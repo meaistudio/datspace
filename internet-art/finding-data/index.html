@@ -90,24 +90,24 @@ function buildGrid() {
 
     ctx.font = "24px monospace";
 
-    const sampleText = `(0000,0000)(0000,0000)(0000,0000)(0000,0000)   (0000,0000)`;
+    const sampleText = `(0000,0000) (0000,0000) (0000,0000) (0000,0000) (0000,0000)`;
     const textWidth = ctx.measureText(sampleText).width;
     const textHeight = 24;
 
-    const spacingX = textWidth + 20;
-    const spacingY = textHeight + 1;
+    const spacingX = textWidth;   // ⬅ hilangkan +20
+    const spacingY = textHeight;  // ⬅ hilangkan +1
 
     blocks = [];
 
-    // === WORLD SIZE (bukan screen size) ===
     const worldWidth = canvas.width / viewScale;
     const worldHeight = canvas.height / viewScale;
 
-    for (let y = spacingY; y < worldHeight; y += spacingY) {
-        for (let x = 0; x < worldWidth; x += spacingX) {
+    // Tambah 1 baris & 1 kolom ekstra supaya tidak ada celah
+    for (let y = 0; y <= worldHeight + spacingY; y += spacingY) {
+        for (let x = 0; x <= worldWidth + spacingX; x += spacingX) {
             blocks.push({
                 x: x,
-                y: y - textHeight,
+                y: y,
                 width: textWidth,
                 height: textHeight,
                 highlight: 0,
@@ -136,7 +136,6 @@ function updateAndDrawBlocks() {
             }
         }
 
-        // === WARNA BLOCK ===
         let blockColor = scheme.block;
 
         if (block.glitchTimer > 0) {
@@ -144,7 +143,6 @@ function updateAndDrawBlocks() {
             block.glitchTimer--;
         }
 
-        // block highlight
         if (block.highlight > 0 || block.glitchTimer > 0) {
             ctx.fillStyle = blockColor;
             ctx.globalAlpha = block.highlight > 0 ? block.highlight : 1;
@@ -152,20 +150,22 @@ function updateAndDrawBlocks() {
             ctx.globalAlpha = 1;
         }
 
-        // text
-const baseX = Math.floor(mouseX);
-const baseY = Math.floor(mouseY);
+        // ==== TEXT ====
+        const baseX = Math.floor(mouseX);
+        const baseY = Math.floor(mouseY);
 
-function pad4(n) {
-    return String(n).padStart(4, "0");
+        const text =
+        `(${String(baseX).padStart(4,"0")},${String(baseY).padStart(4,"0")}) ` +
+        `(${String(baseX+10).padStart(4,"0")},${String(baseY).padStart(4,"0")}) ` +
+        `(${String(baseX+20).padStart(4,"0")},${String(baseY).padStart(4,"0")}) ` +
+        `(${String(baseX+30).padStart(4,"0")},${String(baseY).padStart(4,"0")}) ` +
+        `(${String(baseX+40).padStart(4,"0")},${String(baseY).padStart(4,"0")})`;
+
+        ctx.fillStyle = scheme.text;
+        ctx.fillText(text, block.x, block.y + block.height);
+
+    });
 }
-
-const text = `(${pad4(baseX)},${pad4(baseY)}) `
-           + `(${pad4(baseX+10)},${pad4(baseY)}) `
-           + `(${pad4(baseX+20)},${pad4(baseY)}) `
-           + `(${pad4(baseX+30)},${pad4(baseY)}) `
-           + `(${pad4(baseX+40)},${pad4(baseY)})`;
-
 function drawCursorCircle() {
     ctx.strokeStyle = schemes[schemeIndex].text;
     ctx.lineWidth = 10;
