@@ -87,6 +87,7 @@ function circleRectCollision(cx, cy, radius, rect) {
 }
 
 function buildGrid() {
+
     ctx.font = "24px monospace";
 
     const sampleText = `(0000,0000)(0000,0000)(0000,0000)(0000,0000)   (0000,0000)`;
@@ -98,9 +99,12 @@ function buildGrid() {
 
     blocks = [];
 
-    for (let y = spacingY; y < canvas.height; y += spacingY) {
-        for (let x = 0; x < canvas.width; x += spacingX) {
+    // === WORLD SIZE (bukan screen size) ===
+    const worldWidth = canvas.width / viewScale;
+    const worldHeight = canvas.height / viewScale;
 
+    for (let y = spacingY; y < worldHeight; y += spacingY) {
+        for (let x = 0; x < worldWidth; x += spacingX) {
             blocks.push({
                 x: x,
                 y: y - textHeight,
