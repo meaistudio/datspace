@@ -20,6 +20,7 @@
 <canvas id="canvas"></canvas>
 
 <script>
+let viewScale = 0.5; // 0.5 = tampilan 50% (lebih luas)
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
 
@@ -49,9 +50,9 @@ window.addEventListener("resize", resize);
 
 // ==== MOUSE ====
 window.addEventListener("mousemove", (e) => {
-    mouseX = e.clientX;
-    mouseY = e.clientY;
-});
+    mouseX = (e.clientX - canvas.width/2) / viewScale + canvas.width/2;
+    mouseY = (e.clientY - canvas.height/2) / viewScale + canvas.height/2;
+});    
 
 // ==== TOUCH SUPPORT (HP / TABLET) ====
 canvas.addEventListener("touchstart", function(e) {
@@ -67,8 +68,8 @@ canvas.addEventListener("touchstart", function(e) {
 canvas.addEventListener("touchmove", function(e) {
     e.preventDefault();
     const touch = e.touches[0];
-    mouseX = touch.clientX;
-    mouseY = touch.clientY;
+    mouseX = (touch.clientX - canvas.width/2) / viewScale + canvas.width/2;
+    mouseY = (touch.clientY - canvas.height/2) / viewScale + canvas.height/2;
 }, { passive: false });
 
 // ==== CLICK DESKTOP ====
@@ -86,7 +87,7 @@ function circleRectCollision(cx, cy, radius, rect) {
 }
 
 function buildGrid() {
-    ctx.font = "12px monospace";
+    ctx.font = "24px monospace";
 
     const sampleText = `(0000,0000)(0000,0000)(0000,0000)(0000,0000)   (0000,0000)`;
     const textWidth = ctx.measureText(sampleText).width;
@@ -170,6 +171,15 @@ function drawCursorCircle() {
 }
 
 function animate() {
+
+    ctx.setTransform(1,0,0,1,0,0);
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+
+    // === APPLY GLOBAL SCALE ===
+    ctx.translate(canvas.width/2, canvas.height/2);
+    ctx.scale(viewScale, viewScale);
+    ctx.translate(-canvas.width/2, -canvas.height/2);
+
     const scheme = schemes[schemeIndex];
 
     ctx.fillStyle = scheme.bg;
