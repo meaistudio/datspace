@@ -38,7 +38,7 @@ let scaleFactor = 1;
 function resizeCanvas(){
 
     const isMobile = window.innerWidth < 768;
-    scaleFactor = isMobile ? 2.0 : 1; // 50% lebih besar di HP
+    scaleFactor = isMobile ? 5.0 : 1; // 50% lebih besar di HP
 
     canvas.width = window.innerWidth * scaleFactor;
     canvas.height = window.innerHeight * scaleFactor;
@@ -309,11 +309,11 @@ function pointerDown(e){
     const {x:mx,y:my} = getPos(e);
 
     for(let c of cables){
-        if(Math.hypot(c.from.x-mx,c.from.y-my)<20){
+        if(Math.hypot(c.from.x-mx,c.from.y-my)<50){
             draggingCableEnd = {cable:c, end:"from"};
             return;
         }
-        if(Math.hypot(c.to.x-mx,c.to.y-my)<20){
+        if(Math.hypot(c.to.x-mx,c.to.y-my)<50){
             draggingCableEnd = {cable:c, end:"to"};
             return;
         }
