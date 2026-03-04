@@ -103,21 +103,22 @@ function getNearestGridJack(x,y){
 }
 
 /* =========================
-   AUDIO ENGINE (TECHNO LIGHT)
+   AUDIO ENGINE (HP SAFE + RANDOM GATE)
 ========================= */
 
 let audioCtx = null;
-let osc, filter, master, lfo, lfoGain;
+let osc, filter, master;
+let gateInterval = null;
 
 function initAudio(){
     if(audioCtx) return;
 
     audioCtx = new (window.AudioContext || window.webkitAudioContext)({
-        latencyHint:"interactive"
+        latencyHint: "interactive"
     });
 
     master = audioCtx.createGain();
-    master.gain.value = 0.35;
+    master.gain.value = 0; // mulai 0, akan dibuka saat unlock
     master.connect(audioCtx.destination);
 
     osc = audioCtx.createOscillator();
@@ -126,35 +127,80 @@ function initAudio(){
 
     filter = audioCtx.createBiquadFilter();
     filter.type = "lowpass";
-    filter.frequency.value = 800;
-    filter.Q.value = 7;
-
-    lfo = audioCtx.createOscillator();
-    lfo.type = "triangle";
-    lfo.frequency.value = 0.6;
-
-    lfoGain = audioCtx.createGain();
-    lfoGain.gain.value = 600;
-
-    lfo.connect(lfoGain);
-    lfoGain.connect(filter.frequency);
+    filter.frequency.value = 1200;
+    filter.Q.value = 8;
 
     osc.connect(filter);
     filter.connect(master);
 
     osc.start();
-    lfo.start();
+
+    startRandomGate();
 }
 
+/* ===== UNLOCK AUDIO (WAJIB UNTUK HP) ===== */
+
 function unlockAudio(){
-    if(!audioCtx) initAudio();
+
+    if(!audioCtx){
+        initAudio();
+    }
+
     if(audioCtx.state === "suspended"){
         audioCtx.resume();
     }
+
+    // buka volume setelah resume
+    master.gain.setTargetAtTime(
+        0.35,
+        audioCtx.currentTime,
+        0.05
+    );
 }
 
-document.addEventListener("pointerdown",unlockAudio);
+document.addEventListener("pointerdown", unlockAudio, {passive:false});
+document.addEventListener("touchstart", unlockAudio, {passive:false});
 
+/* =========================
+   RANDOM TECHNO GATE + CUTOFF
+========================= */
+
+function startRandomGate(){
+
+    if(gateInterval) return;
+
+    gateInterval = setInterval(()=>{
+
+        if(!audioCtx) return;
+
+        const now = audioCtx.currentTime;
+
+        // random cutoff sweep
+        const randomCutoff = 300 + Math.random()*2000;
+
+        filter.frequency.setTargetAtTime(
+            randomCutoff,
+            now,
+            0.03
+        );
+
+        // gate on
+        master.gain.setTargetAtTime(
+            0.35,
+            now,
+            0.01
+        );
+
+        // gate off cepat (patah-patah)
+        master.gain.setTargetAtTime(
+            0.0,
+            now + 0.08,
+            0.02
+        );
+
+    }, 120); // tempo techno feel
+
+}
 /* =========================
    POINTER EVENTS
 ========================= */
