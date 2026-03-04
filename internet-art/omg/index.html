@@ -32,7 +32,7 @@ let jackRadiusOuter = 6;
 let jackRadiusInner = 2;
 let cableThickness = 8;
 
-let snapDistance = 30; // lebih kuat
+let snapDistance = 40; // lebih magnetik
 let jacks = [];
 let cables = [];
 let draggingCableEnd = null;
@@ -64,29 +64,36 @@ function createGrid(){
     }
 }
 
-// ================= AUDIO =================
+// ================= AUDIO (MOBILE SAFE) =================
 
 let audioCtx;
 let masterGain;
 let cableVoices = new Map();
 let audioUnlocked = false;
-const MAX_VOICES = 8; // batasi supaya HP tidak overload
+const MAX_VOICES = 6; // lebih aman untuk mobile
 
 function initAudio(){
     if(audioCtx) return;
 
-    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)({
+        latencyHint: "interactive"
+    });
+
     masterGain = audioCtx.createGain();
-    masterGain.gain.value = 0.25;
+    masterGain.gain.value = 0.3;
     masterGain.connect(audioCtx.destination);
 }
 
-function unlockAudio(){
-    if(!audioUnlocked){
-        initAudio();
-        audioCtx.resume();
-        audioUnlocked = true;
+async function unlockAudio(){
+    if(audioUnlocked) return;
+
+    initAudio();
+
+    if(audioCtx.state === "suspended"){
+        await audioCtx.resume();
     }
+
+    audioUnlocked = true;
 }
 
 function createCableSound(cable){
@@ -100,7 +107,7 @@ function createCableSound(cable){
     osc.type = "sine";
 
     filter.type = "lowpass";
-    filter.frequency.value = 1000;
+    filter.frequency.value = 800;
 
     gain.gain.value = 0;
 
@@ -110,8 +117,8 @@ function createCableSound(cable){
 
     osc.start();
 
-    // fade in halus
-    gain.gain.setTargetAtTime(0.15, audioCtx.currentTime, 0.05);
+    // smooth fade in
+    gain.gain.setTargetAtTime(0.15, audioCtx.currentTime, 0.08);
 
     cableVoices.set(cable,{osc,gain,filter});
 }
@@ -128,27 +135,25 @@ function updateCableAudioParams(cable){
         cable.to.y - cable.from.y
     );
 
-    const targetFreq = 80 + length * 1.4;
+    const targetFreq = 90 + length * 1.2;
 
-    // smoothing supaya tidak macet
+    // smoothing supaya tidak glitch
     osc.frequency.setTargetAtTime(
         targetFreq,
         audioCtx.currentTime,
-        0.03
+        0.06
     );
 
-    const targetGain = Math.min(0.18, 0.05 + length/1400);
-
     gain.gain.setTargetAtTime(
-        targetGain,
+        Math.min(0.18, 0.05 + length/1500),
         audioCtx.currentTime,
-        0.05
+        0.08
     );
 
     filter.frequency.setTargetAtTime(
         600 + length,
         audioCtx.currentTime,
-        0.05
+        0.08
     );
 }
 
@@ -158,13 +163,13 @@ function removeCableSound(cable){
 
     const {osc,gain} = voice;
 
-    gain.gain.setTargetAtTime(0, audioCtx.currentTime, 0.05);
+    gain.gain.setTargetAtTime(0, audioCtx.currentTime, 0.1);
 
     setTimeout(()=>{
         try{osc.stop();}catch(e){}
         try{osc.disconnect();}catch(e){}
         try{gain.disconnect();}catch(e){}
-    },200);
+    },300);
 
     cableVoices.delete(cable);
 }
@@ -246,9 +251,9 @@ function randomColor(){
     return colors[Math.floor(Math.random()*colors.length)];
 }
 
-function pointerDown(e){
+async function pointerDown(e){
 
-    unlockAudio();
+    await unlockAudio();
 
     const {x:mx,y:my}=getPos(e);
 
@@ -288,6 +293,7 @@ function pointerUp(e){
 canvas.addEventListener("mousedown",pointerDown);
 canvas.addEventListener("mousemove",pointerMove);
 canvas.addEventListener("mouseup",pointerUp);
+
 canvas.addEventListener("touchstart",pointerDown);
 canvas.addEventListener("touchmove",pointerMove);
 canvas.addEventListener("touchend",pointerUp);
