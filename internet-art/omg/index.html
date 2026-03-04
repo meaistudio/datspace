@@ -28,28 +28,51 @@ const ctx = canvas.getContext("2d");
 let gridSize;
 let jackRadiusOuter;
 let jackRadiusInner;
+let snapDistance;
 
 let jacks = [];
 let cables = [];
 let draggingCableEnd = null;
 
+let scaleFactor = 1;
+
+// ================= RESIZE =================
+
 function resizeCanvas(){
 
     const isMobile = window.innerWidth < 768;
 
-    // Perbesar 50% di HP
-    gridSize = isMobile ? 45 : 30;
-    jackRadiusOuter = isMobile ? 9 : 6;
-    jackRadiusInner = isMobile ? 3 : 2;
+    // 2x lebih besar di HP
+    gridSize = isMobile ? 60 : 30;
+    jackRadiusOuter = isMobile ? 12 : 6;
+    jackRadiusInner = isMobile ? 4 : 2;
+    snapDistance = gridSize * 0.6;
 
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
 
-    createGrid(); 
+    createGrid();
 }
 
-resizeCanvas();
 window.addEventListener("resize", resizeCanvas);
+
+// ================= GRID =================
+
+function createGrid(){
+    jacks = [];
+
+    const cols = Math.floor(canvas.width / gridSize);
+    const rows = Math.floor(canvas.height / gridSize);
+
+    for(let y=1;y<rows-1;y++){
+        for(let x=1;x<cols-1;x++){
+            jacks.push({
+                x: x * gridSize,
+                y: y * gridSize
+            });
+        }
+    }
+}
 
 // ================= AUDIO =================
 
@@ -74,7 +97,6 @@ function createCableSound(cable){
     const filter = audioCtx.createBiquadFilter();
     const panner = audioCtx.createStereoPanner();
 
-    // waveform berdasarkan warna
     if(cable.color === "#ff3b30") osc.type="sawtooth";
     else if(cable.color === "#007aff") osc.type="square";
     else if(cable.color === "#ffcc00") osc.type="triangle";
@@ -84,48 +106,39 @@ function createCableSound(cable){
     filter.frequency.value = 1200;
     filter.Q.value = 4;
 
-    // ================= MODULAR MODULATION =================
-
-    // 1. Slow analog drift
+    // drift
     const drift = audioCtx.createOscillator();
     const driftGain = audioCtx.createGain();
     drift.type = "sine";
     drift.frequency.value = Math.random()*0.3 + 0.05;
     driftGain.gain.value = Math.random()*8 + 3;
-
     drift.connect(driftGain);
     driftGain.connect(osc.frequency);
 
-    // 2. Random stepped pitch (sample & hold style)
+    // random pitch
     const randomLFO = audioCtx.createOscillator();
     const randomGain = audioCtx.createGain();
-
     randomLFO.type = "square";
     randomLFO.frequency.value = Math.random()*2 + 0.3;
     randomGain.gain.value = Math.random()*40;
-
     randomLFO.connect(randomGain);
     randomGain.connect(osc.frequency);
 
-    // 3. Micro vibrato
+    // vibrato
     const vibrato = audioCtx.createOscillator();
     const vibratoGain = audioCtx.createGain();
     vibrato.frequency.value = Math.random()*6 + 3;
     vibratoGain.gain.value = 2;
-
     vibrato.connect(vibratoGain);
     vibratoGain.connect(osc.frequency);
 
-    // 4. Random filter movement
+    // filter movement
     const filterLFO = audioCtx.createOscillator();
     const filterGain = audioCtx.createGain();
     filterLFO.frequency.value = Math.random()*0.5 + 0.1;
     filterGain.gain.value = 600;
-
     filterLFO.connect(filterGain);
     filterGain.connect(filter.frequency);
-
-    // ================= ROUTING =================
 
     osc.connect(filter);
     filter.connect(gain);
@@ -142,17 +155,13 @@ function createCableSound(cable){
 
     cableVoices.set(cable,{
         osc,gain,panner,filter,
-        drift,driftGain,
-        randomLFO,randomGain,
-        vibrato,vibratoGain,
-        filterLFO,filterGain
+        drift,randomLFO,vibrato,filterLFO
     });
 }
 
 function updateCableAudioParams(cable, oscOverride, gainOverride, panOverride){
 
     const voice = cableVoices.get(cable);
-
     const osc = oscOverride || (voice && voice.osc);
     const gain = gainOverride || (voice && voice.gain);
     const panner = panOverride || (voice && voice.panner);
@@ -164,7 +173,6 @@ function updateCableAudioParams(cable, oscOverride, gainOverride, panOverride){
         cable.to.y - cable.from.y
     );
 
-    // base pitch dari panjang kabel
     const baseFreq = 60 + length * 1.6;
     osc.frequency.value = baseFreq;
 
@@ -188,24 +196,6 @@ function removeCableSound(cable){
 
     cableVoices.delete(cable);
 }
-// ================= GRID =================
-
-function createGrid(){
-    jacks = [];
-    const cols = Math.floor(canvas.width / gridSize);
-    const rows = Math.floor(canvas.height / gridSize);
-
-    for(let y=1;y<rows-1;y++){
-        for(let x=1;x<cols-1;x++){
-            jacks.push({
-                x: x * gridSize,
-                y: y * gridSize
-            });
-        }
-    }
-}
-createGrid();
-window.addEventListener("resize",createGrid);
 
 // ================= DRAW =================
 
@@ -250,14 +240,22 @@ function draw(){
     cables.forEach(drawCable);
     requestAnimationFrame(draw);
 }
-draw();
 
-// ================= UTIL =================
+// ================= INTERACTION =================
+
+function getPos(e){
+    let x,y;
+    if(e.touches){
+        x = e.touches[0].clientX;
+        y = e.touches[0].clientY;
+    } else {
+        x = e.clientX;
+        y = e.clientY;
+    }
+    return {x,y};
+}
 
 function getNearestJack(x,y){
-
-    const snapDistance = 18 * scaleFactor;
-
     let closest = null;
     let minDist = Infinity;
 
@@ -268,49 +266,23 @@ function getNearestJack(x,y){
             closest = j;
         }
     }
-
     return closest;
 }
 
 function randomColor(){
-    const colors = [
-        "#ff3b30",
-        "#ff9500",
-        "#ffcc00",
-        "#007aff",
-        "#8e8e93"
-    ];
+    const colors = ["#ff3b30","#ff9500","#ffcc00","#007aff","#8e8e93"];
     return colors[Math.floor(Math.random()*colors.length)];
-}
-
-// ================= INTERACTION (MOUSE + TOUCH) =================
-
-function getPos(e){
-    let x, y;
-
-    if(e.touches){
-        x = e.touches[0].clientX;
-        y = e.touches[0].clientY;
-    } else {
-        x = e.clientX;
-        y = e.clientY;
-    }
-
-    return {
-        x: x * scaleFactor,
-        y: y * scaleFactor
-    };
 }
 
 function pointerDown(e){
     const {x:mx,y:my} = getPos(e);
 
     for(let c of cables){
-        if(Math.hypot(c.from.x-mx,c.from.y-my)<20){
+        if(Math.hypot(c.from.x-mx,c.from.y-my)<snapDistance){
             draggingCableEnd = {cable:c, end:"from"};
             return;
         }
-        if(Math.hypot(c.to.x-mx,c.to.y-my)<20){
+        if(Math.hypot(c.to.x-mx,c.to.y-my)<snapDistance){
             draggingCableEnd = {cable:c, end:"to"};
             return;
         }
@@ -331,26 +303,20 @@ function pointerDown(e){
 
 function pointerMove(e){
     if(!draggingCableEnd) return;
-
     const {x:mx,y:my} = getPos(e);
-
     draggingCableEnd.cable[draggingCableEnd.end].x = mx;
     draggingCableEnd.cable[draggingCableEnd.end].y = my;
-
     updateCableAudioParams(draggingCableEnd.cable);
 }
 
 function pointerUp(e){
     if(!draggingCableEnd) return;
-
     const {x:mx,y:my} = getPos(e);
     const j = getNearestJack(mx,my);
-
     if(j){
         draggingCableEnd.cable[draggingCableEnd.end].x = j.x;
         draggingCableEnd.cable[draggingCableEnd.end].y = j.y;
     }
-
     updateCableAudioParams(draggingCableEnd.cable);
     draggingCableEnd = null;
 }
@@ -363,21 +329,23 @@ canvas.addEventListener("touchstart",pointerDown);
 canvas.addEventListener("touchmove",pointerMove);
 canvas.addEventListener("touchend",pointerUp);
 
-// double click remove
 canvas.addEventListener("dblclick",e=>{
     const mx=e.clientX;
     const my=e.clientY;
 
     cables = cables.filter(c=>{
         const hit =
-            Math.hypot(c.from.x-mx,c.from.y-my)<10 ||
-            Math.hypot(c.to.x-mx,c.to.y-my)<10;
+            Math.hypot(c.from.x-mx,c.from.y-my)<snapDistance ||
+            Math.hypot(c.to.x-mx,c.to.y-my)<snapDistance;
 
         if(hit) removeCableSound(c);
-
         return !hit;
     });
 });
+
+// init
+resizeCanvas();
+draw();
 </script>
 
 </body>
