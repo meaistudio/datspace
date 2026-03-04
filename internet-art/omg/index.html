@@ -2,7 +2,9 @@
 <html>
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
 <title>OMG-Own-Modular-Generating</title>
+
 <style>
 html,body{
     margin:0;
@@ -10,7 +12,7 @@ html,body{
     background:#e9e9e9;
     overflow:hidden;
     font-family:Helvetica, Arial, sans-serif;
-    touch-action:none;
+    touch-action:manipulation;
 }
 canvas{
     display:block;
@@ -25,11 +27,11 @@ canvas{
 const canvas = document.getElementById("c");
 const ctx = canvas.getContext("2d");
 
-let gridSize;
-let jackRadiusOuter;
-let jackRadiusInner;
-let cableThickness;
-let snapDistance;
+let gridSize = 30;
+let jackRadiusOuter = 6;
+let jackRadiusInner = 2;
+let cableThickness = 8;
+let snapDistance = 20;
 
 let jacks = [];
 let cables = [];
@@ -38,20 +40,8 @@ let draggingCableEnd = null;
 // ================= RESIZE =================
 
 function resizeCanvas(){
-
-    const isMobile = window.innerWidth < 768;
-
-    const scale = isMobile ? 3 : 1;   // <<< 3X LEBIH BESAR DI HP
-
-    gridSize = 30 * scale;
-    jackRadiusOuter = 6 * scale;
-    jackRadiusInner = 2 * scale;
-    cableThickness = 8 * scale;
-    snapDistance = 20 * scale;
-
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
-
     createGrid();
 }
 
@@ -80,18 +70,28 @@ function createGrid(){
 let audioCtx;
 let masterGain;
 let cableVoices = new Map();
+let audioUnlocked = false;
 
 function initAudio(){
+    if(audioCtx) return;
+
     audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     masterGain = audioCtx.createGain();
     masterGain.gain.value = 0.25;
     masterGain.connect(audioCtx.destination);
 }
 
+function unlockAudio(){
+    if(!audioUnlocked){
+        initAudio();
+        audioCtx.resume();
+        audioUnlocked = true;
+    }
+}
+
 function createCableSound(cable){
 
-    if(!audioCtx) initAudio();
-    audioCtx.resume();
+    if(!audioCtx) return;
 
     const osc = audioCtx.createOscillator();
     const gain = audioCtx.createGain();
@@ -230,6 +230,9 @@ function randomColor(){
 }
 
 function pointerDown(e){
+
+    unlockAudio(); // fix mobile audio
+
     const {x:mx,y:my}=getPos(e);
 
     const j=getNearestJack(mx,my);
@@ -268,10 +271,27 @@ function pointerUp(e){
 canvas.addEventListener("mousedown",pointerDown);
 canvas.addEventListener("mousemove",pointerMove);
 canvas.addEventListener("mouseup",pointerUp);
+
 canvas.addEventListener("touchstart",pointerDown);
 canvas.addEventListener("touchmove",pointerMove);
 canvas.addEventListener("touchend",pointerUp);
 
+// double click remove
+canvas.addEventListener("dblclick",e=>{
+    const mx=e.clientX;
+    const my=e.clientY;
+
+    cables = cables.filter(c=>{
+        const hit =
+            Math.hypot(c.from.x-mx,c.from.y-my)<snapDistance ||
+            Math.hypot(c.to.x-mx,c.to.y-my)<snapDistance;
+
+        if(hit) removeCableSound(c);
+        return !hit;
+    });
+});
+
+// INIT
 resizeCanvas();
 draw();
 </script>
