@@ -25,9 +25,11 @@ canvas{
 const canvas = document.getElementById("c");
 const ctx = canvas.getContext("2d");
 
-const gridSize = 30;
-const jackRadiusOuter = 6;
-const jackRadiusInner = 2;
+const isMobile = window.innerWidth < 768;
+
+const gridSize = isMobile ? 60 : 30;        // 2x lebih besar
+const jackRadiusOuter = isMobile ? 12 : 6;  // 2x
+const jackRadiusInner = isMobile ? 4 : 2;   // 2x
 
 let jacks = [];
 let cables = [];
@@ -38,7 +40,7 @@ let scaleFactor = 1;
 function resizeCanvas(){
 
     const isMobile = window.innerWidth < 768;
-    scaleFactor = isMobile ? 5.0 : 1; // 50% lebih besar di HP
+    scaleFactor = isMobile ? 10.0 : 1; // 50% lebih besar di HP
 
     canvas.width = window.innerWidth * scaleFactor;
     canvas.height = window.innerHeight * scaleFactor;
