@@ -12,10 +12,10 @@ html,body{
     background:#e9e9e9;
     overflow:hidden;
     font-family:Helvetica, Arial, sans-serif;
-    touch-action:manipulation;
 }
 canvas{
     display:block;
+    touch-action:manipulation;
 }
 </style>
 </head>
@@ -31,8 +31,8 @@ let gridSize = 30;
 let jackRadiusOuter = 6;
 let jackRadiusInner = 2;
 let cableThickness = 8;
-let snapDistance = 20;
 
+let snapDistance = 30; // lebih kuat
 let jacks = [];
 let cables = [];
 let draggingCableEnd = null;
@@ -44,7 +44,6 @@ function resizeCanvas(){
     canvas.height = window.innerHeight;
     createGrid();
 }
-
 window.addEventListener("resize", resizeCanvas);
 
 // ================= GRID =================
@@ -71,6 +70,7 @@ let audioCtx;
 let masterGain;
 let cableVoices = new Map();
 let audioUnlocked = false;
+const MAX_VOICES = 8; // batasi supaya HP tidak overload
 
 function initAudio(){
     if(audioCtx) return;
@@ -91,63 +91,80 @@ function unlockAudio(){
 
 function createCableSound(cable){
 
-    if(!audioCtx) return;
+    if(cableVoices.size >= MAX_VOICES) return;
 
     const osc = audioCtx.createOscillator();
     const gain = audioCtx.createGain();
     const filter = audioCtx.createBiquadFilter();
-    const panner = audioCtx.createStereoPanner();
 
-    osc.type="sine";
+    osc.type = "sine";
 
-    filter.type="lowpass";
-    filter.frequency.value=1200;
-    filter.Q.value=4;
+    filter.type = "lowpass";
+    filter.frequency.value = 1000;
+
+    gain.gain.value = 0;
 
     osc.connect(filter);
     filter.connect(gain);
-    gain.connect(panner);
-    panner.connect(masterGain);
-
-    updateCableAudioParams(cable, osc, gain, panner);
+    gain.connect(masterGain);
 
     osc.start();
 
-    cableVoices.set(cable,{osc,gain,panner,filter});
+    // fade in halus
+    gain.gain.setTargetAtTime(0.15, audioCtx.currentTime, 0.05);
+
+    cableVoices.set(cable,{osc,gain,filter});
 }
 
-function updateCableAudioParams(cable, oscOverride, gainOverride, panOverride){
+function updateCableAudioParams(cable){
 
     const voice = cableVoices.get(cable);
-    const osc = oscOverride || (voice && voice.osc);
-    const gain = gainOverride || (voice && voice.gain);
-    const panner = panOverride || (voice && voice.panner);
+    if(!voice) return;
 
-    if(!osc) return;
+    const {osc,gain,filter} = voice;
 
     const length = Math.hypot(
         cable.to.x - cable.from.x,
         cable.to.y - cable.from.y
     );
 
-    osc.frequency.value = 60 + length * 1.6;
+    const targetFreq = 80 + length * 1.4;
 
-    if(gain) gain.gain.value = Math.min(0.18, 0.03 + length/1200);
+    // smoothing supaya tidak macet
+    osc.frequency.setTargetAtTime(
+        targetFreq,
+        audioCtx.currentTime,
+        0.03
+    );
 
-    if(panner){
-        const centerX = (cable.from.x + cable.to.x)/2;
-        panner.pan.value = (centerX / canvas.width) * 2 - 1;
-    }
+    const targetGain = Math.min(0.18, 0.05 + length/1400);
+
+    gain.gain.setTargetAtTime(
+        targetGain,
+        audioCtx.currentTime,
+        0.05
+    );
+
+    filter.frequency.setTargetAtTime(
+        600 + length,
+        audioCtx.currentTime,
+        0.05
+    );
 }
 
 function removeCableSound(cable){
     const voice = cableVoices.get(cable);
     if(!voice) return;
 
-    Object.values(voice).forEach(node=>{
-        if(node.stop) try{node.stop();}catch(e){}
-        if(node.disconnect) try{node.disconnect();}catch(e){}
-    });
+    const {osc,gain} = voice;
+
+    gain.gain.setTargetAtTime(0, audioCtx.currentTime, 0.05);
+
+    setTimeout(()=>{
+        try{osc.stop();}catch(e){}
+        try{osc.disconnect();}catch(e){}
+        try{gain.disconnect();}catch(e){}
+    },200);
 
     cableVoices.delete(cable);
 }
@@ -231,7 +248,7 @@ function randomColor(){
 
 function pointerDown(e){
 
-    unlockAudio(); // fix mobile audio
+    unlockAudio();
 
     const {x:mx,y:my}=getPos(e);
 
@@ -271,27 +288,10 @@ function pointerUp(e){
 canvas.addEventListener("mousedown",pointerDown);
 canvas.addEventListener("mousemove",pointerMove);
 canvas.addEventListener("mouseup",pointerUp);
-
 canvas.addEventListener("touchstart",pointerDown);
 canvas.addEventListener("touchmove",pointerMove);
 canvas.addEventListener("touchend",pointerUp);
 
-// double click remove
-canvas.addEventListener("dblclick",e=>{
-    const mx=e.clientX;
-    const my=e.clientY;
-
-    cables = cables.filter(c=>{
-        const hit =
-            Math.hypot(c.from.x-mx,c.from.y-my)<snapDistance ||
-            Math.hypot(c.to.x-mx,c.to.y-my)<snapDistance;
-
-        if(hit) removeCableSound(c);
-        return !hit;
-    });
-});
-
-// INIT
 resizeCanvas();
 draw();
 </script>
