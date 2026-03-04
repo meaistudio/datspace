@@ -25,12 +25,26 @@ canvas{
 const canvas = document.getElementById("c");
 const ctx = canvas.getContext("2d");
 
+let scaleFactor = 1;
+
 function resizeCanvas(){
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
+
+    const isMobile = window.innerWidth < 768;
+    scaleFactor = isMobile ? 1.5 : 1; // 50% lebih besar di HP
+
+    canvas.width = window.innerWidth * scaleFactor;
+    canvas.height = window.innerHeight * scaleFactor;
+
+    canvas.style.width = window.innerWidth + "px";
+    canvas.style.height = window.innerHeight + "px";
+
+    ctx.setTransform(scaleFactor, 0, 0, scaleFactor, 0, 0);
+
+    createGrid();
 }
+
 resizeCanvas();
-window.addEventListener("resize",resizeCanvas);
+window.addEventListener("resize", resizeCanvas);
 
 const gridSize = 30;
 const jackRadiusOuter = 6;
