@@ -2,305 +2,218 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
-<title>OMG-Own-Modular-Generating</title>
-
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
 html,body{
     margin:0;
     padding:0;
-    background:#e9e9e9;
     overflow:hidden;
-    font-family:Helvetica, Arial, sans-serif;
+    background:#0b0b0b;
+    touch-action:none;
 }
-canvas{
-    display:block;
-    touch-action:manipulation;
-}
+canvas{ display:block; }
 </style>
 </head>
 <body>
-
 <canvas id="c"></canvas>
 
 <script>
 const canvas = document.getElementById("c");
 const ctx = canvas.getContext("2d");
 
-let gridSize = 30;
-let jackRadiusOuter = 6;
-let jackRadiusInner = 2;
-let cableThickness = 8;
-
-let snapDistance = 40; // lebih magnetik
-let jacks = [];
-let cables = [];
-let draggingCableEnd = null;
-
-// ================= RESIZE =================
+/* =========================
+   RESPONSIVE CANVAS
+========================= */
 
 function resizeCanvas(){
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-    createGrid();
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = window.innerWidth * dpr;
+    canvas.height = window.innerHeight * dpr;
+    canvas.style.width = window.innerWidth + "px";
+    canvas.style.height = window.innerHeight + "px";
+    ctx.setTransform(dpr,0,0,dpr,0,0);
 }
-window.addEventListener("resize", resizeCanvas);
+window.addEventListener("resize",resizeCanvas);
+resizeCanvas();
 
-// ================= GRID =================
+/* =========================
+   UI SCALE (3X HP)
+========================= */
 
-function createGrid(){
-    jacks = [];
+const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+const scaleUI = isMobile ? 3 : 1;
 
-    const cols = Math.floor(canvas.width / gridSize);
-    const rows = Math.floor(canvas.height / gridSize);
+const gridSize = 30 * scaleUI;
+const jackRadiusOuter = 6 * scaleUI;
+const jackRadiusInner = 2 * scaleUI;
 
-    for(let y=1;y<rows-1;y++){
-        for(let x=1;x<cols-1;x++){
-            jacks.push({
-                x: x * gridSize,
-                y: y * gridSize
-            });
-        }
+let cables = [];
+let dragging = null;
+
+/* =========================
+   MAGNETIC GRID (OPTIMIZED)
+========================= */
+
+function getNearestGridJack(x,y){
+    const gx = Math.round(x / gridSize);
+    const gy = Math.round(y / gridSize);
+
+    const snapDistance = gridSize * 0.35; // stabil & presisi
+
+    const snapX = gx * gridSize;
+    const snapY = gy * gridSize;
+
+    const dx = snapX - x;
+    const dy = snapY - y;
+    const dist = Math.sqrt(dx*dx + dy*dy);
+
+    if(dist < snapDistance){
+        return {x:snapX,y:snapY};
     }
+    return null;
 }
 
-// ================= AUDIO (MOBILE SAFE) =================
+/* =========================
+   AUDIO ENGINE (LIGHT)
+========================= */
 
-let audioCtx;
-let masterGain;
-let cableVoices = new Map();
-let audioUnlocked = false;
-const MAX_VOICES = 6; // lebih aman untuk mobile
+let audioCtx = null;
+let osc;
+let lfo;
+let master;
 
 function initAudio(){
     if(audioCtx) return;
 
     audioCtx = new (window.AudioContext || window.webkitAudioContext)({
-        latencyHint: "interactive"
+        latencyHint:"interactive"
     });
 
-    masterGain = audioCtx.createGain();
-    masterGain.gain.value = 0.3;
-    masterGain.connect(audioCtx.destination);
-}
+    master = audioCtx.createGain();
+    master.gain.value = 0.3;
+    master.connect(audioCtx.destination);
 
-async function unlockAudio(){
-    if(audioUnlocked) return;
+    osc = audioCtx.createOscillator();
+    osc.type = "sawtooth";
+    osc.frequency.value = 110;
 
-    initAudio();
+    // random LFO (sample & hold style)
+    lfo = audioCtx.createOscillator();
+    lfo.type = "square";
+    lfo.frequency.value = 2;
 
-    if(audioCtx.state === "suspended"){
-        await audioCtx.resume();
-    }
+    const lfoGain = audioCtx.createGain();
+    lfoGain.gain.value = 25;
 
-    audioUnlocked = true;
-}
+    lfo.connect(lfoGain);
+    lfoGain.connect(osc.frequency);
 
-function createCableSound(cable){
-
-    if(cableVoices.size >= MAX_VOICES) return;
-
-    const osc = audioCtx.createOscillator();
-    const gain = audioCtx.createGain();
-    const filter = audioCtx.createBiquadFilter();
-
-    osc.type = "sine";
-
-    filter.type = "lowpass";
-    filter.frequency.value = 800;
-
-    gain.gain.value = 0;
-
-    osc.connect(filter);
-    filter.connect(gain);
-    gain.connect(masterGain);
+    osc.connect(master);
 
     osc.start();
-
-    // smooth fade in
-    gain.gain.setTargetAtTime(0.15, audioCtx.currentTime, 0.08);
-
-    cableVoices.set(cable,{osc,gain,filter});
+    lfo.start();
 }
 
-function updateCableAudioParams(cable){
-
-    const voice = cableVoices.get(cable);
-    if(!voice) return;
-
-    const {osc,gain,filter} = voice;
-
-    const length = Math.hypot(
-        cable.to.x - cable.from.x,
-        cable.to.y - cable.from.y
-    );
-
-    const targetFreq = 90 + length * 1.2;
-
-    // smoothing supaya tidak glitch
-    osc.frequency.setTargetAtTime(
-        targetFreq,
-        audioCtx.currentTime,
-        0.06
-    );
-
-    gain.gain.setTargetAtTime(
-        Math.min(0.18, 0.05 + length/1500),
-        audioCtx.currentTime,
-        0.08
-    );
-
-    filter.frequency.setTargetAtTime(
-        600 + length,
-        audioCtx.currentTime,
-        0.08
-    );
+function unlockAudio(){
+    if(!audioCtx) initAudio();
+    if(audioCtx.state === "suspended"){
+        audioCtx.resume();
+    }
 }
 
-function removeCableSound(cable){
-    const voice = cableVoices.get(cable);
-    if(!voice) return;
+document.addEventListener("pointerdown",unlockAudio);
 
-    const {osc,gain} = voice;
+/* =========================
+   POINTER EVENTS
+========================= */
 
-    gain.gain.setTargetAtTime(0, audioCtx.currentTime, 0.1);
+canvas.addEventListener("pointerdown", e=>{
+    unlockAudio();
+    const rect = canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
 
-    setTimeout(()=>{
-        try{osc.stop();}catch(e){}
-        try{osc.disconnect();}catch(e){}
-        try{gain.disconnect();}catch(e){}
-    },300);
+    const jack = getNearestGridJack(x,y);
+    if(jack){
+        dragging = {start:jack,end:{x,y}};
+        cables.push(dragging);
+    }
+});
 
-    cableVoices.delete(cable);
-}
+canvas.addEventListener("pointermove", e=>{
+    if(!dragging) return;
+    const rect = canvas.getBoundingClientRect();
+    dragging.end.x = e.clientX - rect.left;
+    dragging.end.y = e.clientY - rect.top;
+});
 
-// ================= DRAW =================
+canvas.addEventListener("pointerup", e=>{
+    if(!dragging) return;
 
-function drawJack(j){
-    ctx.beginPath();
-    ctx.fillStyle="#fff";
-    ctx.arc(j.x,j.y,jackRadiusOuter,0,Math.PI*2);
-    ctx.fill();
+    const rect = canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
 
-    ctx.beginPath();
-    ctx.strokeStyle="#000";
-    ctx.lineWidth=1.5;
-    ctx.arc(j.x,j.y,jackRadiusOuter,0,Math.PI*2);
-    ctx.stroke();
+    const jack = getNearestGridJack(x,y);
 
-    ctx.beginPath();
-    ctx.fillStyle="#000";
-    ctx.arc(j.x,j.y,jackRadiusInner,0,Math.PI*2);
-    ctx.fill();
-}
+    if(jack){
+        dragging.end = jack;
 
-function drawCable(c){
-    ctx.beginPath();
-    ctx.lineWidth = cableThickness;
-    ctx.lineCap="round";
-    ctx.strokeStyle=c.color;
+        // modular pitch reaction (lightweight)
+        osc.frequency.setTargetAtTime(
+            60 + Math.random()*300,
+            audioCtx.currentTime,
+            0.03
+        );
+    }else{
+        cables.pop();
+    }
 
-    const dx=(c.to.x-c.from.x)*0.5;
+    dragging = null;
+});
 
-    ctx.moveTo(c.from.x,c.from.y);
-    ctx.bezierCurveTo(
-        c.from.x+dx,c.from.y+100,
-        c.to.x-dx,c.to.y-100,
-        c.to.x,c.to.y
-    );
-    ctx.stroke();
-}
+/* =========================
+   DRAW LOOP (LIGHT)
+========================= */
 
 function draw(){
     ctx.clearRect(0,0,canvas.width,canvas.height);
-    jacks.forEach(drawJack);
-    cables.forEach(drawCable);
-    requestAnimationFrame(draw);
-}
 
-// ================= INTERACTION =================
+    const cols = Math.floor(window.innerWidth / gridSize);
+    const rows = Math.floor(window.innerHeight / gridSize);
 
-function getPos(e){
-    let x,y;
-    if(e.touches){
-        x=e.touches[0].clientX;
-        y=e.touches[0].clientY;
-    } else {
-        x=e.clientX;
-        y=e.clientY;
-    }
-    return {x,y};
-}
+    // draw grid jacks
+    for(let y=1;y<rows-1;y++){
+        for(let x=1;x<cols-1;x++){
+            const px = x * gridSize;
+            const py = y * gridSize;
 
-function getNearestJack(x,y){
-    let closest=null;
-    let minDist=Infinity;
+            ctx.beginPath();
+            ctx.arc(px,py,jackRadiusOuter,0,Math.PI*2);
+            ctx.fillStyle="#444";
+            ctx.fill();
 
-    for(let j of jacks){
-        const d=Math.hypot(j.x-x,j.y-y);
-        if(d<snapDistance && d<minDist){
-            minDist=d;
-            closest=j;
+            ctx.beginPath();
+            ctx.arc(px,py,jackRadiusInner,0,Math.PI*2);
+            ctx.fillStyle="#111";
+            ctx.fill();
         }
     }
-    return closest;
-}
 
-function randomColor(){
-    const colors=["#ff3b30","#ff9500","#ffcc00","#007aff","#8e8e93"];
-    return colors[Math.floor(Math.random()*colors.length)];
-}
+    // cables
+    ctx.strokeStyle="#00ff88";
+    ctx.lineWidth=2*scaleUI;
 
-async function pointerDown(e){
-
-    await unlockAudio();
-
-    const {x:mx,y:my}=getPos(e);
-
-    const j=getNearestJack(mx,my);
-    if(j){
-        const newCable={
-            from:{x:j.x,y:j.y},
-            to:{x:mx,y:my},
-            color:randomColor()
-        };
-        cables.push(newCable);
-        createCableSound(newCable);
-        draggingCableEnd={cable:newCable,end:"to"};
+    for(let c of cables){
+        ctx.beginPath();
+        ctx.moveTo(c.start.x,c.start.y);
+        ctx.lineTo(c.end.x,c.end.y);
+        ctx.stroke();
     }
+
+    requestAnimationFrame(draw);
 }
-
-function pointerMove(e){
-    if(!draggingCableEnd) return;
-    const {x:mx,y:my}=getPos(e);
-    draggingCableEnd.cable.to.x=mx;
-    draggingCableEnd.cable.to.y=my;
-    updateCableAudioParams(draggingCableEnd.cable);
-}
-
-function pointerUp(e){
-    if(!draggingCableEnd) return;
-    const {x:mx,y:my}=getPos(e);
-    const j=getNearestJack(mx,my);
-    if(j){
-        draggingCableEnd.cable.to.x=j.x;
-        draggingCableEnd.cable.to.y=j.y;
-    }
-    updateCableAudioParams(draggingCableEnd.cable);
-    draggingCableEnd=null;
-}
-
-canvas.addEventListener("mousedown",pointerDown);
-canvas.addEventListener("mousemove",pointerMove);
-canvas.addEventListener("mouseup",pointerUp);
-
-canvas.addEventListener("touchstart",pointerDown);
-canvas.addEventListener("touchmove",pointerMove);
-canvas.addEventListener("touchend",pointerUp);
-
-resizeCanvas();
 draw();
 </script>
-
 </body>
 </html>
