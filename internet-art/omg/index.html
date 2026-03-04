@@ -25,32 +25,27 @@ canvas{
 const canvas = document.getElementById("c");
 const ctx = canvas.getContext("2d");
 
-const isMobile = window.innerWidth < 768;
-
-const gridSize = isMobile ? 60 : 30;        // 2x lebih besar
-const jackRadiusOuter = isMobile ? 12 : 6;  // 2x
-const jackRadiusInner = isMobile ? 4 : 2;   // 2x
+let gridSize;
+let jackRadiusOuter;
+let jackRadiusInner;
 
 let jacks = [];
 let cables = [];
 let draggingCableEnd = null;
 
-let scaleFactor = 1;
-
 function resizeCanvas(){
 
     const isMobile = window.innerWidth < 768;
-    scaleFactor = isMobile ? 10.0 : 1; // 50% lebih besar di HP
 
-    canvas.width = window.innerWidth * scaleFactor;
-    canvas.height = window.innerHeight * scaleFactor;
+    // Perbesar 50% di HP
+    gridSize = isMobile ? 45 : 30;
+    jackRadiusOuter = isMobile ? 9 : 6;
+    jackRadiusInner = isMobile ? 3 : 2;
 
-    canvas.style.width = window.innerWidth + "px";
-    canvas.style.height = window.innerHeight + "px";
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
 
-    ctx.setTransform(scaleFactor, 0, 0, scaleFactor, 0, 0);
-
-    createGrid(); // aman karena gridSize sudah ada
+    createGrid(); 
 }
 
 resizeCanvas();
@@ -311,11 +306,11 @@ function pointerDown(e){
     const {x:mx,y:my} = getPos(e);
 
     for(let c of cables){
-        if(Math.hypot(c.from.x-mx,c.from.y-my)<50){
+        if(Math.hypot(c.from.x-mx,c.from.y-my)<20){
             draggingCableEnd = {cable:c, end:"from"};
             return;
         }
-        if(Math.hypot(c.to.x-mx,c.to.y-my)<50){
+        if(Math.hypot(c.to.x-mx,c.to.y-my)<20){
             draggingCableEnd = {cable:c, end:"to"};
             return;
         }
