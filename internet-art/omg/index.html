@@ -32,55 +32,82 @@ function resizeCanvas(){
     canvas.style.width = window.innerWidth + "px";
     canvas.style.height = window.innerHeight + "px";
     ctx.setTransform(dpr,0,0,dpr,0,0);
+
+    updateGridSize();
 }
 window.addEventListener("resize",resizeCanvas);
-resizeCanvas();
 
 /* =========================
-   UI SCALE (3X HP)
+   UI SCALE
 ========================= */
 
 const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-const scaleUI = isMobile ? 3 : 1;
 
-const gridSize = 30 * scaleUI;
-const jackRadiusOuter = 6 * scaleUI;
-const jackRadiusInner = 2 * scaleUI;
+let gridSize;
+let jackRadiusOuter;
+let jackRadiusInner;
+
+function updateGridSize(){
+
+    if(isMobile){
+        // minimal 8 x 14 lubang
+        const sizeByWidth  = window.innerWidth / 14;
+        const sizeByHeight = window.innerHeight / 8;
+        gridSize = Math.min(sizeByWidth, sizeByHeight);
+    }else{
+        gridSize = 30;
+    }
+
+    jackRadiusOuter = gridSize * 0.2;
+    jackRadiusInner = gridSize * 0.07;
+}
+
+/* =========================
+   COLOR GENERATOR
+========================= */
+
+function randomCableColor(){
+    const hue = Math.floor(Math.random() * 360);
+    return `hsl(${hue}, 90%, 55%)`;
+}
+
+/* =========================
+   DATA
+========================= */
 
 let cables = [];
 let dragging = null;
 
 /* =========================
-   MAGNETIC GRID (OPTIMIZED)
+   MAGNETIC GRID
 ========================= */
 
 function getNearestGridJack(x,y){
+
     const gx = Math.round(x / gridSize);
     const gy = Math.round(y / gridSize);
-
-    const snapDistance = gridSize * 0.35; // stabil & presisi
 
     const snapX = gx * gridSize;
     const snapY = gy * gridSize;
 
     const dx = snapX - x;
     const dy = snapY - y;
-    const dist = Math.sqrt(dx*dx + dy*dy);
+    const dist = dx*dx + dy*dy;
 
-    if(dist < snapDistance){
+    const snapDistance = gridSize * 0.35;
+
+    if(dist < snapDistance * snapDistance){
         return {x:snapX,y:snapY};
     }
     return null;
 }
 
 /* =========================
-   AUDIO ENGINE (LIGHT)
+   AUDIO ENGINE (TECHNO LIGHT)
 ========================= */
 
 let audioCtx = null;
-let osc;
-let lfo;
-let master;
+let osc, filter, master, lfo, lfoGain;
 
 function initAudio(){
     if(audioCtx) return;
@@ -90,25 +117,30 @@ function initAudio(){
     });
 
     master = audioCtx.createGain();
-    master.gain.value = 0.3;
+    master.gain.value = 0.35;
     master.connect(audioCtx.destination);
 
     osc = audioCtx.createOscillator();
     osc.type = "sawtooth";
-    osc.frequency.value = 110;
+    osc.frequency.value = 120;
 
-    // random LFO (sample & hold style)
+    filter = audioCtx.createBiquadFilter();
+    filter.type = "lowpass";
+    filter.frequency.value = 800;
+    filter.Q.value = 7;
+
     lfo = audioCtx.createOscillator();
-    lfo.type = "square";
-    lfo.frequency.value = 2;
+    lfo.type = "triangle";
+    lfo.frequency.value = 0.6;
 
-    const lfoGain = audioCtx.createGain();
-    lfoGain.gain.value = 25;
+    lfoGain = audioCtx.createGain();
+    lfoGain.gain.value = 600;
 
     lfo.connect(lfoGain);
-    lfoGain.connect(osc.frequency);
+    lfoGain.connect(filter.frequency);
 
-    osc.connect(master);
+    osc.connect(filter);
+    filter.connect(master);
 
     osc.start();
     lfo.start();
@@ -135,7 +167,11 @@ canvas.addEventListener("pointerdown", e=>{
 
     const jack = getNearestGridJack(x,y);
     if(jack){
-        dragging = {start:jack,end:{x,y}};
+        dragging = {
+            start:jack,
+            end:{x,y},
+            color:randomCableColor()
+        };
         cables.push(dragging);
     }
 });
@@ -159,12 +195,18 @@ canvas.addEventListener("pointerup", e=>{
     if(jack){
         dragging.end = jack;
 
-        // modular pitch reaction (lightweight)
         osc.frequency.setTargetAtTime(
-            60 + Math.random()*300,
+            80 + Math.random()*250,
             audioCtx.currentTime,
             0.03
         );
+
+        filter.frequency.setTargetAtTime(
+            400 + Math.random()*1200,
+            audioCtx.currentTime,
+            0.05
+        );
+
     }else{
         cables.pop();
     }
@@ -173,16 +215,17 @@ canvas.addEventListener("pointerup", e=>{
 });
 
 /* =========================
-   DRAW LOOP (LIGHT)
+   DRAW LOOP
 ========================= */
 
 function draw(){
+
     ctx.clearRect(0,0,canvas.width,canvas.height);
 
     const cols = Math.floor(window.innerWidth / gridSize);
     const rows = Math.floor(window.innerHeight / gridSize);
 
-    // draw grid jacks
+    // draw jacks
     for(let y=1;y<rows-1;y++){
         for(let x=1;x<cols-1;x++){
             const px = x * gridSize;
@@ -200,19 +243,30 @@ function draw(){
         }
     }
 
-    // cables
-    ctx.strokeStyle="#00ff88";
-    ctx.lineWidth=2*scaleUI;
-
+    // cables (CURVE)
     for(let c of cables){
+
         ctx.beginPath();
+        ctx.lineWidth = gridSize * 0.12;
+        ctx.lineCap = "round";
+        ctx.strokeStyle = c.color;
+
+        const dx = (c.end.x - c.start.x) * 0.5;
+
         ctx.moveTo(c.start.x,c.start.y);
-        ctx.lineTo(c.end.x,c.end.y);
+        ctx.bezierCurveTo(
+            c.start.x + dx, c.start.y + 80,
+            c.end.x - dx,   c.end.y - 80,
+            c.end.x,        c.end.y
+        );
+
         ctx.stroke();
     }
 
     requestAnimationFrame(draw);
 }
+
+resizeCanvas();
 draw();
 </script>
 </body>
