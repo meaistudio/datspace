@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Red Green Blue</title>
+
+<style>
+body{
+    margin:0;
+    background:#ccc;
+}
+
+.canvas{
+    position:relative;
+    width:100vw;
+    height:100vh;
+    overflow:hidden;
+}
+
+/* BLOCK SYSTEM */
+.unit{
+    position:absolute;
+    transform-origin:center;
+}
+
+.block{
+    position:relative;
+    width:120px;
+    height:120px;
+    background:#ff0000;
+    overflow:hidden;
+}
+
+.glow{
+    position:absolute;
+    width:160px;
+    height:160px;
+    top:-20px;
+    left:-20px;
+    border-radius:50%;
+
+    background: radial-gradient(circle,
+        rgba(255,255,255,1) 0%,
+        rgba(255,255,255,1) 35%,
+        rgba(255,180,180,0.9) 50%,
+        rgba(255,0,0,0.7) 65%,
+        rgba(255,0,0,0.25) 80%,
+        rgba(255,0,0,0) 100%
+    );
+
+    filter:blur(3px);
+}
+
+/* PURPLE LINES */
+.line{
+    position:absolute;
+    background:#ff00ff;
+    opacity:100;
+    mix-blend-mode: difference ;
+}
+
+.v{ width:100px; height:100%; }
+.h{ height:100px; width:100%; }
+
+/* CONNECTION LINES */
+.connect{
+    position:absolute;
+    background:#9eeb34;
+    opacity:100;
+    mix-blend-mode: difference ;
+}
+</style>
+</head>
+
+<body>
+
+<div class="canvas" id="canvas"></div>
+
+<script>
+const canvas = document.getElementById("canvas");
+
+let blocks = [];
+let units = [];
+
+/* =========================
+   GENERATE SYSTEM
+========================= */
+function generate(){
+
+    // clear canvas
+    canvas.innerHTML = "";
+    blocks = [];
+    units = [];
+
+    const TOTAL = 100;
+
+    /* =========================
+       RED BLOCKS
+    ========================= */
+    for(let i=0; i<TOTAL; i++){
+
+        const unit = document.createElement("div");
+        unit.className = "unit";
+
+        let x = Math.random() * window.innerWidth;
+        let y = Math.random() * window.innerHeight;
+
+        let baseScale = 0.1 + Math.random()*0.6;
+
+        unit.innerHTML = `
+            <div class="block">
+                <div class="glow"></div>
+            </div>
+        `;
+
+        canvas.appendChild(unit);
+
+        blocks.push({
+            x: x + 60,
+            y: y + 60
+        });
+
+        // animasi
+        let t = Math.random() * 100;
+
+        function animate(){
+            t += 0.02;
+
+            let offsetX = Math.sin(t + i) * 2;
+            let offsetY = Math.cos(t + i) * 2;
+
+            let scale = baseScale + Math.sin(t*2) * 1;
+
+            unit.style.transform = `
+                translate(${x + offsetX}px, ${y + offsetY}px)
+                scale(${scale})
+            `;
+
+            requestAnimationFrame(animate);
+        }
+
+        animate();
+    }
+
+    /* =========================
+       CONNECTION LINES
+    ========================= */
+    for(let i=0; i<blocks.length-1; i++){
+
+        const a = blocks[i];
+        const b = blocks[i+1];
+
+        const hLine = document.createElement("div");
+        hLine.className = "connect";
+
+        hLine.style.left = Math.min(a.x, b.x) + "px";
+        hLine.style.top = a.y + "px";
+        hLine.style.width = Math.abs(a.x - b.x) + "px";
+        hLine.style.height = "3px";
+
+        canvas.appendChild(hLine);
+
+        const vLine = document.createElement("div");
+        vLine.className = "connect";
+
+        vLine.style.left = b.x + "px";
+        vLine.style.top = Math.min(a.y, b.y) + "px";
+        vLine.style.width = "3px";
+        vLine.style.height = Math.abs(a.y - b.y) + "px";
+
+        canvas.appendChild(vLine);
+    }
+
+    /* =========================
+       PURPLE LINES
+    ========================= */
+    const TOTAL_LINES = 8;
+
+    for(let i=0; i<TOTAL_LINES; i++){
+
+        const isVertical = Math.random() > 0.5;
+
+        const line = document.createElement("div");
+        line.className = "line " + (isVertical ? "v" : "h");
+
+        if(isVertical){
+            line.style.left = Math.random()*window.innerWidth + "px";
+            line.style.top = "0px";
+        } else {
+            line.style.top = Math.random()*window.innerHeight + "px";
+            line.style.left = "0px";
+        }
+
+        canvas.appendChild(line);
+    }
+}
+
+/* =========================
+   INITIAL LOAD
+========================= */
+generate();
+
+/* =========================
+   INTERACTION
+========================= */
+
+// klik desktop
+window.addEventListener("click", generate);
+
+// touch hp
+window.addEventListener("touchstart", generate);
+</script>
+
+</body>
+</html>
