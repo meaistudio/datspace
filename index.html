@@ -164,7 +164,7 @@ a, a:visited, a:hover, a:active {
     width: min(480px, 56vw);
     max-width: 100%;
     height: auto;
-    max-height: 72vh;
+    max-height: 52vh;
     object-fit: contain;
     margin: 0 auto 24px auto;
 }
@@ -255,7 +255,7 @@ function updateContent(){
 
 if(currentTab==="HOME") {
 
-    content.classList.remove("home-desc","fade-in","fade-out");
+    content.classList.remove("home-desc","fade-in","fade-out","content-event");
     homeExpanded = false;
     showTitle = true;
 
