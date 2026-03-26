@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>DNA MOBILE DATA</title>
+<style>
+html,body{
+    margin:0;
+    padding:0;
+    overflow:hidden;
+    background:#000;
+    font-family: monospace;
+}
+canvas{display:block;}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+
+<script>
+const canvas = document.getElementById("c");
+const ctx = canvas.getContext("2d");
+
+// lebih ringan dari sebelumnya
+canvas.style.filter = "contrast(1.05) saturate(1.1)";
+
+let w,h;
+function resize(){
+    w = canvas.width = window.innerWidth;
+    h = canvas.height = window.innerHeight;
+}
+window.addEventListener("resize", resize);
+resize();
+
+let t = 0;
+
+// interaction
+let mouse = {x:w/2,y:h/2};
+let targetMouse = {x:w/2,y:h/2};
+
+let isDown = false;
+let dragForce = 0;
+
+let zoom = 3;
+let targetZoom = 3;
+
+let burst = 0;
+
+// mouse
+window.addEventListener("mousemove", e=>{
+    targetMouse.x = e.clientX;
+    targetMouse.y = e.clientY;
+    if(isDown) dragForce = 1;
+});
+
+// touch (mobile)
+window.addEventListener("touchmove", e=>{
+    targetMouse.x = e.touches[0].clientX;
+    targetMouse.y = e.touches[0].clientY;
+    if(isDown) dragForce = 1;
+});
+
+window.addEventListener("touchstart", ()=>{
+    isDown = true;
+    burst = 8;
+});
+
+window.addEventListener("touchend", ()=> isDown = false);
+
+// mouse click
+window.addEventListener("mousedown", ()=>{
+    isDown = true;
+    burst = 8;
+});
+window.addEventListener("mouseup", ()=> isDown = false);
+
+// zoom
+window.addEventListener("wheel", e=>{
+    targetZoom += e.deltaY * -0.001;
+    targetZoom = Math.max(0.7, Math.min(10, targetZoom));
+});
+
+function lerp(a,b,n){ return a+(b-a)*n; }
+
+// warna lebih soft
+function rgbColor(i){
+    return `rgb(${Math.sin(i)*90+150}, ${Math.sin(i+2)*90+150}, ${Math.sin(i+4)*90+150})`;
+}
+
+function cmykToRgb(c,m,y,k){
+    let r = 255*(1-c)*(1-k);
+    let g = 255*(1-m)*(1-k);
+    let b = 255*(1-y)*(1-k);
+    return `rgb(${r},${g},${b})`;
+}
+
+function draw(){
+
+    mouse.x = lerp(mouse.x,targetMouse.x,0.12);
+    mouse.y = lerp(mouse.y,targetMouse.y,0.12);
+    zoom = lerp(zoom,targetZoom,0.08);
+    dragForce = lerp(dragForce,0,0.06);
+
+    // trail (lebih stabil di HP)
+    ctx.globalCompositeOperation = "diferrence";
+    ctx.fillStyle="rgba(0,0,0,0.6)";
+    ctx.fillRect(0,0,w,h);
+
+    // blending
+    ctx.globalCompositeOperation = "add";
+
+    ctx.save();
+    ctx.translate(w/2,h/2);
+    ctx.scale(zoom,zoom);
+    ctx.translate(-w/2,-h/2);
+
+    let centerX = w/2;
+    let centerY = h/2;
+
+    for(let i=0;i<240;i++){ // dikurangi biar ringan
+
+        let angle = i*0.22 + t;
+        let radius = 260 + Math.sin(t+i*0.1)*25;
+
+        let x1 = centerX + Math.cos(angle)*radius;
+        let y1 = centerY + i*4 - 450;
+
+        let x2 = centerX + Math.cos(angle+Math.PI)*radius;
+        let y2 = y1;
+
+        let dx = (mouse.x-centerX)*0.002;
+        let dy = (mouse.y-centerY)*0.002;
+
+        x1 += dx*i*(2+dragForce*15);
+        x2 -= dx*i*(2+dragForce*15);
+
+        y1 += Math.sin(t+i*0.1+dy*5)*(8+dragForce*20);
+        y2 += Math.cos(t+i*0.1+dy*5)*(8+dragForce*20);
+
+        let rgb = rgbColor(i*0.1+t);
+
+        let cmyk = cmykToRgb(
+            (Math.sin(i+t)+1)/2,
+            (Math.sin(i+t+2)+1)/2,
+            (Math.sin(i+t+4)+1)/2,
+            0.1
+        );
+
+        ctx.strokeStyle = i%2 ? rgb : cmyk;
+        ctx.lineWidth = 2;
+
+        ctx.beginPath();
+        ctx.moveTo(x1,y1);
+        ctx.lineTo(x2,y2);
+        ctx.stroke();
+
+        // nodes
+        ctx.fillStyle = rgb;
+        ctx.beginPath();
+        ctx.arc(x1,y1,3,0,Math.PI*2);
+        ctx.fill();
+
+        ctx.fillStyle = cmyk;
+        ctx.beginPath();
+        ctx.arc(x2,y2,3,0,Math.PI*2);
+        ctx.fill();
+
+        // ===== TEXT DIFFERENCE + FAKE LUMINANCE =====
+        if(i % 4 === 0){
+
+            let text1 = `${Math.round(x1)},${Math.round(y1)}`;
+            let text2 = `${Math.round(x2)},${Math.round(y2)}`;
+
+            // fake luminance (ringan)
+            let lum1 = (Math.sin(i*0.2 + t) + 1) * 10;
+            let lum2 = (Math.cos(i*0.2 + t) + 1) * 10;
+
+            ctx.save();
+            ctx.globalCompositeOperation = "difference";
+            ctx.fillStyle = "white";
+            ctx.font = "30px monospace";
+
+            // redup di area "gelap"
+            ctx.globalAlpha = lum1 * 1000;
+            ctx.fillText(text1, x1+5, y1-1);
+
+            ctx.globalAlpha = lum2 * 1000;
+            ctx.fillText(text2, x2+5, y2-1);
+
+            ctx.restore();
+        }
+
+        // burst
+        if(burst>0){
+            ctx.strokeStyle="rgba(255,255,255,100)";
+            ctx.beginPath();
+            ctx.arc(x1,y1,burst*8,0,Math.PI*2);
+            ctx.stroke();
+        }
+    }
+
+    ctx.restore();
+
+    if(burst>0) burst*=0.9;
+
+    t += 0.003;
+
+    requestAnimationFrame(draw);
+}
+
+draw();
+</script>
+</body>
+</html>
