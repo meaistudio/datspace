@@ -135,37 +135,42 @@ a, a:visited, a:hover, a:active {
 
     /* ================= EVENT FIX ================= */
 
-    .event-wrap{
-        flex-direction:column;  /* jangan horizontal */
-        gap:20px;
-        bottom:100px;
-        transform:translateX(-50%,-50%);
-        width:100%;
-        padding:0 28px;
-        text-align:left;
-    }
+.event-wrap{
+    display: flex;
+    flex-direction: column;   /* jangan horizontal */
+    align-items: center;
+    justify-content: flex-start;
+    gap: 20px;
+    width: 100%;
+    max-width: 1000px;
+    margin: 90px auto 0 auto;   /* kasih jarak dari navbar */
+    padding: 0 28px 60px;
+    box-sizing: border-box;
+    text-align: center;
+}
 
-    .event-image{
-        display: block;
-        width: min(780px, 72vw);   /* desktop lebih kecil */
-        max-width: 50%;
-        max-height: 72vh;          /* batasi tinggi */
-        height: auto;
-        object-fit: contain;
-        margin: 0 auto 24px auto;
-    }
-    
-    .event-info{
-        font-size:16px;   /* sebelumnya 32px → terlalu besar */
-        line-height:1.7;
-        max-width:100%;
-    }
+.event-flyer{
+    display: block;
+    width: min(780px, 72vw);   /* desktop lebih kecil */
+    max-width: 100%;
+    max-height: 72vh;          /* batasi tinggi */
+    height: auto;
+    object-fit: contain;
+    margin: 0 auto 24px auto;
+}
 
-    .event-title{
-        font-size:20px;   /* sebelumnya 40px */
-        margin-bottom:12px;
-    }
+.event-info{
+    font-size: 16px;
+    line-height: 1.7;
+    max-width: 760px;
+    width: 100%;
+    text-align: center;
+}
 
+.event-title{
+    font-size: 20px;
+    margin-bottom: 12px;
+    font-weight: 600;
 }
 
 </style>
@@ -296,7 +301,7 @@ if(currentTab==="EVENT") {
 
     content.innerHTML = `
     <div class="event-wrap">
-        <img class="event-image" src="DATs_To/DATs_To001/DATs To001.png">
+        <img class="event-flyer" src="DATs_To/DATs_To001/DATs To001.png">
 
         <div class="event-info">
             <div class="event-title">>DATs_To001 Visual Talks</div>
