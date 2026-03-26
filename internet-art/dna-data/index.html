@@ -42,8 +42,10 @@ let targetMouse = {x:w/2,y:h/2};
 let isDown = false;
 let dragForce = 0;
 
-let zoom = 3;
-let targetZoom = 3;
+const isMobile = window.innerWidth < 768 || 'ontouchstart' in window;
+
+let zoom = isMobile ? 1 : 3;
+let targetZoom = zoom;
 
 let burst = 0;
 
