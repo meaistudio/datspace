@@ -68,14 +68,19 @@ canvas{
     
 .content-event{
     position: fixed;
-    top: 120px;
+    top: 110px;
+    bottom: 40px;
     left: 50%;
     transform: translateX(-50%);
-    width: 100%;
-    max-width: 900px;
+    width: min(900px, calc(100vw - 56px));
+    overflow-y: auto;
+    overflow-x: hidden;
     text-align: left;
     z-index: 10;
+    padding-right: 8px;
+    box-sizing: border-box;
 }
+
 .content.home-desc {
     position:fixed; 
     top:50%; 
@@ -123,6 +128,13 @@ a, a:visited, a:hover, a:active {
         padding:0 28px; /* margin kiri-kanan lebih lega */
         max-width:100%;
     }
+
+    .content-event{
+        top: 70px;
+        bottom: 20px;
+        width: calc(100vw - 32px);
+        padding-right: 4px;
+    }
     
     .event-flyer{
         width: 78vw;
@@ -152,14 +164,10 @@ a, a:visited, a:hover, a:active {
 
 .event-wrap{
     display: flex;
-    flex-direction: column;   /* jangan horizontal */
-    align-items: left;
-    justify-content: flex-start;
+    flex-direction: column;
     gap: 20px;
     width: 100%;
-    max-width: 1000px;
-    margin: 90px auto 0 auto;   /* kasih jarak dari navbar */
-    padding: 0 28px 60px;
+    padding: 0 0 40px 0;
     box-sizing: border-box;
     text-align: left;
 }
