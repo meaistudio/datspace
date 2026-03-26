@@ -67,7 +67,14 @@ canvas{
 }  
     
 .content-event{
-    text-align:left;
+    position: fixed;
+    top: 120px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+    max-width: 900px;
+    text-align: left;
+    z-index: 10;
 }
 .content.home-desc {
     position:fixed; 
@@ -157,7 +164,7 @@ a, a:visited, a:hover, a:active {
     width: min(480px, 56vw);
     max-width: 100%;
     height: auto;
-    max-height: none;
+    max-height: 72vh;
     object-fit: contain;
     margin: 0 auto 24px auto;
 }
@@ -344,7 +351,7 @@ if(currentTab==="PROGRAM") {
 
     showTitle = true;
     homeExpanded = false;
-    content.classList.remove("home-desc, content-event");
+    content.classList.remove("home-desc", "content-event");
 
     content.innerHTML = `
         <div class="program-menu">
@@ -360,7 +367,7 @@ if(currentTab==="CONTACT") {
 
     showTitle = true;
     homeExpanded = false;
-    content.classList.remove("home-desc, content-event");
+    content.classList.remove("home-desc", "content-event");
 
     content.innerHTML = `
     <div style="text-align:center; line-height:1.8;">
