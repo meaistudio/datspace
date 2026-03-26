@@ -287,33 +287,24 @@ if(currentTab==="HOME") {
 }
 
 
-if(currentTab==="EVENT") {
-
-    showTitle = false;
-    homeExpanded = false;
-
-    content.classList.remove("home-desc");
-
-    content.innerHTML = `
-    <div class="event-wrap">
-        <img class="event-image" src="DATs_To/DATs_To001/DATs To001.png">
-
-        <div class="event-info">
-            <div class="event-title">>DATs_To001 Visual Talks</div>
-            A visual artist meeting space to share work, 
-            processes, and ideas through artist talks, 
-            work reviews, and open discussions.
-            <br><br>
-            // 4 April 2026<br>
-            // RSVP Only<br>
-            // Visual artist who actively works or explores in visual media, 
-               live visuals, projection mapping, and audiovisual performance.
-            <br><br>
-            Location: MEAI Studio, Jalan Gatsu Timur No.88x, Denpasar Timur, Kota Denpasar
+    if(currentTab==="EVENT") {
+        if(homeExpanded) return;
+        homeExpanded = true;
+        content.innerHTML = `
+        <div class="event-wrap">
+            <div class="event-info">
+                <div class="event-title">NO ACTIVE TRANSMISSION</div>
+                There is no public event scheduled at this moment.
+                <br><br>
+                // System idle<br>
+                // Awaiting next activation<br>
+                // Signal will reappear unexpectedly
+                <br><br>
+                DAT SPACE operates in irregular frequencies.
+            </div>
         </div>
-    </div>
-    `;
-}
+        `;
+    }
 
 
 if(currentTab==="LOCATION") {
