@@ -66,15 +66,8 @@ canvas{
     max-width:900px;
 }  
     
-.content event{
-    position:fixed;
-    bottom:120px;
-    left:50%;
-    transform:translateX(-50%);
-    font-size:20px;
+.content-event{
     text-align:left;
-    z-index:10;
-    max-width:900px;
 }
 .content.home-desc {
     position:fixed; 
@@ -308,8 +301,8 @@ if(currentTab==="EVENT") {
     showTitle = false;
     homeExpanded = false;
 
-    content.classList.remove("event");
-    content.classList.add("event");
+    content.classList.remove("home-desc");
+    content.classList.add("content-event");
 
     content.innerHTML = `
     <div class="event-wrap">
