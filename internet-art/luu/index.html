@@ -5,44 +5,56 @@
 <title>LUU</title>
 
 <style>
-    body {
-        margin: 0;
-        overflow: hidden;
-        background: black;
-    }
+body {
+    margin: 0;
+    overflow: hidden;
+    background: black;
+}
 
-    .scene {
-        position: relative;
-        width: 100vw;
-        height: 100vh;
-        overflow: hidden;
-    }
+/* SCENE */
+.scene {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+}
 
-    /* Jalan background */
-    .road {
-        position: absolute;
-        width: 200%;
-        height: 100%;
-        background: url("gif/jalan.gif");
-        background-repeat: repeat-x;
-        background-size: contain;
-        animation: roadMove 5s linear infinite;
-    }
+/* JALAN (FIXED SIZE, TIDAK STRETCH) */
+.road {
+    position: absolute;
+    bottom: 0;
+    left: 0;
 
-    @keyframes roadMove {
-        from { transform: translateX(0); }
-        to { transform: translateX(-50%); }
-    }
+    width: 200%;
+    height: 300px; /* FIXED HEIGHT */
 
-    /* Truk */
+    background: url("gif/jalan.gif");
+    background-repeat: repeat-x;
+    background-size: auto 100%; /* tidak berubah rasio */
+
+    animation: roadMove 5s linear infinite;
+}
+
+@keyframes roadMove {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+}
+
+/* TRUK */
+.truck {
+    position: absolute;
+    width: 800px;
+    image-rendering: pixelated;
+    pointer-events: none;
+    will-change: transform;
+}
+
+/* MOBILE */
+@media (max-width: 600px) {
     .truck {
-        position: absolute;
-        width: 800px;
-        image-rendering: pixelated;
-        pointer-events: none;
-        will-change: transform;
+        width: 400px;
     }
-
+}
 </style>
 </head>
 
@@ -58,7 +70,10 @@ const scene = document.querySelector(".scene");
 let trucks = [];
 const maxTrucks = 10;
 
-// buat truk baru
+// tinggi jalan (HARUS sama dengan CSS)
+const roadHeight = 300;
+
+// buat truk
 function createTruck() {
     if (trucks.length >= maxTrucks) return;
 
@@ -66,11 +81,14 @@ function createTruck() {
     truck.src = "gif/Truk sampah.gif";
     truck.classList.add("truck");
 
-    // depth (posisi + layer + scale)
+    // depth (layer + scale)
     const depth = Math.random() * 10;
     const scale = 1.2 - (depth / 20);
 
-    truck.style.bottom = depth + "%";
+    // posisi truk selalu relatif ke jalan (PIXEL, bukan %)
+    const bottomOffset = roadHeight * 0.1 + depth * 5;
+
+    truck.style.bottom = bottomOffset + "px";
     truck.style.zIndex = Math.floor(100 - depth);
     truck.dataset.scale = scale;
 
@@ -82,8 +100,8 @@ function createTruck() {
     function animate() {
         x += speed;
 
-        const randomY = (Math.random() - 0.5) * 6;
-        const randomRotate = (Math.random() - 0.5) * 1.5;
+        const randomY = (Math.random() - 0.5) * 5;
+        const randomRotate = (Math.random() - 0.5) * 1.2;
         const scale = truck.dataset.scale;
 
         truck.style.transform = `
@@ -108,10 +126,8 @@ function createTruck() {
     trucks.push(truck);
 }
 
-// klik untuk tambah truk
-window.addEventListener("click", () => {
-    createTruck();
-});
+// klik tambah truk
+window.addEventListener("click", createTruck);
 
 // mulai dengan 1 truk
 createTruck();
