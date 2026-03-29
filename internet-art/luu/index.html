@@ -37,16 +37,12 @@
     /* Truk */
     .truck {
         position: absolute;
-        bottom: 10%;
         width: 800px;
         image-rendering: pixelated;
-        animation: moveTruck 10s linear infinite;
+        pointer-events: none;
+        will-change: transform;
     }
 
-    @keyframes moveTruck {
-        from { left: -600px; }
-        to { left: 110%; }
-    }
 </style>
 </head>
 
@@ -54,30 +50,71 @@
 
 <div class="scene">
     <div class="road"></div>
-
-    <img 
-        src="gif/Truk sampah.gif"
-        class="truck" 
-        id="truck">
 </div>
 
 <script>
-const truck = document.getElementById("truck");
+const scene = document.querySelector(".scene");
 
-// efek getar (vibration)
-function vibrateTruck() {
-    const randomY = (Math.random() - 0.5) * 10;
-    const randomRotate = (Math.random() - 0.5) * 2;
+let trucks = [];
+const maxTrucks = 10;
 
-    truck.style.transform = `
-        translateY(${randomY}px)
-        rotate(${randomRotate}deg)
-    `;
+// buat truk baru
+function createTruck() {
+    if (trucks.length >= maxTrucks) return;
 
-    requestAnimationFrame(vibrateTruck);
+    const truck = document.createElement("img");
+    truck.src = "gif/Truk sampah.gif";
+    truck.classList.add("truck");
+
+    // depth (posisi + layer + scale)
+    const depth = Math.random() * 10;
+    const scale = 1.2 - (depth / 20);
+
+    truck.style.bottom = depth + "%";
+    truck.style.zIndex = Math.floor(100 - depth);
+    truck.dataset.scale = scale;
+
+    let x = -800;
+    const speed = Math.random() * 3 + 1;
+
+    scene.appendChild(truck);
+
+    function animate() {
+        x += speed;
+
+        const randomY = (Math.random() - 0.5) * 6;
+        const randomRotate = (Math.random() - 0.5) * 1.5;
+        const scale = truck.dataset.scale;
+
+        truck.style.transform = `
+            translateX(${x}px)
+            translateY(${randomY}px)
+            rotate(${randomRotate}deg)
+            scale(${scale})
+        `;
+
+        // keluar layar → hapus
+        if (x > window.innerWidth + 800) {
+            cancelAnimationFrame(truck._anim);
+            truck.remove();
+            trucks = trucks.filter(t => t !== truck);
+            return;
+        }
+
+        truck._anim = requestAnimationFrame(animate);
+    }
+
+    animate();
+    trucks.push(truck);
 }
 
-vibrateTruck();
+// klik untuk tambah truk
+window.addEventListener("click", () => {
+    createTruck();
+});
+
+// mulai dengan 1 truk
+createTruck();
 </script>
 
 </body>
