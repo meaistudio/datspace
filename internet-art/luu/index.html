@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>LUU</title>
+
+<style>
+    body {
+        margin: 0;
+        overflow: hidden;
+        background: black;
+    }
+
+    .scene {
+        position: relative;
+        width: 100vw;
+        height: 100vh;
+        overflow: hidden;
+    }
+
+    /* Jalan background */
+    .road {
+        position: absolute;
+        width: 200%;
+        height: 100%;
+        background: url("gif/jalan.gif");
+        background-repeat: repeat-x;
+        background-size: contain;
+        animation: roadMove 5s linear infinite;
+    }
+
+    @keyframes roadMove {
+        from { transform: translateX(0); }
+        to { transform: translateX(-50%); }
+    }
+
+    /* Truk */
+    .truck {
+        position: absolute;
+        bottom: 20%;
+        width: 200px;
+        image-rendering: pixelated;
+        animation: moveTruck 10s linear infinite;
+    }
+
+    @keyframes moveTruck {
+        from { left: -250px; }
+        to { left: 110%; }
+    }
+</style>
+</head>
+
+<body>
+
+<div class="scene">
+    <div class="road"></div>
+
+    <img 
+        src="gif/Truk sampah.gif"
+        class="truck" 
+        id="truck">
+</div>
+
+<script>
+const truck = document.getElementById("truck");
+
+// efek getar (vibration)
+function vibrateTruck() {
+    const randomY = (Math.random() - 0.5) * 10;
+    const randomRotate = (Math.random() - 0.5) * 2;
+
+    truck.style.transform = `
+        translateY(${randomY}px)
+        rotate(${randomRotate}deg)
+    `;
+
+    requestAnimationFrame(vibrateTruck);
+}
+
+vibrateTruck();
+</script>
+
+</body>
+</html>
