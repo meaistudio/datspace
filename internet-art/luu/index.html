@@ -2,116 +2,46 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-
-<!-- LOCK ZOOM -->
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-
 <title>LUU</title>
 
 <style>
-html, body {
-    margin: 0;
-    padding: 0;
-    overflow: hidden;
-    height: 100%;
-    background: black;
-    touch-action: none;
-}
+    body {
+        margin: 0;
+        overflow: hidden;
+        background: black;
+    }
 
-/* Hilangkan highlight tap */
-* {
-    box-sizing: border-box;
-    -webkit-tap-highlight-color: transparent;
-}
+    .scene {
+        position: relative;
+        width: 100vw;
+        height: 100vh;
+        overflow: hidden;
+    }
 
-/* SCENE CENTER LOCK */
-.scene {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    width: 100vw;
-    height: 100vh;
-    transform: translate(-50%, -50%);
-    overflow: hidden;
-}
-
-/* JALAN (selalu bawah) */
-.road {
-    position: absolute;
-    bottom: 100;
-    width: 200%;
-    height: 35vh;
-    background: url("gif/jalan.gif");
-    background-repeat: repeat-x;
-    background-size: cover;
-    animation: roadMove 5s linear infinite;
-    z-index: 1;
-}
-
-@keyframes roadMove {
-    from { transform: translateX(0); }
-    to { transform: translateX(-50%); }
-}
-
-/* TRUK */
-.truck {
-    position: absolute;
-    width: 800px;
-    image-rendering: pixelated;
-    pointer-events: none;
-    will-change: transform;
-}
-
-/* OVERLAY */
-.overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: rgba(0,0,0,0.6);
-    z-index: 999;
-    text-align: center;
-}
-
-.text {
-    color: white;
-    font-family: monospace;
-    padding: 20px;
-}
-
-.text .id {
-    font-size: 32px;
-    margin: 0;
-}
-
-.text .en {
-    font-size: 18px;
-    opacity: 0.7;
-    margin-top: 8px;
-}
-
-/* MOBILE */
-@media (max-width: 600px) {
+    /* Jalan background */
     .road {
-        height: 30vh;
+        position: absolute;
+        width: 200%;
+        height: 100%;
+        background: url("gif/jalan.gif");
+        background-repeat: repeat-x;
+        background-size: contain;
+        animation: roadMove 5s linear infinite;
     }
 
+    @keyframes roadMove {
+        from { transform: translateX(0); }
+        to { transform: translateX(-50%); }
+    }
+
+    /* Truk */
     .truck {
-        width: 400px;
+        position: absolute;
+        width: 800px;
+        image-rendering: pixelated;
+        pointer-events: none;
+        will-change: transform;
     }
-
-    .text .id {
-        font-size: 20px;
-    }
-
-    .text .en {
-        font-size: 14px;
-    }
-}
 
 </style>
 </head>
@@ -120,25 +50,15 @@ html, body {
 
 <div class="scene">
     <div class="road"></div>
-
-    <!-- OVERLAY -->
-    <div class="overlay" id="overlay">
-        <div class="text">
-            <p class="id">klik untuk buang sampah</p>
-            <p class="en">click to dispose waste</p>
-        </div>
-    </div>
 </div>
 
 <script>
 const scene = document.querySelector(".scene");
-const overlay = document.getElementById("overlay");
 
 let trucks = [];
 const maxTrucks = 10;
-let started = false;
 
-// BUAT TRUK
+// buat truk baru
 function createTruck() {
     if (trucks.length >= maxTrucks) return;
 
@@ -146,13 +66,11 @@ function createTruck() {
     truck.src = "gif/Truk sampah.gif";
     truck.classList.add("truck");
 
-    // depth → posisi + layer + ukuran
+    // depth (posisi + layer + scale)
     const depth = Math.random() * 10;
     const scale = 1.2 - (depth / 20);
 
-    const bottomOffset = 2 + depth * 0.8;
-
-    truck.style.bottom = bottomOffset + "%";
+    truck.style.bottom = depth + "%";
     truck.style.zIndex = Math.floor(100 - depth);
     truck.dataset.scale = scale;
 
@@ -164,8 +82,8 @@ function createTruck() {
     function animate() {
         x += speed;
 
-        const randomY = (Math.random() - 0.5) * 5;
-        const randomRotate = (Math.random() - 0.5) * 1.2;
+        const randomY = (Math.random() - 0.5) * 6;
+        const randomRotate = (Math.random() - 0.5) * 1.5;
         const scale = truck.dataset.scale;
 
         truck.style.transform = `
@@ -190,20 +108,13 @@ function createTruck() {
     trucks.push(truck);
 }
 
-// INTERAKSI (desktop + mobile)
-function handleInteraction() {
-    if (!started) {
-        overlay.style.display = "none";
-        createTruck();
-        started = true;
-        return;
-    }
-
+// klik untuk tambah truk
+window.addEventListener("click", () => {
     createTruck();
-}
+});
 
-window.addEventListener("click", handleInteraction);
-window.addEventListener("touchstart", handleInteraction);
+// mulai dengan 1 truk
+createTruck();
 </script>
 
 </body>
