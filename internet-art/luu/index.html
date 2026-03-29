@@ -62,22 +62,74 @@
 </div>
 
 <script>
-const truck = document.getElementById("truck");
+const scene = document.querySelector(".scene");
 
-// efek getar (vibration)
-function vibrateTruck() {
-    const randomY = (Math.random() - 0.5) * 10;
-    const randomRotate = (Math.random() - 0.5) * 2;
+let trucks = [];
+let maxTrucks = 10;
 
-    truck.style.transform = `
-        translateY(${randomY}px)
-        rotate(${randomRotate}deg)
-    `;
+// fungsi buat truk baru
+function createTruck() {
+    const truck = document.createElement("img");
+    truck.src = "gif/Truk sampah.gif";
+    truck.classList.add("truck");
 
-    requestAnimationFrame(vibrateTruck);
+    // random posisi & speed
+    let baseX = -600;
+    let speed = Math.random() * 3 + 1; // 1–4
+    let baseY = Math.random() * 20; // variasi tinggi
+
+    truck.style.bottom = (10 + baseY) + "%";
+
+    scene.appendChild(truck);
+
+    function animate() {
+        baseX += speed;
+
+        const randomY = (Math.random() - 0.5) * 10;
+        const randomRotate = (Math.random() - 0.5) * 2;
+
+        truck.style.transform = `
+            translateX(${baseX}px)
+            translateY(${randomY}px)
+            rotate(${randomRotate}deg)
+        `;
+
+        if (baseX > window.innerWidth + 600) {
+            baseX = -600;
+        }
+
+        truck._anim = requestAnimationFrame(animate);
+    }
+
+    animate();
+
+    trucks.push(truck);
 }
 
-vibrateTruck();
+// klik = tambah truk
+window.addEventListener("click", () => {
+    if (trucks.length < maxTrucks) {
+        createTruck();
+    } else {
+        reduceTrucks();
+    }
+});
+
+// fungsi mengurangi truk
+function reduceTrucks() {
+    let interval = setInterval(() => {
+        if (trucks.length > 1) {
+            const truck = trucks.shift();
+            cancelAnimationFrame(truck._anim);
+            truck.remove();
+        } else {
+            clearInterval(interval);
+        }
+    }, 500);
+}
+
+// mulai dengan 1 truk
+createTruck();
 </script>
 
 </body>
