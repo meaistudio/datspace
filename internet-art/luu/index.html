@@ -9,7 +9,7 @@ html, body {
     margin: 0;
     padding: 0;
     overflow-x: hidden;
-    overflow-y: hidden; /* ⛔ lock vertical */
+    overflow-y: hidden;
     background: black;
 }
 
@@ -17,22 +17,24 @@ html, body {
 .scene {
     position: relative;
 
-    width: 100vw;      /* fleksibel horizontal */
-    height: 500px;     /* ⛔ LOCK HEIGHT */
+    width: 100vw;
+    height: 500px; /* LOCK HEIGHT */
+
     max-height: 500px;
     min-height: 500px;
 
     overflow: hidden;
 }
 
-/* JALAN */
+/* JALAN (LEBIH BESAR + TURUN) */
 .road {
     position: absolute;
-    bottom: 0;
-    left: 0;
+    bottom: -100px; /* ⬇️ turun ke bawah */
 
+    left: 0;
     width: 200%;
-    height: 300px; /* FIXED */
+
+    height: 450px; /* ⬆️ diperbesar */
 
     background: url("gif/jalan.gif");
     background-repeat: repeat-x;
@@ -77,7 +79,7 @@ let trucks = [];
 const maxTrucks = 10;
 
 // HARUS sama dengan CSS .road height
-const roadHeight = 300;
+const roadHeight = 450;
 
 // CREATE TRUCK
 function createTruck() {
@@ -91,7 +93,8 @@ function createTruck() {
     const depth = Math.random() * 10;
     const scale = 1.2 - (depth / 20);
 
-    const bottomOffset = (roadHeight * 0.1) + depth * 6;
+    // posisi mengikuti jalan baru
+    const bottomOffset = (roadHeight * 0.05) + depth * 6;
 
     truck.style.bottom = bottomOffset + "px";
     truck.style.zIndex = Math.floor(100 - depth);
