@@ -5,34 +5,38 @@
 <title>LUU</title>
 
 <style>
-body {
+html, body {
     margin: 0;
-    overflow: hidden;
+    padding: 0;
+    overflow-x: hidden;
+    overflow-y: hidden; /* ⛔ lock vertical */
     background: black;
 }
 
 /* SCENE */
 .scene {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
+    position: relative;
+
+    width: 100vw;      /* fleksibel horizontal */
+    height: 500px;     /* ⛔ LOCK HEIGHT */
+    max-height: 500px;
+    min-height: 500px;
+
     overflow: hidden;
 }
 
-/* JALAN (FIXED SIZE, TIDAK STRETCH) */
+/* JALAN */
 .road {
     position: absolute;
-    bottom: 50;
+    bottom: 0;
     left: 0;
 
     width: 200%;
-    height: 900px; /* FIXED HEIGHT */
+    height: 300px; /* FIXED */
 
     background: url("gif/jalan.gif");
     background-repeat: repeat-x;
-    background-size: auto 100%; /* tidak berubah rasio */
+    background-size: auto 100%;
 
     animation: roadMove 5s linear infinite;
 }
@@ -45,7 +49,7 @@ body {
 /* TRUK */
 .truck {
     position: absolute;
-    width: 800px;
+    width: 600px;
     image-rendering: pixelated;
     pointer-events: none;
     will-change: transform;
@@ -53,12 +57,8 @@ body {
 
 /* MOBILE */
 @media (max-width: 600px) {
-    .road {
-        bottom: 0;
-    }
-    
     .truck {
-        width: 400px;
+        width: 300px;
     }
 }
 </style>
@@ -76,10 +76,10 @@ const scene = document.querySelector(".scene");
 let trucks = [];
 const maxTrucks = 10;
 
-// tinggi jalan (HARUS sama dengan CSS)
+// HARUS sama dengan CSS .road height
 const roadHeight = 300;
 
-// buat truk
+// CREATE TRUCK
 function createTruck() {
     if (trucks.length >= maxTrucks) return;
 
@@ -87,12 +87,11 @@ function createTruck() {
     truck.src = "gif/Truk sampah.gif";
     truck.classList.add("truck");
 
-    // depth (layer + scale)
+    // depth system
     const depth = Math.random() * 10;
     const scale = 1.2 - (depth / 20);
 
-    // posisi truk selalu relatif ke jalan (PIXEL, bukan %)
-    const bottomOffset = roadHeight * 0.1 + depth * 5;
+    const bottomOffset = (roadHeight * 0.1) + depth * 6;
 
     truck.style.bottom = bottomOffset + "px";
     truck.style.zIndex = Math.floor(100 - depth);
@@ -106,8 +105,8 @@ function createTruck() {
     function animate() {
         x += speed;
 
-        const randomY = (Math.random() - 0.5) * 5;
-        const randomRotate = (Math.random() - 0.5) * 1.2;
+        const randomY = (Math.random() - 0.5) * 4;
+        const randomRotate = (Math.random() - 0.5) * 1;
         const scale = truck.dataset.scale;
 
         truck.style.transform = `
@@ -117,7 +116,6 @@ function createTruck() {
             scale(${scale})
         `;
 
-        // keluar layar → hapus
         if (x > window.innerWidth + 800) {
             cancelAnimationFrame(truck._anim);
             truck.remove();
@@ -132,10 +130,10 @@ function createTruck() {
     trucks.push(truck);
 }
 
-// klik tambah truk
+// CLICK SPAWN
 window.addEventListener("click", createTruck);
 
-// mulai dengan 1 truk
+// INIT
 createTruck();
 </script>
 
