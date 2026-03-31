@@ -11,6 +11,8 @@ html, body {
     overflow-x: hidden;
     overflow-y: hidden;
     background: black;
+
+    touch-action: manipulation; /* FIX TOUCH */
 }
 
 /* SCENE */
@@ -18,7 +20,7 @@ html, body {
     position: relative;
 
     width: 100vw;
-    height: 1000px; /* LOCK HEIGHT */
+    height: 1000px;
 
     max-height: 1000px;
     min-height: 1000px;
@@ -26,15 +28,15 @@ html, body {
     overflow: hidden;
 }
 
-/* JALAN (LEBIH BESAR + TURUN) */
+/* JALAN */
 .road {
     position: absolute;
-    bottom: 0px; /* ⬇️ turun ke bawah */
+    bottom: 0px;
 
     left: 0;
     width: 200%;
 
-    height: 700px; /* ⬆️ diperbesar */
+    height: 700px; /* */
 
     background: url("gif/jalan.gif");
     background-repeat: repeat-x;
@@ -78,8 +80,8 @@ const scene = document.querySelector(".scene");
 let trucks = [];
 const maxTrucks = 10;
 
-// HARUS sama dengan CSS .road height
-const roadHeight = 450;
+// HARUS sama dengan CSS
+const roadHeight = 700;
 
 // CREATE TRUCK
 function createTruck() {
@@ -89,11 +91,9 @@ function createTruck() {
     truck.src = "gif/Truk sampah.gif";
     truck.classList.add("truck");
 
-    // depth system
     const depth = Math.random() * 10;
     const scale = 1.2 - (depth / 20);
 
-    // posisi mengikuti jalan baru
     const bottomOffset = (roadHeight * 0.05) + depth * 6;
 
     truck.style.bottom = bottomOffset + "px";
@@ -133,8 +133,8 @@ function createTruck() {
     trucks.push(truck);
 }
 
-// CLICK SPAWN
-window.addEventListener("click", createTruck);
+// FIX UNIVERSAL INPUT (HP + DESKTOP)
+window.addEventListener("pointerdown", createTruck);
 
 // INIT
 createTruck();
