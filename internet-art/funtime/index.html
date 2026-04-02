@@ -14,22 +14,27 @@ html, body {
     overflow:hidden;
 }
 
-/* SCENE */
 .scene {
     position:relative;
     width:100vw;
     height:100vh;
 }
 
-/* ANIME GIRL */
+/* ANIME GIRL (CENTER) */
 .girl {
     position:absolute;
-
     width:420px;
     bottom:0;
     left:50%;
-
     transform:translateX(-50%);
+}
+
+/* EARTH (LEFT TOP) */
+.earth {
+    position:absolute;
+    width:260px;
+    top:10%;
+    left:10%;
 }
 
 /* IMAGE */
@@ -44,7 +49,10 @@ img {
 
 <div class="scene">
 
-    <!-- TEST IMAGE -->
+    <!-- EARTH -->
+    <img class="earth" src="gif/funtime-earth.gif">
+
+    <!-- ANIME GIRL -->
     <img class="girl" src="gif/anime-girl.gif">
 
 </div>
