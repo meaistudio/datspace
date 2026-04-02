@@ -20,26 +20,38 @@ html, body {
     height:100vh;
 }
 
-/* ANIME GIRL (CENTER) */
+/* BACKGROUND */
+.bg {
+    position:absolute;
+    width:100%;
+    height:100%;
+    top:0;
+    left:0;
+    object-fit:cover; /* penting supaya full cover */
+    z-index:0;
+}
+
+/* EARTH */
+.earth {
+    position:absolute;
+    width:260px;
+    top:10%;
+    left:10%;
+    z-index:2;
+}
+
+/* ANIME GIRL */
 .girl {
     position:absolute;
     width:420px;
     bottom:0;
     left:50%;
     transform:translateX(-50%);
-}
-
-/* EARTH (LEFT TOP) */
-.earth {
-    position:absolute;
-    width:260px;
-    top:10%;
-    left:10%;
+    z-index:3;
 }
 
 /* IMAGE */
 img {
-    width:100%;
     display:block;
 }
 </style>
@@ -48,6 +60,9 @@ img {
 <body>
 
 <div class="scene">
+
+    <!-- BACKGROUND -->
+    <img class="bg" src="gif/galaxy.gif">
 
     <!-- EARTH -->
     <img class="earth" src="gif/funtime-earth.gif">
