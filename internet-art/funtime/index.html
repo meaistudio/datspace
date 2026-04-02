@@ -59,7 +59,7 @@ html, body {
 .ball3 { position:absolute; width:90px;  top:630px; left:450px; z-index:4; }
 .ball4 { position:absolute; width:160px; top:730px; left:350px; z-index:4; }
 
-/* GIRL (TIDAK BLOK KLIK) */
+/* GIRL */
 .girl {
     position:absolute;
     width:420px;
@@ -113,20 +113,33 @@ img {
 
 </div>
 
+<!-- AUDIO -->
+<audio id="audio-ball2" src="song/my-song-44.mp3"></audio>
+
 <script>
 const items = document.querySelectorAll('.clickable');
+const audioBall2 = document.getElementById('audio-ball2');
 
 items.forEach(el => {
     el.addEventListener('click', () => {
 
         const isActive = el.classList.contains('active');
 
-        // reset semua
+        // reset visual
         items.forEach(i => i.classList.remove('active'));
 
-        // aktifkan hanya yang diklik
+        // stop audio
+        audioBall2.pause();
+        audioBall2.currentTime = 0;
+
+        // aktifkan jika belum aktif
         if (!isActive) {
             el.classList.add('active');
+
+            // khusus ball2 play audio
+            if (el.classList.contains('ball2')) {
+                audioBall2.play();
+            }
         }
     });
 });
