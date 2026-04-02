@@ -94,6 +94,21 @@ img {
     transform: scale(1.2);
     filter: brightness(1.2);
 }
+
+/* FOOTER TEXT */
+.footer-text {
+    position:fixed;
+    bottom:20px;
+    left:20px;
+
+    color:white;
+    font-family: monospace;
+    font-size:14px;
+    letter-spacing:2px;
+
+    opacity:0.7;
+    z-index:999;
+}
 </style>
 </head>
 
@@ -121,8 +136,11 @@ img {
 
 </div>
 
+<!-- FOOTER -->
+<div class="footer-text">DATs X FUNTIME</div>
+
 <!-- AUDIO -->
-<audio id="audio-ball2" src="song/my-song-44.mp3"></audio>
+<audio id="audio-ball2" src="song/my-song-44.mp3" preload="auto"></audio>
 
 <script>
 const items = document.querySelectorAll('.clickable');
@@ -147,14 +165,13 @@ items.forEach(el => {
         if (!isActive) {
             el.classList.add('active');
 
-            /* ASTEROID LEVEL SYSTEM */
             if (el.classList.contains('ball1')) {
                 asteroid.style.transform = "translateY(20px)";
             }
 
             if (el.classList.contains('ball2')) {
                 asteroid.style.transform = "translateY(60px)";
-                audioBall2.play();
+                audioBall2.play().catch(err => console.log(err));
             }
 
             if (el.classList.contains('ball3')) {
