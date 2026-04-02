@@ -3,7 +3,6 @@
 <head>
 <meta charset="UTF-8">
 
-<!-- DISABLE ZOOM -->
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
 <title>FUNTIME LOCKED</title>
@@ -16,16 +15,13 @@ html, body {
     overflow:hidden;
 }
 
-/* FIXED CANVAS */
+/* CANVAS */
 .scene {
     position:absolute;
-
     width:1080px;
     height:1080px;
-
     top:50%;
     left:50%;
-
     transform:translate(-50%, -50%);
 }
 
@@ -35,12 +31,17 @@ html, body {
     width:100%;
     height:100%;
     object-fit:cover;
+    z-index:0;
+    pointer-events:none;
 }
 
+/* ASTEROID */
 .asteroid {
     position:absolute;
     width:100%;
     top:350px;
+    z-index:1;
+    pointer-events:none;
 }
 
 /* EARTH */
@@ -49,51 +50,41 @@ html, body {
     width:220px;
     top:180px;
     left:340px;
+    z-index:3;
 }
 
-/* ball 1 */
-.ball1 {
-    position:absolute;
-    width:120px;
-    top:180px;
-    left:600px;
-}
+/* BALLS */
+.ball1 { position:absolute; width:120px; top:180px; left:600px; z-index:4; }
+.ball2 { position:absolute; width:100px; top:450px; left:380px; z-index:4; }
+.ball3 { position:absolute; width:90px;  top:630px; left:450px; z-index:4; }
+.ball4 { position:absolute; width:160px; top:730px; left:350px; z-index:4; }
 
-    /* ball 2 */
-.ball2 {
-    position:absolute;
-    width:100px;
-    top:450px;
-    left:380px;
-}
-    /* ball 3 */
-.ball3 {
-    position:absolute;
-    width:90px;
-    top:630px;
-    left:450px;
-}
-    /* ball 4 */
-.ball4 {
-    position:absolute;
-    width:160px;
-    top:730px;
-    left:350px;
-}
-    
-
-
-/* GIRL */
+/* GIRL (TIDAK BLOK KLIK) */
 .girl {
     position:absolute;
     width:420px;
     bottom:160px;
     left:55%;
     transform:translateX(-50%);
+    z-index:5;
+    pointer-events:none;
 }
 
+/* IMAGE */
 img {
     display:block;
+}
+
+/* CLICKABLE */
+.clickable {
+    cursor:pointer;
+    transition: transform 0.2s ease, filter 0.2s ease;
+}
+
+/* ACTIVE */
+.active {
+    transform: scale(1.2);
+    filter: brightness(1.2);
 }
 </style>
 </head>
@@ -105,28 +96,41 @@ img {
     <!-- BG -->
     <img class="bg" src="gif/galaxy.gif">
 
-    <!-- BG -->
+    <!-- ASTEROID -->
     <img class="asteroid" src="gif/asteroid.gif">
 
     <!-- EARTH -->
-    <img class="earth" src="gif/earth.gif">
+    <img class="earth clickable" src="gif/earth.gif">
 
-    <!-- EARTH -->
-    <img class="ball1" src="gif/ball-1.gif">
+    <!-- BALLS -->
+    <img class="ball1 clickable" src="gif/ball-1.gif">
+    <img class="ball2 clickable" src="gif/ball-2.gif">
+    <img class="ball3 clickable" src="gif/ball-3.gif">
+    <img class="ball4 clickable" src="gif/ball-4.gif">
 
-    <!-- EARTH -->
-    <img class="ball2" src="gif/ball-2.gif">
-
-    <!-- EARTH -->
-    <img class="ball3" src="gif/ball-3.gif">
-
-    <!-- EARTH -->
-    <img class="ball4" src="gif/ball-4.gif">
-    
     <!-- GIRL -->
     <img class="girl" src="gif/anime-girl.gif">
 
 </div>
+
+<script>
+const items = document.querySelectorAll('.clickable');
+
+items.forEach(el => {
+    el.addEventListener('click', () => {
+
+        const isActive = el.classList.contains('active');
+
+        // reset semua
+        items.forEach(i => i.classList.remove('active'));
+
+        // aktifkan hanya yang diklik
+        if (!isActive) {
+            el.classList.add('active');
+        }
+    });
+});
+</script>
 
 </body>
 </html>
