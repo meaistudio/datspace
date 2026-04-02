@@ -42,6 +42,7 @@ html, body {
     top:350px;
     z-index:1;
     pointer-events:none;
+    transition: transform 0.5s ease;
 }
 
 /* EARTH */
@@ -59,7 +60,13 @@ html, body {
 .ball3 { position:absolute; width:90px;  top:630px; left:450px; z-index:4; }
 .ball4 { position:absolute; width:160px; top:730px; left:350px; z-index:4; }
 
-/* GIRL */
+/* GIRL FLOAT */
+@keyframes floatGirl {
+    0%   { transform: translateX(-50%) translateY(0px); }
+    50%  { transform: translateX(-50%) translateY(-10px); }
+    100% { transform: translateX(-50%) translateY(0px); }
+}
+
 .girl {
     position:absolute;
     width:420px;
@@ -68,6 +75,7 @@ html, body {
     transform:translateX(-50%);
     z-index:5;
     pointer-events:none;
+    animation: floatGirl 5s ease-in-out infinite;
 }
 
 /* IMAGE */
@@ -97,7 +105,7 @@ img {
     <img class="bg" src="gif/galaxy.gif">
 
     <!-- ASTEROID -->
-    <img class="asteroid" src="gif/asteroid.gif">
+    <img id="asteroid" class="asteroid" src="gif/asteroid.gif">
 
     <!-- EARTH -->
     <img class="earth clickable" src="gif/earth.gif">
@@ -114,11 +122,12 @@ img {
 </div>
 
 <!-- AUDIO -->
-<audio id="audio-ball2" src="song/my-song-44.mp3"></audio>
+<audio id="audio-ball2" src="song/my-song-44.mp4"></audio>
 
 <script>
 const items = document.querySelectorAll('.clickable');
 const audioBall2 = document.getElementById('audio-ball2');
+const asteroid = document.getElementById('asteroid');
 
 items.forEach(el => {
     el.addEventListener('click', () => {
@@ -132,13 +141,28 @@ items.forEach(el => {
         audioBall2.pause();
         audioBall2.currentTime = 0;
 
-        // aktifkan jika belum aktif
+        // reset asteroid
+        asteroid.style.transform = "translateY(0px)";
+
         if (!isActive) {
             el.classList.add('active');
 
-            // khusus ball2 play audio
+            /* ASTEROID LEVEL SYSTEM */
+            if (el.classList.contains('ball1')) {
+                asteroid.style.transform = "translateY(20px)";
+            }
+
             if (el.classList.contains('ball2')) {
+                asteroid.style.transform = "translateY(60px)";
                 audioBall2.play();
+            }
+
+            if (el.classList.contains('ball3')) {
+                asteroid.style.transform = "translateY(100px)";
+            }
+
+            if (el.classList.contains('ball4')) {
+                asteroid.style.transform = "translateY(150px)";
             }
         }
     });
