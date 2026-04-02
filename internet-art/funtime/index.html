@@ -3,73 +3,80 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <title>FUNTIME RELEASE</title>
 
 <style>
 html, body {
     margin:0;
     padding:0;
-    overflow:hidden;
     background:black;
-    font-family: monospace;
+    overflow:hidden;
 }
 
 /* SCENE */
 .scene {
-    position:fixed;
+    position:relative;
     width:100vw;
     height:100vh;
-    overflow:hidden;
 }
 
-/* LAYER BASE */
+/* BASE LAYER */
 .layer {
     position:absolute;
     will-change: transform;
-    pointer-events:none;
 }
 
-/* CENTER TITLE */
+/* BACKGROUND */
+.bg {
+    width:120%;
+    height:120%;
+    top:-10%;
+    left:-10%;
+}
+
+/* GROUND */
+.ground {
+    bottom:0;
+    width:120%;
+    left:-10%;
+}
+
+/* ANIME GIRL CENTER */
+.girl {
+    width:420px;
+    bottom:0;
+    left:50%;
+    transform:translateX(-50%);
+    z-index:10;
+}
+
+/* EARTH + TEXT */
+.earth {
+    width:260px;
+    top:12%;
+    left:12%;
+}
+
 .title {
     position:absolute;
-    top:50%;
-    left:50%;
-    transform:translate(-50%,-50%);
-    text-align:center;
+    top:18%;
+    left:16%;
     color:white;
-    z-index:100;
-    pointer-events:auto;
-}
-
-.title h1 {
-    font-size:clamp(24px, 5vw, 80px);
+    font-size:40px;
+    font-weight:bold;
     letter-spacing:4px;
+    z-index:20;
 }
 
-.title p {
-    opacity:0.7;
-    font-size:14px;
-}
+/* ORBS */
+.orb1 { width:220px; top:10%; right:12%; }
+.orb2 { width:200px; top:45%; right:10%; }
+.orb3 { width:220px; bottom:20%; left:10%; }
+.orb4 { width:180px; bottom:5%; left:45%; transform:translateX(-50%); }
 
-/* CLICK AREA */
-.cta {
-    margin-top:20px;
-    padding:10px 20px;
-    border:1px solid white;
-    cursor:pointer;
-    display:inline-block;
-    transition:0.2s;
-}
-.cta:hover {
-    background:white;
-    color:black;
-}
-
-/* IMAGE STYLE */
+/* IMAGE */
 img {
     width:100%;
-    height:auto;
     display:block;
 }
 </style>
@@ -79,94 +86,69 @@ img {
 
 <div class="scene" id="scene">
 
-    <!-- BACKGROUND -->
-    <div class="layer" data-depth="0.1" style="width:120%; top:-10%; left:-10%;">
-        <img src="internet-art/funtime/gif/galaxy.gif">
-    </div>
+    <!-- BG -->
+    <img class="layer bg" src="internet-art/funtime/gif/galaxy.gif">
+
+    <!-- GROUND -->
+    <img class="layer ground" src="internet-art/funtime/gif/ASTEROID.gif">
 
     <!-- EARTH -->
-    <div class="layer" data-depth="0.2" style="width:400px; bottom:-50px; left:20%;">
-        <img src="internet-art/funtime/gif/FUNTIME EARTH.gif">
-    </div>
-
-    <!-- ASTEROID -->
-    <div class="layer" data-depth="0.3" style="width:300px; top:10%; right:10%;">
-        <img src="internet-art/funtime/gif/ASTEROID.gif">
-    </div>
-
-    <!-- BALLS -->
-    <div class="layer" data-depth="0.4" style="width:120px; top:20%; left:10%;">
-        <img src="internet-art/funtime/gif/BALL 1 COMPRESS.gif">
-    </div>
-
-    <div class="layer" data-depth="0.5" style="width:150px; top:60%; left:30%;">
-        <img src="internet-art/funtime/gif/BALL 2 COMPRESS.gif">
-    </div>
-
-    <div class="layer" data-depth="0.6" style="width:130px; top:40%; right:20%;">
-        <img src="internet-art/funtime/gif/BALL 3 COMPRESS.gif">
-    </div>
-
-    <div class="layer" data-depth="0.7" style="width:180px; bottom:10%; right:5%;">
-        <img src="internet-art/funtime/gif/BALL 4 COMPRESS.gif">
-    </div>
-
-    <!-- ANIME GIRL -->
-    <div class="layer" data-depth="0.9" style="width:300px; bottom:0; left:50%; transform:translateX(-50%);">
-        <img src="internet-art/funtime/gif/ANIME GIRL.gif">
-    </div>
+    <img class="layer earth" src="internet-art/funtime/gif/FUNTIME EARTH.gif">
 
     <!-- TITLE -->
-    <div class="title">
-        <h1>FUNTIME</h1>
-        <p>NEW RELEASE</p>
-        <div class="cta">PLAY</div>
-    </div>
+    <div class="title">FUNTIME</div>
+
+    <!-- GIRL -->
+    <img class="layer girl" src="internet-art/funtime/gif/ANIME GIRL.gif">
+
+    <!-- ORBS -->
+    <img class="layer orb1" src="internet-art/funtime/gif/BALL 1 COMPRESS.gif">
+    <img class="layer orb2" src="internet-art/funtime/gif/BALL 2 COMPRESS.gif">
+    <img class="layer orb3" src="internet-art/funtime/gif/BALL 3 COMPRESS.gif">
+    <img class="layer orb4" src="internet-art/funtime/gif/BALL 4 COMPRESS.gif">
 
 </div>
 
 <script>
-const scene = document.getElementById('scene');
 const layers = document.querySelectorAll('.layer');
 
-let mouseX = 0;
-let mouseY = 0;
+let mx = 0;
+let my = 0;
 
-window.addEventListener('mousemove', e => {
-    mouseX = (e.clientX / window.innerWidth - 0.5);
-    mouseY = (e.clientY / window.innerHeight - 0.5);
+window.addEventListener('mousemove', e=>{
+    mx = (e.clientX / window.innerWidth - 0.5);
+    my = (e.clientY / window.innerHeight - 0.5);
 });
 
-/* ANIMATION LOOP */
+/* SUBTLE PARALLAX (tidak merusak layout) */
 function animate(){
-    layers.forEach(layer => {
-        const depth = layer.getAttribute('data-depth');
+    layers.forEach((layer, i)=>{
+        const depth = (i+1) * 0.003;
 
-        const moveX = mouseX * depth * 50;
-        const moveY = mouseY * depth * 50;
+        const x = mx * 30 * depth;
+        const y = my * 30 * depth;
 
-        layer.style.transform = `translate(${moveX}px, ${moveY}px)`;
+        layer.style.transform += ` translate(${x}px, ${y}px)`;
     });
 
     requestAnimationFrame(animate);
 }
-
 animate();
 
-/* FLOATING DRIFT */
-layers.forEach(layer => {
-    let offset = Math.random() * 1000;
+/* FLOAT HALUS */
+layers.forEach(layer=>{
+    let t = Math.random()*100;
 
-    function drift(){
-        offset += 0.01;
+    function float(){
+        t += 0.01;
+        const y = Math.sin(t)*5;
 
-        const y = Math.sin(offset) * 10;
-        layer.style.top = `calc(${layer.style.top || "0px"} + ${y}px)`;
+        layer.style.transform += ` translateY(${y}px)`;
 
-        requestAnimationFrame(drift);
+        requestAnimationFrame(float);
     }
 
-    drift();
+    float();
 });
 </script>
 
