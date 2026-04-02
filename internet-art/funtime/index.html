@@ -3,7 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>FUNTIME RELEASE</title>
+
+<title>FUNTIME BASE</title>
 
 <style>
 html, body {
@@ -13,66 +14,25 @@ html, body {
     overflow:hidden;
 }
 
+/* SCENE */
 .scene {
     position:relative;
     width:100vw;
     height:100vh;
 }
 
-/* Semua layer fix */
-.layer {
-    position:absolute;
-}
-
-/* BACKGROUND */
-.bg {
-    width:120%;
-    height:120%;
-    top:-10%;
-    left:-10%;
-}
-
-/* GROUND */
-.ground {
-    bottom:0;
-    width:120%;
-    left:-10%;
-}
-
-/* GIRL CENTER */
+/* ANIME GIRL */
 .girl {
-    width:420px;
-    bottom:0;
-    left:50%;
-    transform:translateX(-50%);
-    z-index:10;
-}
-
-/* EARTH */
-.earth {
-    width:260px;
-    top:12%;
-    left:12%;
-}
-
-/* TITLE */
-.title {
     position:absolute;
-    top:18%;
-    left:16%;
-    color:white;
-    font-size:40px;
-    font-weight:bold;
-    letter-spacing:4px;
-    z-index:20;
+
+    width:420px;              /* bisa kamu adjust */
+    bottom:0;                 /* nempel bawah */
+    left:50%;                 /* tengah horizontal */
+
+    transform:translateX(-50%); /* center fix */
 }
 
-/* ORBS */
-.orb1 { width:220px; top:10%; right:12%; }
-.orb2 { width:200px; top:45%; right:10%; }
-.orb3 { width:220px; bottom:20%; left:10%; }
-.orb4 { width:180px; bottom:5%; left:45%; transform:translateX(-50%); }
-
+/* IMAGE */
 img {
     width:100%;
     display:block;
@@ -82,44 +42,11 @@ img {
 
 <body>
 
-<div class="scene" id="scene">
+<div class="scene">
 
-    <img class="layer bg" src="internet-art/funtime/gif/galaxy.gif">
-
-    <img class="layer ground" src="internet-art/funtime/gif/ASTEROID.gif">
-
-    <img class="layer earth" src="internet-art/funtime/gif/FUNTIME EARTH.gif">
-
-    <div class="title">FUNTIME</div>
-
-    <img class="layer girl" src="internet-art/funtime/gif/ANIME GIRL.gif">
-
-    <img class="layer orb1" src="internet-art/funtime/gif/BALL 1 COMPRESS.gif">
-    <img class="layer orb2" src="internet-art/funtime/gif/BALL 2 COMPRESS.gif">
-    <img class="layer orb3" src="internet-art/funtime/gif/BALL 3 COMPRESS.gif">
-    <img class="layer orb4" src="internet-art/funtime/gif/BALL 4 COMPRESS.gif">
+    <img class="girl" src="internet-art/funtime/gif/ANIME GIRL.gif">
 
 </div>
-
-<script>
-/* OPTIONAL: PARALLAX SUPER HALUS (kalau mau, kalau tidak hapus saja) */
-
-const layers = document.querySelectorAll('.layer');
-
-window.addEventListener('mousemove', e => {
-    const mx = (e.clientX / window.innerWidth - 0.5);
-    const my = (e.clientY / window.innerHeight - 0.5);
-
-    layers.forEach((layer, i) => {
-        const depth = i * 0.002; // sangat kecil
-
-        const x = mx * 10 * depth;
-        const y = my * 10 * depth;
-
-        layer.style.transform = `translate(${x}px, ${y}px)`;
-    });
-});
-</script>
 
 </body>
 </html>
