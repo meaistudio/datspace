@@ -2,7 +2,8 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
 <title>FUNTIME LOCKED</title>
 
@@ -14,7 +15,7 @@ html, body {
     overflow:hidden;
 }
 
-/* SCENE */
+/* CANVAS */
 .scene {
     position:absolute;
     width:1080px;
@@ -24,12 +25,14 @@ html, body {
     transform:translate(-50%, -50%);
 }
 
-/* BG */
+/* BACKGROUND */
 .bg {
     position:absolute;
     width:100%;
     height:100%;
     object-fit:cover;
+    z-index:0;
+    pointer-events:none;
 }
 
 /* ASTEROID */
@@ -38,46 +41,61 @@ html, body {
     width:100%;
     top:350px;
     z-index:1;
+    pointer-events:none;
     transition: transform 0.5s ease;
 }
 
-/* BALLS */
-.ball1, .ball2, .ball3, .ball4 {
+/* EARTH */
+.earth {
     position:absolute;
-    z-index:5;
-    cursor:pointer;
-    animation: breathe 4s ease-in-out infinite;
+    width:220px;
+    top:180px;
+    left:340px;
+    z-index:3;
 }
 
-.ball1 { width:120px; top:180px; left:600px; }
-.ball2 { width:100px; top:450px; left:380px; }
-.ball3 { width:90px;  top:630px; left:450px; }
-.ball4 { width:160px; top:730px; left:350px; }
+/* BALLS */
+.ball1 { position:absolute; width:120px; top:180px; left:600px; z-index:4; }
+.ball2 { position:absolute; width:100px; top:450px; left:380px; z-index:4; }
+.ball3 { position:absolute; width:90px;  top:630px; left:450px; z-index:4; }
+.ball4 { position:absolute; width:160px; top:730px; left:350px; z-index:4; }
 
-/* idle animation */
-@keyframes breathe {
-    0%   { transform: scale(1); }
-    50%  { transform: scale(1.05); }
-    100% { transform: scale(1); }
+/* GIRL FLOAT */
+@keyframes floatGirl {
+    0%   { transform: translateX(-50%) translateY(0px); }
+    50%  { transform: translateX(-50%) translateY(-10px); }
+    100% { transform: translateX(-50%) translateY(0px); }
 }
 
-/* ACTIVE CLICK */
-.active {
-    animation: none; /* stop idle */
-    transform: scale(1.25);
-}
-
-/* GIRL */
 .girl {
     position:absolute;
     width:420px;
     bottom:160px;
     left:55%;
     transform:translateX(-50%);
-    z-index:4;
+    z-index:5;
+    pointer-events:none;
+    animation: floatGirl 5s ease-in-out infinite;
 }
 
-/* ORBIT */
+/* IMAGE */
+img {
+    display:block;
+}
+
+/* CLICKABLE */
+.clickable {
+    cursor:pointer;
+    transition: transform 0.2s ease, filter 0.2s ease;
+}
+
+/* ACTIVE */
+.active {
+    transform: scale(1.2);
+    filter: brightness(1.2);
+}
+
+/* ORBIT TEXT */
 .orbit {
     position:absolute;
     width:200px;
@@ -106,15 +124,19 @@ html, body {
     to { transform: rotate(360deg); }
 }
 
-/* FOOTER */
+/* FOOTER TEXT */
 .footer-text {
     position:fixed;
     bottom:20px;
     left:20px;
+
     color:white;
     font-family: monospace;
     font-size:14px;
+    letter-spacing:2px;
+
     opacity:0.7;
+    z-index:999;
 }
 </style>
 </head>
@@ -123,43 +145,55 @@ html, body {
 
 <div class="scene">
 
+    <!-- BG -->
     <img class="bg" src="gif/galaxy.gif">
+
+    <!-- ASTEROID -->
     <img id="asteroid" class="asteroid" src="gif/asteroid.gif">
 
-    <!-- BALLS -->
-    <img class="ball1" src="gif/ball-1.gif">
-    <img class="ball2" src="gif/ball-2.gif">
-    <img class="ball3" src="gif/ball-3.gif">
-    <img class="ball4" src="gif/ball-4.gif">
+    <!-- EARTH -->
+    <img class="earth clickable" src="gif/earth.gif">
 
-    <!-- ORBIT -->
+    <!-- BALLS -->
+    <img class="ball1 clickable" src="gif/ball-1.gif">
+    <img class="ball2 clickable" src="gif/ball-2.gif">
+    <img class="ball3 clickable" src="gif/ball-3.gif">
+    <img class="ball4 clickable" src="gif/ball-4.gif">
+
+    <!-- ORBIT TEXT -->
     <div id="orbit1" class="orbit"></div>
     <div id="orbit2" class="orbit"></div>
     <div id="orbit3" class="orbit"></div>
     <div id="orbit4" class="orbit"></div>
 
+    <!-- GIRL -->
     <img class="girl" src="gif/anime-girl.gif">
 
 </div>
 
+<!-- FOOTER -->
 <div class="footer-text">DATs X FUNTIME</div>
 
-<audio id="audio-ball2" src="song/my-song-44.mp3"></audio>
+<!-- AUDIO -->
+<audio id="audio-ball2" src="song/my-song-44.mp3" preload="auto"></audio>
 
 <script>
-const balls = document.querySelectorAll('.ball1, .ball2, .ball3, .ball4');
-const asteroid = document.getElementById('asteroid');
+const items = document.querySelectorAll('.clickable');
 const audioBall2 = document.getElementById('audio-ball2');
+const asteroid = document.getElementById('asteroid');
 
+/* ORBIT DATA */
 const orbits = {
-    ball1: { el: orbit1, text: "Velfarre 2002" },
-    ball2: { el: orbit2, text: "Xenon 1996" },
-    ball3: { el: orbit3, text: "Twin Star 1999" },
-    ball4: { el: orbit4, text: "9LoveJ 2001" }
+    ball1: { el: document.getElementById('orbit1'), text: "Velfarre 2002" },
+    ball2: { el: document.getElementById('orbit2'), text: "Xenon 1996" },
+    ball3: { el: document.getElementById('orbit3'), text: "Twin Star 1999" },
+    ball4: { el: document.getElementById('orbit4'), text: "9LoveJ 2001" }
 };
 
+/* CREATE CURVED TEXT */
 function createSVGOrbit(container, text) {
     container.innerHTML = "";
+
     const radius = 70;
 
     const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
@@ -196,6 +230,7 @@ function createSVGOrbit(container, text) {
     container.appendChild(svg);
 }
 
+/* POSITION */
 function positionOrbit(orbitEl, targetEl) {
     const rect = targetEl.getBoundingClientRect();
     const parentRect = document.querySelector('.scene').getBoundingClientRect();
@@ -204,42 +239,49 @@ function positionOrbit(orbitEl, targetEl) {
     orbitEl.style.top = (rect.top - parentRect.top + rect.height/2 - 100) + "px";
 }
 
-balls.forEach(el => {
+/* CLICK */
+items.forEach(el => {
     el.addEventListener('click', () => {
 
         const isActive = el.classList.contains('active');
 
-        // RESET ALL
-        balls.forEach(b => {
-            b.classList.remove('active');
-            b.style.animation = "breathe 4s ease-in-out infinite";
-        });
+        items.forEach(i => i.classList.remove('active'));
 
+        // hide orbit
         Object.values(orbits).forEach(o => o.el.style.display = "none");
 
         audioBall2.pause();
         audioBall2.currentTime = 0;
         asteroid.style.transform = "translateY(0px)";
 
-        // TOGGLE OFF
-        if (isActive) return;
+        if (!isActive) {
+            el.classList.add('active');
 
-        // ACTIVATE
-        el.classList.add('active');
-        el.style.animation = "none";
+            const key = [...el.classList].find(c => c.startsWith('ball'));
+            const orbit = orbits[key];
 
-        const key = [...el.classList].find(c => c.startsWith('ball'));
-        const orbit = orbits[key];
+            if (orbit) {
+                createSVGOrbit(orbit.el, orbit.text);
+                positionOrbit(orbit.el, el);
+                orbit.el.style.display = "block";
+            }
 
-        if (orbit) {
-            createSVGOrbit(orbit.el, orbit.text);
-            positionOrbit(orbit.el, el);
-            orbit.el.style.display = "block";
-        }
+            if (el.classList.contains('ball1')) {
+                asteroid.style.transform = "translateY(20px)";
+            }
 
-        if (el.classList.contains('ball2')) {
-            asteroid.style.transform = "translateY(60px)";
-            audioBall2.play();
+            if (el.classList.contains('ball2')) {
+                asteroid.style.transform = "translateY(60px)";
+                audioBall2.play().catch(err => console.log(err));
+            }
+
+            if (el.classList.contains('ball3')) {
+                asteroid.style.transform = "translateY(100px)";
+            }
+
+            if (el.classList.contains('ball4')) {
+                asteroid.style.transform = "translateY(150px)";
+            }
         }
     });
 });
