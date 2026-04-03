@@ -15,7 +15,7 @@ html, body {
     overflow:hidden;
 }
 
-/* SCENE */
+/* CANVAS */
 .scene {
     position:absolute;
     width:1080px;
@@ -31,6 +31,7 @@ html, body {
     width:100%;
     height:100%;
     object-fit:cover;
+    z-index:0;
     pointer-events:none;
 }
 
@@ -51,7 +52,12 @@ html, body {
     top:180px;
     left:340px;
     z-index:3;
-    pointer-events:none;
+}
+
+/* 🔥 biar bisa diklik */
+.clickable-earth {
+    pointer-events:auto;
+    cursor:pointer;
 }
 
 /* BALLS */
@@ -90,22 +96,16 @@ html, body {
     animation: floatGirl 5s ease-in-out infinite;
 }
 
-/* HITBOX (EDIT DI SINI) */
+/* HITBOX */
 .girl-hitbox {
     position:absolute;
-
-    width:150px;   /* ubah lebar */
-    height:170px;  /* ubah tinggi */
-
-    bottom:500px;  /* naik turun */
+    width:150px;
+    height:170px;
+    bottom:200px;
     left:55%;
     transform:translateX(-50%);
-
     z-index:6;
     cursor:pointer;
-
-    /* DEBUG MODE (hapus kalau sudah fix) */
-    background: rgba(255,0,0,0);
 }
 
 /* ORBIT */
@@ -157,7 +157,10 @@ html, body {
     <img class="bg" src="gif/galaxy.gif">
     <img id="asteroid" class="asteroid" src="gif/asteroid.gif">
 
-    <img class="earth" src="gif/earth.gif">
+    <!-- 🔥 EARTH LINK -->
+    <a href="https://www.instagram.com/cahyafuntime____" target="_blank">
+        <img class="earth clickable-earth" src="gif/earth.gif">
+    </a>
 
     <!-- BALLS -->
     <img class="ball1" src="gif/ball-1.gif">
@@ -207,6 +210,7 @@ const orbits = {
 
 function createSVGOrbit(container, text, radius) {
     container.innerHTML = "";
+
     const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
     svg.setAttribute("viewBox", "0 0 200 200");
 
