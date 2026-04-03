@@ -15,7 +15,7 @@ html, body {
     overflow:hidden;
 }
 
-/* CANVAS */
+/* SCENE */
 .scene {
     position:absolute;
     width:1080px;
@@ -95,19 +95,43 @@ img {
     filter: brightness(1.2);
 }
 
-/* FOOTER TEXT */
+/* FOOTER */
 .footer-text {
     position:fixed;
     bottom:20px;
     left:20px;
-
     color:white;
     font-family: monospace;
     font-size:14px;
     letter-spacing:2px;
-
     opacity:0.7;
     z-index:999;
+}
+
+/* ORBIT TEXT */
+.orbit {
+    position:absolute;
+    width:200px;
+    height:200px;
+    pointer-events:none;
+    animation: spin 6s linear infinite;
+    display:none;
+}
+
+.orbit span {
+    position:absolute;
+    left:50%;
+    top:50%;
+    transform-origin:0 0;
+    font-family:"Times New Roman", serif;
+    font-size:14px;
+    color:white;
+    letter-spacing:2px;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
 }
 </style>
 </head>
@@ -131,12 +155,17 @@ img {
     <img class="ball3 clickable" src="gif/ball-3.gif">
     <img class="ball4 clickable" src="gif/ball-4.gif">
 
+    <!-- ORBIT TEXT -->
+    <div id="orbit1" class="orbit"></div>
+    <div id="orbit2" class="orbit"></div>
+    <div id="orbit3" class="orbit"></div>
+    <div id="orbit4" class="orbit"></div>
+
     <!-- GIRL -->
     <img class="girl" src="gif/anime-girl.gif">
 
 </div>
 
-<!-- FOOTER -->
 <div class="footer-text">DATs X FUNTIME</div>
 
 <!-- AUDIO -->
@@ -147,23 +176,68 @@ const items = document.querySelectorAll('.clickable');
 const audioBall2 = document.getElementById('audio-ball2');
 const asteroid = document.getElementById('asteroid');
 
+const orbits = {
+    ball1: { el: document.getElementById('orbit1'), text: "Velfarre 2002" },
+    ball2: { el: document.getElementById('orbit2'), text: "Xenon 1996" },
+    ball3: { el: document.getElementById('orbit3'), text: "Twin Star 1999" },
+    ball4: { el: document.getElementById('orbit4'), text: "9LoveJ 2001" }
+};
+
+// create circular text
+function createCircleText(container, text) {
+    container.innerHTML = "";
+    const radius = 80;
+    const chars = text.split("");
+    const angleStep = 360 / chars.length;
+
+    chars.forEach((char, i) => {
+        const span = document.createElement("span");
+        span.innerText = char;
+
+        const angle = i * angleStep;
+
+        span.style.transform = `
+            rotate(${angle}deg)
+            translate(${radius}px)
+            rotate(${-angle}deg)
+        `;
+
+        container.appendChild(span);
+    });
+}
+
+// position orbit
+function positionOrbit(orbitEl, targetEl) {
+    const rect = targetEl.getBoundingClientRect();
+    const parentRect = document.querySelector('.scene').getBoundingClientRect();
+
+    orbitEl.style.left = (rect.left - parentRect.left + rect.width/2 - 100) + "px";
+    orbitEl.style.top = (rect.top - parentRect.top + rect.height/2 - 100) + "px";
+}
+
 items.forEach(el => {
     el.addEventListener('click', () => {
 
         const isActive = el.classList.contains('active');
 
-        // reset visual
         items.forEach(i => i.classList.remove('active'));
+        Object.values(orbits).forEach(o => o.el.style.display = "none");
 
-        // stop audio
         audioBall2.pause();
         audioBall2.currentTime = 0;
-
-        // reset asteroid
         asteroid.style.transform = "translateY(0px)";
 
         if (!isActive) {
             el.classList.add('active');
+
+            const key = [...el.classList].find(c => c.startsWith('ball'));
+            const orbitData = orbits[key];
+
+            if (orbitData) {
+                createCircleText(orbitData.el, orbitData.text);
+                positionOrbit(orbitData.el, el);
+                orbitData.el.style.display = "block";
+            }
 
             if (el.classList.contains('ball1')) {
                 asteroid.style.transform = "translateY(20px)";
