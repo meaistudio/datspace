@@ -42,17 +42,29 @@ html, body {
 }
 
 /* BALLS */
-.ball1 { position:absolute; width:120px; top:180px; left:600px; z-index:5; }
-.ball2 { position:absolute; width:100px; top:450px; left:380px; z-index:5; }
-.ball3 { position:absolute; width:90px;  top:630px; left:450px; z-index:5; }
-.ball4 { position:absolute; width:160px; top:730px; left:350px; z-index:5; }
-
-.clickable {
+.ball1, .ball2, .ball3, .ball4 {
+    position:absolute;
+    z-index:5;
     cursor:pointer;
+    animation: breathe 4s ease-in-out infinite;
 }
 
+.ball1 { width:120px; top:180px; left:600px; }
+.ball2 { width:100px; top:450px; left:380px; }
+.ball3 { width:90px;  top:630px; left:450px; }
+.ball4 { width:160px; top:730px; left:350px; }
+
+/* idle animation */
+@keyframes breathe {
+    0%   { transform: scale(1); }
+    50%  { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+/* ACTIVE CLICK */
 .active {
-    transform: scale(1.2);
+    animation: none; /* stop idle */
+    transform: scale(1.25);
 }
 
 /* GIRL */
@@ -65,21 +77,21 @@ html, body {
     z-index:4;
 }
 
-/* ORBIT FIX */
+/* ORBIT */
 .orbit {
     position:absolute;
     width:200px;
     height:200px;
     display:none;
-    pointer-events:none; /* 🔥 penting biar ga block klik */
+    pointer-events:none;
     z-index:3;
-    animation: spin 25s linear infinite; /* lebih slow */
+    animation: spin 25s linear infinite;
 }
 
 .orbit svg {
     width:100%;
     height:100%;
-    overflow:visible; /* 🔥 hilangin kesan kotak */
+    overflow:visible;
 }
 
 .orbit text {
@@ -114,10 +126,11 @@ html, body {
     <img class="bg" src="gif/galaxy.gif">
     <img id="asteroid" class="asteroid" src="gif/asteroid.gif">
 
-    <img class="ball1 clickable" src="gif/ball-1.gif">
-    <img class="ball2 clickable" src="gif/ball-2.gif">
-    <img class="ball3 clickable" src="gif/ball-3.gif">
-    <img class="ball4 clickable" src="gif/ball-4.gif">
+    <!-- BALLS -->
+    <img class="ball1" src="gif/ball-1.gif">
+    <img class="ball2" src="gif/ball-2.gif">
+    <img class="ball3" src="gif/ball-3.gif">
+    <img class="ball4" src="gif/ball-4.gif">
 
     <!-- ORBIT -->
     <div id="orbit1" class="orbit"></div>
@@ -134,7 +147,7 @@ html, body {
 <audio id="audio-ball2" src="song/my-song-44.mp3"></audio>
 
 <script>
-const items = document.querySelectorAll('.clickable');
+const balls = document.querySelectorAll('.ball1, .ball2, .ball3, .ball4');
 const asteroid = document.getElementById('asteroid');
 const audioBall2 = document.getElementById('audio-ball2');
 
@@ -147,15 +160,14 @@ const orbits = {
 
 function createSVGOrbit(container, text) {
     container.innerHTML = "";
-
-    const radius = 70; // 🔥 lebih dekat ke bola
+    const radius = 70;
 
     const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
     svg.setAttribute("viewBox", "0 0 200 200");
 
     const defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
-
     const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+
     const id = "circlePath" + Math.random();
 
     path.setAttribute("id", id);
@@ -192,14 +204,29 @@ function positionOrbit(orbitEl, targetEl) {
     orbitEl.style.top = (rect.top - parentRect.top + rect.height/2 - 100) + "px";
 }
 
-items.forEach(el => {
+balls.forEach(el => {
     el.addEventListener('click', () => {
+
+        const isActive = el.classList.contains('active');
+
+        // RESET ALL
+        balls.forEach(b => {
+            b.classList.remove('active');
+            b.style.animation = "breathe 4s ease-in-out infinite";
+        });
 
         Object.values(orbits).forEach(o => o.el.style.display = "none");
 
         audioBall2.pause();
         audioBall2.currentTime = 0;
         asteroid.style.transform = "translateY(0px)";
+
+        // TOGGLE OFF
+        if (isActive) return;
+
+        // ACTIVATE
+        el.classList.add('active');
+        el.style.animation = "none";
 
         const key = [...el.classList].find(c => c.startsWith('ball'));
         const orbit = orbits[key];
