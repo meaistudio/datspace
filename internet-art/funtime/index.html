@@ -60,13 +60,7 @@ html, body {
 .ball3 { position:absolute; width:90px;  top:630px; left:450px; z-index:4; }
 .ball4 { position:absolute; width:160px; top:730px; left:350px; z-index:4; }
 
-/* GIRL FLOAT */
-@keyframes floatGirl {
-    0%   { transform: translateX(-50%) translateY(0px); }
-    50%  { transform: translateX(-50%) translateY(-10px); }
-    100% { transform: translateX(-50%) translateY(0px); }
-}
-
+/* GIRL */
 .girl {
     position:absolute;
     width:420px;
@@ -74,13 +68,6 @@ html, body {
     left:55%;
     transform:translateX(-50%);
     z-index:5;
-    pointer-events:none;
-    animation: floatGirl 5s ease-in-out infinite;
-}
-
-/* IMAGE */
-img {
-    display:block;
 }
 
 /* CLICKABLE */
@@ -89,13 +76,12 @@ img {
     transition: transform 0.2s ease, filter 0.2s ease;
 }
 
-/* ACTIVE */
 .active {
     transform: scale(1.2);
     filter: brightness(1.2);
 }
 
-/* ORBIT TEXT */
+/* ORBIT */
 .orbit {
     position:absolute;
     width:200px;
@@ -124,19 +110,15 @@ img {
     to { transform: rotate(360deg); }
 }
 
-/* FOOTER TEXT */
+/* FOOTER */
 .footer-text {
     position:fixed;
     bottom:20px;
     left:20px;
-
     color:white;
     font-family: monospace;
     font-size:14px;
-    letter-spacing:2px;
-
     opacity:0.7;
-    z-index:999;
 }
 </style>
 </head>
@@ -145,56 +127,56 @@ img {
 
 <div class="scene">
 
-    <!-- BG -->
     <img class="bg" src="gif/galaxy.gif">
-
-    <!-- ASTEROID -->
     <img id="asteroid" class="asteroid" src="gif/asteroid.gif">
 
-    <!-- EARTH -->
     <img class="earth clickable" src="gif/earth.gif">
 
-    <!-- BALLS -->
     <img class="ball1 clickable" src="gif/ball-1.gif">
     <img class="ball2 clickable" src="gif/ball-2.gif">
     <img class="ball3 clickable" src="gif/ball-3.gif">
     <img class="ball4 clickable" src="gif/ball-4.gif">
 
-    <!-- ORBIT TEXT -->
+    <!-- ORBIT -->
     <div id="orbit1" class="orbit"></div>
     <div id="orbit2" class="orbit"></div>
     <div id="orbit3" class="orbit"></div>
     <div id="orbit4" class="orbit"></div>
 
-    <!-- GIRL -->
     <img class="girl" src="gif/anime-girl.gif">
 
 </div>
 
-<!-- FOOTER -->
 <div class="footer-text">DATs X FUNTIME</div>
 
-<!-- AUDIO -->
-<audio id="audio-ball2" src="song/my-song-44.mp3" preload="auto"></audio>
+<!-- AUDIO MULTI -->
+<audio id="audio-ball1" src="song/velfarre-2002.mp3" preload="auto"></audio>
+<audio id="audio-ball2" src="song/xenon-1996.mp3" preload="auto"></audio>
+<audio id="audio-ball3" src="song/twin-star-1999.mp3" preload="auto"></audio>
+<audio id="audio-ball4" src="song/9loveJ-2001-(Ft.Gestalt-Intelligence).mp3" preload="auto"></audio>
 
 <script>
 const items = document.querySelectorAll('.clickable');
-const audioBall2 = document.getElementById('audio-ball2');
 const asteroid = document.getElementById('asteroid');
 
-/* ORBIT DATA */
-const orbits = {
-    ball1: { el: document.getElementById('orbit1'), text: "Velfarre 2002" },
-    ball2: { el: document.getElementById('orbit2'), text: "Xenon 1996" },
-    ball3: { el: document.getElementById('orbit3'), text: "Twin Star 1999" },
-    ball4: { el: document.getElementById('orbit4'), text: "9LoveJ 2001" }
+/* AUDIO MAP */
+const audios = {
+    ball1: document.getElementById('audio-ball1'),
+    ball2: document.getElementById('audio-ball2'),
+    ball3: document.getElementById('audio-ball3'),
+    ball4: document.getElementById('audio-ball4')
 };
 
-/* CREATE CURVED TEXT */
-function createSVGOrbit(container, text) {
-    container.innerHTML = "";
+/* ORBIT CONFIG (RADIUS PER BOLA) */
+const orbits = {
+    ball1: { el: orbit1, text: "Velfarre 2002", radius: 70 },
+    ball2: { el: orbit2, text: "Xenon 1996", radius: 55 }, // lebih kecil
+    ball3: { el: orbit3, text: "Twin Star 1999", radius: 70 },
+    ball4: { el: orbit4, text: "9LoveJ 2001", radius: 70 }
+};
 
-    const radius = 70;
+function createSVGOrbit(container, text, radius) {
+    container.innerHTML = "";
 
     const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
     svg.setAttribute("viewBox", "0 0 200 200");
@@ -230,7 +212,6 @@ function createSVGOrbit(container, text) {
     container.appendChild(svg);
 }
 
-/* POSITION */
 function positionOrbit(orbitEl, targetEl) {
     const rect = targetEl.getBoundingClientRect();
     const parentRect = document.querySelector('.scene').getBoundingClientRect();
@@ -239,49 +220,43 @@ function positionOrbit(orbitEl, targetEl) {
     orbitEl.style.top = (rect.top - parentRect.top + rect.height/2 - 100) + "px";
 }
 
-/* CLICK */
 items.forEach(el => {
     el.addEventListener('click', () => {
 
         const isActive = el.classList.contains('active');
 
         items.forEach(i => i.classList.remove('active'));
-
-        // hide orbit
         Object.values(orbits).forEach(o => o.el.style.display = "none");
 
-        audioBall2.pause();
-        audioBall2.currentTime = 0;
+        // STOP ALL AUDIO
+        Object.values(audios).forEach(a => {
+            a.pause();
+            a.currentTime = 0;
+        });
+
         asteroid.style.transform = "translateY(0px)";
 
         if (!isActive) {
             el.classList.add('active');
 
             const key = [...el.classList].find(c => c.startsWith('ball'));
-            const orbit = orbits[key];
 
+            const orbit = orbits[key];
             if (orbit) {
-                createSVGOrbit(orbit.el, orbit.text);
+                createSVGOrbit(orbit.el, orbit.text, orbit.radius);
                 positionOrbit(orbit.el, el);
                 orbit.el.style.display = "block";
             }
 
-            if (el.classList.contains('ball1')) {
-                asteroid.style.transform = "translateY(20px)";
+            const audio = audios[key];
+            if (audio) {
+                audio.play().catch(err => console.log(err));
             }
 
-            if (el.classList.contains('ball2')) {
-                asteroid.style.transform = "translateY(60px)";
-                audioBall2.play().catch(err => console.log(err));
-            }
-
-            if (el.classList.contains('ball3')) {
-                asteroid.style.transform = "translateY(100px)";
-            }
-
-            if (el.classList.contains('ball4')) {
-                asteroid.style.transform = "translateY(150px)";
-            }
+            if (key === "ball1") asteroid.style.transform = "translateY(20px)";
+            if (key === "ball2") asteroid.style.transform = "translateY(60px)";
+            if (key === "ball3") asteroid.style.transform = "translateY(100px)";
+            if (key === "ball4") asteroid.style.transform = "translateY(150px)";
         }
     });
 });
