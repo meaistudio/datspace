@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <title>FUNTIME LOCKED</title>
 
@@ -15,7 +15,7 @@ html, body {
     overflow:hidden;
 }
 
-/* CANVAS */
+/* SCENE */
 .scene {
     position:absolute;
     width:1080px;
@@ -25,13 +25,12 @@ html, body {
     transform:translate(-50%, -50%);
 }
 
-/* BACKGROUND */
+/* BG */
 .bg {
     position:absolute;
     width:100%;
     height:100%;
     object-fit:cover;
-    z-index:0;
     pointer-events:none;
 }
 
@@ -73,7 +72,7 @@ html, body {
     filter: brightness(1.2);
 }
 
-/* GIRL FLOAT */
+/* GIRL FIX */
 @keyframes floatGirl {
     0%   { transform: translateX(-50%) translateY(0px); }
     50%  { transform: translateX(-50%) translateY(-10px); }
@@ -87,7 +86,8 @@ html, body {
     left:55%;
     transform:translateX(-50%);
     z-index:5;
-    pointer-events:auto;
+
+    pointer-events:none; /* 🔥 FIX UTAMA */
     animation: floatGirl 5s ease-in-out infinite;
 }
 
@@ -142,26 +142,22 @@ html, body {
 
     <img class="earth" src="gif/earth.gif">
 
-    <!-- BALLS -->
     <img class="ball1" src="gif/ball-1.gif">
     <img class="ball2" src="gif/ball-2.gif">
     <img class="ball3" src="gif/ball-3.gif">
     <img class="ball4" src="gif/ball-4.gif">
 
-    <!-- ORBIT -->
     <div id="orbit1" class="orbit"></div>
     <div id="orbit2" class="orbit"></div>
     <div id="orbit3" class="orbit"></div>
     <div id="orbit4" class="orbit"></div>
 
-    <!-- GIRL -->
     <img id="animeGirl" class="girl" src="gif/anime-girl.gif">
 
 </div>
 
 <div class="footer-text">DATs X FUNTIME</div>
 
-<!-- AUDIO -->
 <audio id="audio-ball1" src="song/velfarre-2002.mp3"></audio>
 <audio id="audio-ball2" src="song/xenon-1996.mp3"></audio>
 <audio id="audio-ball3" src="song/twin-star-1999.mp3"></audio>
@@ -174,10 +170,10 @@ const girl = document.getElementById('animeGirl');
 
 /* AUDIO */
 const audios = {
-    ball1: document.getElementById('audio-ball1'),
-    ball2: document.getElementById('audio-ball2'),
-    ball3: document.getElementById('audio-ball3'),
-    ball4: document.getElementById('audio-ball4')
+    ball1: audio-ball1,
+    ball2: audio-ball2,
+    ball3: audio-ball3,
+    ball4: audio-ball4
 };
 
 /* ORBIT */
@@ -190,13 +186,11 @@ const orbits = {
 
 function createSVGOrbit(container, text, radius) {
     container.innerHTML = "";
-
     const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
     svg.setAttribute("viewBox", "0 0 200 200");
 
     const defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
     const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-
     const id = "circlePath" + Math.random();
 
     path.setAttribute("id", id);
@@ -216,12 +210,10 @@ function createSVGOrbit(container, text, radius) {
     textPath.setAttributeNS("http://www.w3.org/1999/xlink", "href", "#" + id);
     textPath.setAttribute("startOffset", "50%");
     textPath.setAttribute("text-anchor", "middle");
-
     textPath.textContent = text + " • " + text;
 
     textEl.appendChild(textPath);
     svg.appendChild(textEl);
-
     container.appendChild(svg);
 }
 
@@ -237,8 +229,6 @@ function positionOrbit(orbitEl, targetEl) {
 items.forEach(el => {
     el.addEventListener('click', () => {
 
-        const isActive = el.classList.contains('active');
-
         items.forEach(i => i.classList.remove('active'));
         Object.values(orbits).forEach(o => o.el.style.display = "none");
 
@@ -249,55 +239,48 @@ items.forEach(el => {
 
         asteroid.style.transform = "translateY(0px)";
 
-        if (!isActive) {
-            el.classList.add('active');
+        el.classList.add('active');
 
-            const key = [...el.classList].find(c => c.startsWith('ball'));
+        const key = [...el.classList].find(c => c.startsWith('ball'));
 
-            const orbit = orbits[key];
-            if (orbit) {
-                createSVGOrbit(orbit.el, orbit.text, orbit.radius);
-                positionOrbit(orbit.el, el);
-                orbit.el.style.display = "block";
-            }
-
-            const audio = audios[key];
-            if (audio) audio.play();
-
-            if (key === "ball1") asteroid.style.transform = "translateY(20px)";
-            if (key === "ball2") asteroid.style.transform = "translateY(60px)";
-            if (key === "ball3") asteroid.style.transform = "translateY(100px)";
-            if (key === "ball4") asteroid.style.transform = "translateY(150px)";
+        const orbit = orbits[key];
+        if (orbit) {
+            createSVGOrbit(orbit.el, orbit.text, orbit.radius);
+            positionOrbit(orbit.el, el);
+            orbit.el.style.display = "block";
         }
+
+        const audio = audios[key];
+        if (audio) audio.play();
+
+        if (key === "ball1") asteroid.style.transform = "translateY(20px)";
+        if (key === "ball2") asteroid.style.transform = "translateY(60px)";
+        if (key === "ball3") asteroid.style.transform = "translateY(100px)";
+        if (key === "ball4") asteroid.style.transform = "translateY(150px)";
     });
 });
 
-/* GIRL HOLD INTERACTION */
-let isHolding = false;
+/* GIRL HOLD DETECTION TANPA BLOCK */
+let holding = false;
 
-// desktop
-girl.addEventListener('mousedown', () => {
-    isHolding = true;
-    girl.src = "gif/anime-girl-angry.gif";
-});
+window.addEventListener('mousedown', (e) => {
+    const rect = girl.getBoundingClientRect();
 
-window.addEventListener('mouseup', () => {
-    if (isHolding) {
-        girl.src = "gif/anime-girl.gif";
-        isHolding = false;
+    if (
+        e.clientX >= rect.left &&
+        e.clientX <= rect.right &&
+        e.clientY >= rect.top &&
+        e.clientY <= rect.bottom
+    ) {
+        holding = true;
+        girl.src = "gif/anime-girl-angry.gif";
     }
 });
 
-// mobile
-girl.addEventListener('touchstart', () => {
-    isHolding = true;
-    girl.src = "gif/anime-girl-angry.gif";
-});
-
-window.addEventListener('touchend', () => {
-    if (isHolding) {
+window.addEventListener('mouseup', () => {
+    if (holding) {
         girl.src = "gif/anime-girl.gif";
-        isHolding = false;
+        holding = false;
     }
 });
 </script>
