@@ -54,7 +54,7 @@ html, body {
     z-index:3;
 }
 
-/* 🔥 biar bisa diklik */
+/* biar bisa diklik */
 .clickable-earth {
     pointer-events:auto;
     cursor:pointer;
@@ -99,13 +99,15 @@ html, body {
 /* HITBOX */
 .girl-hitbox {
     position:absolute;
-    width:150px;
-    height:170px;
-    bottom:200px;
+    width:130px;   
+    height:150px;  
+    bottom:210px;
     left:55%;
     transform:translateX(-50%);
-    z-index:6;
+
+    z-index:9999;
     cursor:pointer;
+    pointer-events:auto;
 }
 
 /* ORBIT */
