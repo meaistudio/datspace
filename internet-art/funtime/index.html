@@ -15,7 +15,7 @@ html, body {
     overflow:hidden;
 }
 
-/* CANVAS */
+/* SCENE */
 .scene {
     position:absolute;
     width:1080px;
@@ -31,7 +31,6 @@ html, body {
     width:100%;
     height:100%;
     object-fit:cover;
-    z-index:0;
     pointer-events:none;
 }
 
@@ -87,20 +86,26 @@ html, body {
     left:55%;
     transform:translateX(-50%);
     z-index:5;
-    pointer-events:none; /* 🔥 penting */
+    pointer-events:none;
     animation: floatGirl 5s ease-in-out infinite;
 }
 
-/* HITBOX (AREA TENGAH BADAN) */
+/* 🔥 HITBOX (EDIT DI SINI) */
 .girl-hitbox {
     position:absolute;
-    width:140px;
-    height:160px;
-    bottom:210px;
+
+    width:150px;   /* ubah lebar */
+    height:170px;  /* ubah tinggi */
+
+    bottom:200px;  /* naik turun */
     left:55%;
     transform:translateX(-50%);
+
     z-index:6;
     cursor:pointer;
+
+    /* 🔴 DEBUG MODE (hapus kalau sudah fix) */
+    background: rgba(255,0,0,0.25);
 }
 
 /* ORBIT */
@@ -202,7 +207,6 @@ const orbits = {
 
 function createSVGOrbit(container, text, radius) {
     container.innerHTML = "";
-
     const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
     svg.setAttribute("viewBox", "0 0 200 200");
 
