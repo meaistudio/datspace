@@ -2,7 +2,8 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
 <title>FUNTIME LOCKED</title>
 
@@ -14,7 +15,7 @@ html, body {
     overflow:hidden;
 }
 
-/* SCENE */
+/* CANVAS */
 .scene {
     position:absolute;
     width:1080px;
@@ -24,12 +25,13 @@ html, body {
     transform:translate(-50%, -50%);
 }
 
-/* BG */
+/* BACKGROUND */
 .bg {
     position:absolute;
     width:100%;
     height:100%;
     object-fit:cover;
+    z-index:0;
     pointer-events:none;
 }
 
@@ -43,6 +45,16 @@ html, body {
     transition: transform 0.5s ease;
 }
 
+/* EARTH */
+.earth {
+    position:absolute;
+    width:220px;
+    top:180px;
+    left:340px;
+    z-index:3;
+    pointer-events:none;
+}
+
 /* BALLS */
 .ball1, .ball2, .ball3, .ball4 {
     position:absolute;
@@ -54,6 +66,12 @@ html, body {
 .ball2 { width:100px; top:450px; left:380px; }
 .ball3 { width:90px;  top:630px; left:450px; }
 .ball4 { width:160px; top:730px; left:350px; }
+
+/* ACTIVE */
+.active {
+    transform: scale(1.2);
+    filter: brightness(1.2);
+}
 
 /* GIRL FLOAT */
 @keyframes floatGirl {
@@ -69,30 +87,20 @@ html, body {
     left:55%;
     transform:translateX(-50%);
     z-index:5;
-
     pointer-events:none; /* 🔥 penting */
     animation: floatGirl 5s ease-in-out infinite;
 }
 
-/* HITBOX (AREA INTERAKSI TENGAH BADAN) */
+/* HITBOX (AREA TENGAH BADAN) */
 .girl-hitbox {
     position:absolute;
-    width:160px;
-    height:180px;
-    bottom:200px;
+    width:140px;
+    height:160px;
+    bottom:210px;
     left:55%;
     transform:translateX(-50%);
     z-index:6;
-
     cursor:pointer;
-    /* debug: kasih warna kalau mau lihat */
-    /* background: rgba(255,0,0,0.2); */
-}
-
-/* ACTIVE */
-.active {
-    transform: scale(1.2);
-    filter: brightness(1.2);
 }
 
 /* ORBIT */
@@ -144,6 +152,8 @@ html, body {
     <img class="bg" src="gif/galaxy.gif">
     <img id="asteroid" class="asteroid" src="gif/asteroid.gif">
 
+    <img class="earth" src="gif/earth.gif">
+
     <!-- BALLS -->
     <img class="ball1" src="gif/ball-1.gif">
     <img class="ball2" src="gif/ball-2.gif">
@@ -158,19 +168,126 @@ html, body {
 
     <!-- GIRL -->
     <img id="animeGirl" class="girl" src="gif/anime-girl.gif">
-
-    <!-- HITBOX -->
     <div id="girlHitbox" class="girl-hitbox"></div>
 
 </div>
 
 <div class="footer-text">DATs X FUNTIME</div>
 
+<!-- AUDIO -->
+<audio id="audio-ball1" src="song/velfarre-2002.mp3"></audio>
+<audio id="audio-ball2" src="song/xenon-1996.mp3"></audio>
+<audio id="audio-ball3" src="song/twin-star-1999.mp3"></audio>
+<audio id="audio-ball4" src="song/9loveJ-2001-(Ft.Gestalt-Intelligence).mp3"></audio>
+
 <script>
+const items = document.querySelectorAll('.ball1, .ball2, .ball3, .ball4');
+const asteroid = document.getElementById('asteroid');
+
+/* AUDIO */
+const audios = {
+    ball1: document.getElementById('audio-ball1'),
+    ball2: document.getElementById('audio-ball2'),
+    ball3: document.getElementById('audio-ball3'),
+    ball4: document.getElementById('audio-ball4')
+};
+
+/* ORBIT */
+const orbits = {
+    ball1: { el: orbit1, text: "Velfarre 2002", radius: 72 },
+    ball2: { el: orbit2, text: "Xenon 1996", radius: 62 },
+    ball3: { el: orbit3, text: "Twin Star 1999", radius: 55 },
+    ball4: { el: orbit4, text: "9LoveJ 2001", radius: 95 }
+};
+
+function createSVGOrbit(container, text, radius) {
+    container.innerHTML = "";
+
+    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg.setAttribute("viewBox", "0 0 200 200");
+
+    const defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
+    const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+
+    const id = "circlePath" + Math.random();
+
+    path.setAttribute("id", id);
+    path.setAttribute("d",
+        `M 100,100
+         m -${radius},0
+         a ${radius},${radius} 0 1,1 ${radius*2},0
+         a ${radius},${radius} 0 1,1 -${radius*2},0`
+    );
+
+    defs.appendChild(path);
+    svg.appendChild(defs);
+
+    const textEl = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    const textPath = document.createElementNS("http://www.w3.org/2000/svg", "textPath");
+
+    textPath.setAttributeNS("http://www.w3.org/1999/xlink", "href", "#" + id);
+    textPath.setAttribute("startOffset", "50%");
+    textPath.setAttribute("text-anchor", "middle");
+
+    textPath.textContent = text + " • " + text;
+
+    textEl.appendChild(textPath);
+    svg.appendChild(textEl);
+
+    container.appendChild(svg);
+}
+
+function positionOrbit(orbitEl, targetEl) {
+    const rect = targetEl.getBoundingClientRect();
+    const parentRect = document.querySelector('.scene').getBoundingClientRect();
+
+    orbitEl.style.left = (rect.left - parentRect.left + rect.width/2 - 100) + "px";
+    orbitEl.style.top = (rect.top - parentRect.top + rect.height/2 - 100) + "px";
+}
+
+/* BALL CLICK */
+items.forEach(el => {
+    el.addEventListener('click', () => {
+
+        const isActive = el.classList.contains('active');
+
+        items.forEach(i => i.classList.remove('active'));
+        Object.values(orbits).forEach(o => o.el.style.display = "none");
+
+        Object.values(audios).forEach(a => {
+            a.pause();
+            a.currentTime = 0;
+        });
+
+        asteroid.style.transform = "translateY(0px)";
+
+        if (!isActive) {
+            el.classList.add('active');
+
+            const key = [...el.classList].find(c => c.startsWith('ball'));
+
+            const orbit = orbits[key];
+            if (orbit) {
+                createSVGOrbit(orbit.el, orbit.text, orbit.radius);
+                positionOrbit(orbit.el, el);
+                orbit.el.style.display = "block";
+            }
+
+            const audio = audios[key];
+            if (audio) audio.play();
+
+            if (key === "ball1") asteroid.style.transform = "translateY(20px)";
+            if (key === "ball2") asteroid.style.transform = "translateY(60px)";
+            if (key === "ball3") asteroid.style.transform = "translateY(100px)";
+            if (key === "ball4") asteroid.style.transform = "translateY(150px)";
+        }
+    });
+});
+
+/* GIRL HITBOX */
 const girl = document.getElementById('animeGirl');
 const hitbox = document.getElementById('girlHitbox');
 
-/* HOLD SYSTEM (HANYA HITBOX) */
 let holding = false;
 
 hitbox.addEventListener('mousedown', () => {
@@ -185,7 +302,6 @@ window.addEventListener('mouseup', () => {
     }
 });
 
-/* MOBILE */
 hitbox.addEventListener('touchstart', () => {
     holding = true;
     girl.src = "gif/anime-girl-angry.gif";
