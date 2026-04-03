@@ -111,10 +111,10 @@ img {
 /* ORBIT TEXT */
 .orbit {
     position:absolute;
-    width:200px;
-    height:200px;
+    width:260px;
+    height:260px;
     pointer-events:none;
-    animation: spin 6s linear infinite;
+    animation: spin 18s linear infinite; /* lebih pelan */
     display:none;
 }
 
@@ -124,9 +124,9 @@ img {
     top:50%;
     transform-origin:0 0;
     font-family:"Times New Roman", serif;
-    font-size:14px;
+    font-size:18px; /* lebih besar */
     color:white;
-    letter-spacing:2px;
+    letter-spacing:3px;
 }
 
 @keyframes spin {
@@ -186,7 +186,7 @@ const orbits = {
 // create circular text
 function createCircleText(container, text) {
     container.innerHTML = "";
-    const radius = 80;
+    const radius = 110; // lebih besar
     const chars = text.split("");
     const angleStep = 360 / chars.length;
 
@@ -211,8 +211,8 @@ function positionOrbit(orbitEl, targetEl) {
     const rect = targetEl.getBoundingClientRect();
     const parentRect = document.querySelector('.scene').getBoundingClientRect();
 
-    orbitEl.style.left = (rect.left - parentRect.left + rect.width/2 - 100) + "px";
-    orbitEl.style.top = (rect.top - parentRect.top + rect.height/2 - 100) + "px";
+    orbitEl.style.left = (rect.left - parentRect.left + rect.width/2 - 130) + "px";
+    orbitEl.style.top = (rect.top - parentRect.top + rect.height/2 - 130) + "px";
 }
 
 items.forEach(el => {
