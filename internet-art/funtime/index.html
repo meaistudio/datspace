@@ -2,8 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <title>FUNTIME LOCKED</title>
 
@@ -42,20 +41,19 @@ html, body {
     transition: transform 0.5s ease;
 }
 
-/* EARTH */
-.earth {
-    position:absolute;
-    width:220px;
-    top:180px;
-    left:340px;
-    z-index:3;
+/* BALLS */
+.ball1 { position:absolute; width:120px; top:180px; left:600px; z-index:5; }
+.ball2 { position:absolute; width:100px; top:450px; left:380px; z-index:5; }
+.ball3 { position:absolute; width:90px;  top:630px; left:450px; z-index:5; }
+.ball4 { position:absolute; width:160px; top:730px; left:350px; z-index:5; }
+
+.clickable {
+    cursor:pointer;
 }
 
-/* BALLS */
-.ball1 { position:absolute; width:120px; top:180px; left:600px; z-index:4; }
-.ball2 { position:absolute; width:100px; top:450px; left:380px; z-index:4; }
-.ball3 { position:absolute; width:90px;  top:630px; left:450px; z-index:4; }
-.ball4 { position:absolute; width:160px; top:730px; left:350px; z-index:4; }
+.active {
+    transform: scale(1.2);
+}
 
 /* GIRL */
 .girl {
@@ -64,37 +62,29 @@ html, body {
     bottom:160px;
     left:55%;
     transform:translateX(-50%);
-    z-index:5;
-    animation: floatGirl 5s ease-in-out infinite;
+    z-index:4;
 }
 
-@keyframes floatGirl {
-    0%   { transform: translateX(-50%) translateY(0); }
-    50%  { transform: translateX(-50%) translateY(-10px); }
-    100% { transform: translateX(-50%) translateY(0); }
-}
-
-/* CLICK */
-.clickable {
-    cursor:pointer;
-    transition: transform 0.2s ease;
-}
-.active {
-    transform: scale(1.2);
-}
-
-/* ORBIT SVG */
+/* ORBIT FIX */
 .orbit {
     position:absolute;
-    width:260px;
-    height:260px;
+    width:200px;
+    height:200px;
     display:none;
-    animation: spin 20s linear infinite; /* slow */
+    pointer-events:none; /* 🔥 penting biar ga block klik */
+    z-index:3;
+    animation: spin 25s linear infinite; /* lebih slow */
+}
+
+.orbit svg {
+    width:100%;
+    height:100%;
+    overflow:visible; /* 🔥 hilangin kesan kotak */
 }
 
 .orbit text {
     font-family:"Times New Roman", serif;
-    font-size:22px;
+    font-size:16px;
     fill:white;
     letter-spacing:2px;
 }
@@ -124,14 +114,12 @@ html, body {
     <img class="bg" src="gif/galaxy.gif">
     <img id="asteroid" class="asteroid" src="gif/asteroid.gif">
 
-    <img class="earth clickable" src="gif/earth.gif">
-
     <img class="ball1 clickable" src="gif/ball-1.gif">
     <img class="ball2 clickable" src="gif/ball-2.gif">
     <img class="ball3 clickable" src="gif/ball-3.gif">
     <img class="ball4 clickable" src="gif/ball-4.gif">
 
-    <!-- SVG ORBITS -->
+    <!-- ORBIT -->
     <div id="orbit1" class="orbit"></div>
     <div id="orbit2" class="orbit"></div>
     <div id="orbit3" class="orbit"></div>
@@ -157,11 +145,10 @@ const orbits = {
     ball4: { el: orbit4, text: "9LoveJ 2001" }
 };
 
-// create SVG curved text
 function createSVGOrbit(container, text) {
     container.innerHTML = "";
 
-    const radius = 100;
+    const radius = 70; // 🔥 lebih dekat ke bola
 
     const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
     svg.setAttribute("viewBox", "0 0 200 200");
@@ -186,7 +173,9 @@ function createSVGOrbit(container, text) {
     const textPath = document.createElementNS("http://www.w3.org/2000/svg", "textPath");
 
     textPath.setAttributeNS("http://www.w3.org/1999/xlink", "href", "#" + id);
-    textPath.setAttribute("startOffset", "0%");
+    textPath.setAttribute("startOffset", "50%");
+    textPath.setAttribute("text-anchor", "middle");
+
     textPath.textContent = text + " • " + text;
 
     textEl.appendChild(textPath);
@@ -195,26 +184,22 @@ function createSVGOrbit(container, text) {
     container.appendChild(svg);
 }
 
-// position orbit
 function positionOrbit(orbitEl, targetEl) {
     const rect = targetEl.getBoundingClientRect();
     const parentRect = document.querySelector('.scene').getBoundingClientRect();
 
-    orbitEl.style.left = (rect.left - parentRect.left + rect.width/2 - 130) + "px";
-    orbitEl.style.top = (rect.top - parentRect.top + rect.height/2 - 130) + "px";
+    orbitEl.style.left = (rect.left - parentRect.left + rect.width/2 - 100) + "px";
+    orbitEl.style.top = (rect.top - parentRect.top + rect.height/2 - 100) + "px";
 }
 
 items.forEach(el => {
     el.addEventListener('click', () => {
 
-        items.forEach(i => i.classList.remove('active'));
         Object.values(orbits).forEach(o => o.el.style.display = "none");
 
         audioBall2.pause();
         audioBall2.currentTime = 0;
         asteroid.style.transform = "translateY(0px)";
-
-        el.classList.add('active');
 
         const key = [...el.classList].find(c => c.startsWith('ball'));
         const orbit = orbits[key];
