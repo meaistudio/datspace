@@ -45,7 +45,7 @@ html, body {
     transition: transform 0.5s ease;
 }
 
-/* EARTH (tidak ganggu klik) */
+/* EARTH */
 .earth {
     position:absolute;
     width:220px;
@@ -73,7 +73,7 @@ html, body {
     filter: brightness(1.2);
 }
 
-/* GIRL FLOAT (FIXED) */
+/* GIRL FLOAT */
 @keyframes floatGirl {
     0%   { transform: translateX(-50%) translateY(0px); }
     50%  { transform: translateX(-50%) translateY(-10px); }
@@ -87,7 +87,7 @@ html, body {
     left:55%;
     transform:translateX(-50%);
     z-index:5;
-    pointer-events:none;
+    pointer-events:auto;
     animation: floatGirl 5s ease-in-out infinite;
 }
 
@@ -140,7 +140,6 @@ html, body {
     <img class="bg" src="gif/galaxy.gif">
     <img id="asteroid" class="asteroid" src="gif/asteroid.gif">
 
-    <!-- EARTH -->
     <img class="earth" src="gif/earth.gif">
 
     <!-- BALLS -->
@@ -155,7 +154,8 @@ html, body {
     <div id="orbit3" class="orbit"></div>
     <div id="orbit4" class="orbit"></div>
 
-    <img class="girl" src="gif/anime-girl.gif">
+    <!-- GIRL -->
+    <img id="animeGirl" class="girl" src="gif/anime-girl.gif">
 
 </div>
 
@@ -170,6 +170,7 @@ html, body {
 <script>
 const items = document.querySelectorAll('.ball1, .ball2, .ball3, .ball4');
 const asteroid = document.getElementById('asteroid');
+const girl = document.getElementById('animeGirl');
 
 /* AUDIO */
 const audios = {
@@ -232,6 +233,7 @@ function positionOrbit(orbitEl, targetEl) {
     orbitEl.style.top = (rect.top - parentRect.top + rect.height/2 - 100) + "px";
 }
 
+/* BALL CLICK */
 items.forEach(el => {
     el.addEventListener('click', () => {
 
@@ -268,6 +270,35 @@ items.forEach(el => {
             if (key === "ball4") asteroid.style.transform = "translateY(150px)";
         }
     });
+});
+
+/* GIRL HOLD INTERACTION */
+let isHolding = false;
+
+// desktop
+girl.addEventListener('mousedown', () => {
+    isHolding = true;
+    girl.src = "gif/anime-girl-angry.gif";
+});
+
+window.addEventListener('mouseup', () => {
+    if (isHolding) {
+        girl.src = "gif/anime-girl.gif";
+        isHolding = false;
+    }
+});
+
+// mobile
+girl.addEventListener('touchstart', () => {
+    isHolding = true;
+    girl.src = "gif/anime-girl-angry.gif";
+});
+
+window.addEventListener('touchend', () => {
+    if (isHolding) {
+        girl.src = "gif/anime-girl.gif";
+        isHolding = false;
+    }
 });
 </script>
 
