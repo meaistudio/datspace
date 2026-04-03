@@ -99,15 +99,22 @@ html, body {
 /* HITBOX */
 .girl-hitbox {
     position:absolute;
-    width:130px;   
-    height:150px;  
-    bottom:500px;
+    width:130px;
+    height:150px;
+
+    bottom:210px;
     left:55%;
-    transform:translateX(-50%);
+    transform:translateX(-50%) translateZ(0);
 
     z-index:9999;
     cursor:pointer;
     pointer-events:auto;
+
+    opacity:0.001;
+
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    backface-visibility: hidden;
 }
 
 /* ORBIT */
