@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>DATSPACE — INTERNET ART COLLABORATION </title>
+
+<link rel="icon" type="image/png" href="/dats.png">
+    
+<style>
+html, body{
+    margin:0;
+    padding:0;
+    background:black;
+    color:white;
+    font-family:Consolas, monospace;
+}
+
+.container{
+    max-width:1200px;
+    margin:120px auto;
+    padding:40px;
+}
+
+.title{
+    font-size:60px;
+    margin-bottom:60px;
+}
+
+.grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(300px,1fr));
+    gap:40px;
+}
+
+.card{
+    border:1px solid white;
+    padding:20px;
+    transition:0.4s ease;
+}
+
+.card:hover{
+    background:white;
+    color:black;
+}
+
+.card a{
+    color:inherit;
+    text-decoration:none;
+}
+
+.back{ position:fixed; 
+      top:40px; 
+      left:40px; 
+      font-size:25px;
+      color:white;
+}
+    
+</style>
+</head>
+<body>
+
+<a href="../index.html" class="back">← BACK</a>
+
+<div class="container">
+
+    <div class="title">INTERNET ART COLLABORATION ARCHIVE</div>
+
+    <div class="grid">
+
+        <!-- DATs X FUNTIME -->
+       <div class="card">
+            <a href="/internet-art/collaboration/funtime">
+                <h2>
+                    FUNTIME EP<br>
+                    DATs X FUNTIME
+                </h2>
+                <p>Galaxy for FUNTIME World</p>
+            </a>
+        </div>
+
+    </div>
+
+</div>
+
+</body>
+</html>
