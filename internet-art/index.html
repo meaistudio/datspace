@@ -21,9 +21,33 @@ html, body{
     padding:40px;
 }
 
+/* NEW TITLE ROW */
+.title-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-end;
+    margin-bottom:60px;
+}
+
 .title{
     font-size:60px;
-    margin-bottom:60px;
+}
+
+/* SUBTITLE (COLLAB LINK) */
+.subtitle{
+    font-size:20px;
+    opacity:0.6;
+    letter-spacing:2px;
+}
+
+.subtitle a{
+    color:inherit;
+    text-decoration:none;
+}
+
+.subtitle:hover{
+    opacity:1;
+    letter-spacing:4px;
 }
 
 .grid{
@@ -48,11 +72,12 @@ html, body{
     text-decoration:none;
 }
 
-.back{ position:fixed; 
-      top:40px; 
-      left:40px; 
-      font-size:25px;
-      color:white;
+.back{ 
+    position:fixed; 
+    top:40px; 
+    left:40px; 
+    font-size:25px;
+    color:white;
 }
     
 </style>
@@ -63,7 +88,16 @@ html, body{
 
 <div class="container">
 
-    <div class="title">INTERNET ART ARCHIVE</div>
+    <!-- UPDATED TITLE -->
+    <div class="title-row">
+        <div class="title">INTERNET ART ARCHIVE</div>
+
+        <div class="subtitle">
+            <a href="/internet-art/collaboration/">
+                COLLABORATION EDITION
+            </a>
+        </div>
+    </div>
 
     <div class="grid">
 
@@ -77,6 +111,7 @@ html, body{
                 <p>Flashlight interface exploring palm monoculture visibility.</p>
             </a>
         </div>
+
         <!-- FINDING DATA -->
         <div class="card">
             <a href="/internet-art/finding-data/">
@@ -87,6 +122,7 @@ html, body{
                 <p>Interactive signal hunting through fragmented digital traces.</p>
             </a>
         </div>
+
         <!-- BUBBLE -->
         <div class="card">
             <a href="/internet-art/bubble/">
@@ -97,6 +133,7 @@ html, body{
                 <p>Interactive bubble environment exploring spatial drift and digital fragility.</p>
             </a>
         </div>
+
         <!-- NETART JUDOL -->
         <div class="card">
             <a href="/internet-art/judol/">
@@ -110,6 +147,7 @@ html, body{
                 </p>
             </a>
         </div>
+
         <!-- NETART ADEP ADEP-IN -->
         <div class="card">
             <a href="/internet-art/adep-adepin/">
@@ -122,9 +160,10 @@ html, body{
                     a fatherly voice approves every transaction, 
                     and ownership quietly mutates into unsolicited aspiration. 
                     Click “BELI” until property becomes prophecy.
-                    </p>
-                </a>
-            </div>
+                </p>
+            </a>
+        </div>
+
         <!-- NETART DEMOTIVATED -->
         <div class="card">
             <a href="/internet-art/demotivated/">
@@ -135,11 +174,12 @@ html, body{
                 <p>
                     An impossible puzzle interface where completion continuously escapes. 
                     A study of avoidance mechanics, user persistence, and quiet digital resistance.
-                    </p>
-                </a>
-            </div>
-         <!-- NETART ID??? -->
-         <div class="card">
+                </p>
+            </a>
+        </div>
+
+        <!-- NETART ID??? -->
+        <div class="card">
             <a href="/internet-art/id-ont-know">
                 <h2>
                 ID-ONT-KNOW<br>
@@ -148,9 +188,10 @@ html, body{
                 <p>
                     A generative scan-field interface where identity fragments into data structures. 
                     A study of system mapping, signal inversion, and constructed technical myth.
-                    </p>
-                </a>
-            </div>
+                </p>
+            </a>
+        </div>
+
         <!-- OMG -->
         <div class="card">
             <a href="/internet-art/omg/">
@@ -161,9 +202,10 @@ html, body{
                  <p>
                     A modular self-generating system operating
                     without central control.
-                    </p>
-                </a>
-            </div>
+                </p>
+            </a>
+        </div>
+
         <!-- REDGREENBLUE -->
         <div class="card">
             <a href="/internet-art/redgreenblue/">
@@ -174,9 +216,10 @@ html, body{
                  <p>
                     A fragmented visual system where nodes, signals, 
                     and artificial connections continuously reconfigure themselves.
-                    </p>
-                </a>
-            </div>
+                </p>
+            </a>
+        </div>
+
         <!-- DNA DATA -->
         <div class="card">
             <a href="/internet-art/dna-data/">
@@ -186,12 +229,11 @@ html, body{
                 </h2>
                 <p>
                     A generative DNA structure where coordinates, color systems (RGB–CMYK), 
-                    and interaction continuously reshape a living data organism. 
-                    Each node carries positional information, forming a dynamic interplay 
-                    between biological metaphor and computational space.
-                    </p>
-                </a>
-            </div>
+                    and interaction continuously reshape a living data organism.
+                </p>
+            </a>
+        </div>
+
         <!-- Co-Creation Playground -->
         <div class="card">
             <a href="https://sandywinata.co/dats_sandywinata.co.html">
@@ -201,9 +243,10 @@ html, body{
                 </h2>
                 <p>
                 For introverts who don't know how to start a convo
-                    </p>
-                </a>
-            </div>
+                </p>
+            </a>
+        </div>
+
         <!-- LUU -->
         <div class="card">
             <a href="/internet-art/luu/">
@@ -212,10 +255,11 @@ html, body{
                 by Divabhwn
                 </h2>
                 <p>
-                    A loop of Bali’s waste crisis—trucks keep moving as landfills close and processing falls behind.
-                    </p>
-                </a>
-            </div>
+                    A loop of Bali’s waste crisis—trucks keep moving as landfills close.
+                </p>
+            </a>
+        </div>
+
         <!-- IS EDITING FREE? -->
         <div class="card">
             <a href="/internet-art/is-editing-free/">
@@ -224,11 +268,11 @@ html, body{
                 by Aga Mahesa
                 </h2>
                 <p>
-                    Recently there has been a lot of news discussing whether editing should be free.
                     Yeah of course editing is free.. so do it yourself.
-                    </p>
-                </a>
-            </div>
+                </p>
+            </a>
+        </div>
+
     </div>
 
 </div>
