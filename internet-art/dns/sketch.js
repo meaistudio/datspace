@@ -109,149 +109,128 @@ function spawnDots() {
 // The panel is purely HTML/CSS injected into the page.
 // ============================================================
 function buildUI() {
- // ---- Outer panel ----
+  // ---- 1. Outer Panel (Glassmorphism Effect) ----
   let panel = createElement('div');
   panel.style('position',        'fixed');
-  panel.style('bottom',          '30px');      // Jarak dari bawah
-  panel.style('left',            '50%');       // Pindah ke tengah horizontal
-  panel.style('transform',       'translateX(-50%)'); // Offset agar benar-benar center
-  panel.style('background',      'rgba(0,0,0,0.75)'); // Sedikit lebih gelap agar kontras
-  panel.style('border',          '1px solid rgba(255,255,255,0.15)');
-  panel.style('border-radius',   '16px');      // Lebih rounded agar modern
-  panel.style('padding',         '16px 20px');
+  panel.style('bottom',          '30px');
+  panel.style('left',            '50%');
+  panel.style('transform',       'translateX(-50%)');
+  panel.style('background',      'rgba(255, 255, 255, 0.07)'); // Putih sangat transparan
+  panel.style('border',          '1px solid rgba(255, 255, 255, 0.18)');
+  panel.style('border-radius',   '24px');
+  panel.style('padding',         '12px 20px');
+  panel.style('display',         'flex');
+  panel.style('align-items',     'center');
+  panel.style('gap',             '20px');
+  panel.style('z-index',         '999');
+  panel.style('backdrop-filter', 'blur(20px) saturate(180%)'); // Glassmorphism kuat
+  panel.style('box-shadow',      '0 8px 32px 0 rgba(0, 0, 0, 0.37)');
   panel.style('color',           '#fff');
   panel.style('font-family',     'monospace');
-  panel.style('display',         'flex');
-  panel.style('flex-direction',  'row');       // Ubah ke ROW agar memanjang ke samping
-  panel.style('align-items',     'center');    // Rata tengah secara vertikal
-  panel.style('gap',             '30px');      // Jarak antar section (Slider vs Palette)
-  panel.style('z-index',         '999');
-  panel.style('backdrop-filter', 'blur(10px)'); // Efek glassmorphism biar makin "vibe"
 
-  // ---- Size slider section ----
+  // ---- 2. Dropdown Container (Hidden by default) ----
+  let settingsMenu = createElement('div');
+  settingsMenu.style('display',        'none'); 
+  settingsMenu.style('flex-direction',  'column');
+  settingsMenu.style('gap',             '12px');
+  settingsMenu.style('padding-right',   '20px');
+  settingsMenu.style('border-right',    '1px solid rgba(255, 255, 255, 0.1)');
+  settingsMenu.parent(panel);
+
+  // --- Isi Settings: Slider ---
   let sizeLabel = createElement('div', 'DOT SIZE');
-  sizeLabel.style('letter-spacing', '2px');
-  sizeLabel.style('opacity',        '0.5');
-  sizeLabel.style('font-size',      '10px');
-  sizeLabel.parent(panel);
-
-  // Row: slider + live readout value
-  let sliderRow = createElement('div');
-  sliderRow.style('display',      'flex');
-  sliderRow.style('align-items',  'center');
-  sliderRow.style('gap',          '10px');
-  sliderRow.parent(panel);
+  sizeLabel.style('font-size', '9px');
+  sizeLabel.style('letter-spacing', '1px');
+  sizeLabel.style('opacity', '0.6');
+  sizeLabel.parent(settingsMenu);
 
   let slider = createSlider(8, 60, MAX_SIZE, 1);
-  slider.style('flex',            '1');
-  slider.style('accent-color',    '#aaa');
-  slider.parent(sliderRow);
-
-  let sizeReadout = createElement('span', MAX_SIZE);
-  sizeReadout.style('min-width',  '24px');
-  sizeReadout.style('text-align', 'right');
-  sizeReadout.parent(sliderRow);
-
-  // Update MAX_SIZE and MIN_SIZE whenever the slider moves
+  slider.style('width', '120px');
+  slider.style('accent-color', '#fff');
+  slider.parent(settingsMenu);
   slider.input(() => {
     MAX_SIZE = slider.value();
-    MIN_SIZE = max(1, floor(MAX_SIZE * 0.07)); // MIN_SIZE stays proportional
-    sizeReadout.html(MAX_SIZE);
+    MIN_SIZE = max(1, floor(MAX_SIZE * 0.07));
   });
 
-  // ---- Palette switcher section ----
+  // --- Isi Settings: Palette Swatches ---
   let palLabel = createElement('div', 'PALETTE');
-  palLabel.style('letter-spacing', '2px');
-  palLabel.style('opacity',        '0.5');
-  palLabel.style('font-size',      '10px');
-  palLabel.parent(panel);
+  palLabel.style('font-size', '9px');
+  palLabel.style('letter-spacing', '1px');
+  palLabel.style('opacity', '0.6');
+  palLabel.parent(settingsMenu);
 
-  // One button per palette, with colour swatches
+  let swatchContainer = createElement('div');
+  swatchContainer.style('display', 'flex');
+  swatchContainer.style('gap', '8px');
+  swatchContainer.parent(settingsMenu);
+
   for (let name in palettes) {
-    let btn = createElement('button');
-    btn.style('background',    'rgba(255,255,255,0.06)');
-    btn.style('border',        '1px solid rgba(255,255,255,0.15)');
-    btn.style('border-radius', '6px');
-    btn.style('color',         '#fff');
-    btn.style('font-family',   'monospace');
-    btn.style('font-size',     '11px');
-    btn.style('padding',       '6px 10px');
-    btn.style('cursor',        'pointer');
-    btn.style('display',       'flex');
-    btn.style('align-items',   'center');
-    btn.style('gap',           '8px');
-    btn.style('text-align',    'left');
-    btn.style('width',         '100%');
-
-    // Build colour swatch dots for this palette
-    let swatchRow = createElement('span');
-    swatchRow.style('display', 'flex');
-    swatchRow.style('gap',     '3px');
-    for (let c of palettes[name]) {
-      let swatch = createElement('span');
-      swatch.style('width',         '8px');
-      swatch.style('height',        '8px');
-      swatch.style('border-radius', '50%');
-      swatch.style('background',    `rgb(${c[0]},${c[1]},${c[2]})`);
-      swatch.style('display',       'inline-block');
-      swatch.parent(swatchRow);
-    }
-
-    let label = createElement('span', name);
-    swatchRow.parent(btn);
-    label.parent(btn);
-    btn.parent(panel);
-
-    // On click: switch palette + respawn dots with new colours
-    btn.mousePressed(() => {
+    let sBtn = createElement('button');
+    sBtn.style('width', '24px');
+    sBtn.style('height', '24px');
+    sBtn.style('border-radius', '50%');
+    sBtn.style('border', '2px solid rgba(255,255,255,0.2)');
+    sBtn.style('cursor', 'pointer');
+    sBtn.style('transition', 'transform 0.2s');
+    
+    // Gradient background menggunakan warna palet
+    let c = palettes[name];
+    sBtn.style('background', `linear-gradient(135deg, rgb(${c[0][0]},${c[0][1]},${c[0][2]}), rgb(${c[1][0]},${c[1][1]},${c[1][2]}))`);
+    
+    sBtn.parent(swatchContainer);
+    
+    sBtn.mouseOver(() => sBtn.style('transform', 'scale(1.2)'));
+    sBtn.mouseOut(() => sBtn.style('transform', 'scale(1)'));
+    
+    sBtn.mousePressed(() => {
       activePalette = palettes[name];
-      // Reassign colours to existing dots without resetting positions
-      for (let dot of dots) {
-        dot.col = random(activePalette);
-      }
-      // Highlight active button
-      selectAll('button').forEach(b => {
-        b.style('background', 'rgba(255,255,255,0.06)');
-        b.style('border',     '1px solid rgba(255,255,255,0.15)');
-      });
-      btn.style('background', 'rgba(255,255,255,0.18)');
-      btn.style('border',     '1px solid rgba(255,255,255,0.4)');
+      for (let dot of dots) { dot.col = random(activePalette); }
+      // Efek visual klik
+      selectAll('button').forEach(b => b.style('border', '2px solid rgba(255,255,255,0.2)'));
+      sBtn.style('border', '2px solid #fff');
     });
   }
-  // 1. Buat label (opsional)
-  let capLabel = createElement('div', 'ACTION');
-  capLabel.style('letter-spacing', '2px');
-  capLabel.style('opacity', '0.5');
-  capLabel.style('font-size', '10px');
-  capLabel.parent(panel);
 
-  // 2. Definisikan tombol
+  // ---- 3. Toggle Settings Button ----
+  let toggleBtn = createElement('button', '⚙️');
+  toggleBtn.style('background', 'none');
+  toggleBtn.style('border', 'none');
+  toggleBtn.style('font-size', '20px');
+  toggleBtn.style('cursor', 'pointer');
+  toggleBtn.style('transition', 'transform 0.4s');
+  toggleBtn.parent(panel);
+
+  let isOpen = false;
+  toggleBtn.mousePressed(() => {
+    isOpen = !isOpen;
+    settingsMenu.style('display', isOpen ? 'flex' : 'none');
+    toggleBtn.style('transform', isOpen ? 'rotate(180deg)' : 'rotate(0deg)');
+  });
+
+  // ---- 4. Capture Button (Glassmorphism Style) ----
   let capBtn = createElement('button', '📸 TAKE PICTURE');
-  capBtn.style('background', '#fff'); 
-  capBtn.style('border', 'none');
-  capBtn.style('border-radius', '6px');
-  capBtn.style('color', '#000');
-  capBtn.style('font-family', 'monospace');
-  capBtn.style('font-weight', 'bold');
-  capBtn.style('padding', '10px 15px');
-  capBtn.style('cursor', 'pointer');
+  capBtn.style('background',    'rgba(255, 255, 255, 0.2)');
+  capBtn.style('border',        '1px solid rgba(255, 255, 255, 0.4)');
+  capBtn.style('border-radius', '16px');
+  capBtn.style('color',         '#fff');
+  capBtn.style('font-family',   'monospace');
+  capBtn.style('font-weight',   'bold');
+  capBtn.style('padding',       '12px 24px');
+  capBtn.style('cursor',        'pointer');
+  capBtn.style('backdrop-filter', 'blur(5px)');
+  capBtn.style('transition',    'all 0.2s');
   capBtn.parent(panel);
 
-  // 3. TAMBAHKAN LOGIKA DI SINI
   capBtn.mousePressed(() => {
-    // Efek visual saat ditekan (jadi abu-abu)
-    capBtn.style('background', '#aaa');
-    
-    // Fungsi Save
+    capBtn.style('background', 'rgba(255, 255, 255, 0.5)');
     let timestamp = year() + nf(month(), 2) + nf(day(), 2) + "-" + nf(hour(), 2) + nf(minute(), 2) + nf(second(), 2);
-    saveCanvas('vibe-coding-' + timestamp, 'png');
+    saveCanvas('DNS-' + timestamp, 'png');
   });
 
   capBtn.mouseReleased(() => {
-    // Balikkan warna ke putih setelah dilepas
-    capBtn.style('background', '#fff');
+    capBtn.style('background', 'rgba(255, 255, 255, 0.2)');
   });
-  
 
   panel.parent(document.body);
 }
