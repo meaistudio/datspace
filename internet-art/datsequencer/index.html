@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>DATs SEQUENCER</title>
+
+<style>
+html,body{
+    margin:0;
+    padding:0;
+    background:black;
+    overflow:hidden;
+    font-family:monospace;
+}
+
+canvas{
+    position:fixed;
+    top:0;
+    left:0;
+}
+
+.gridWrap{
+    position:fixed;
+    bottom:0;
+    width:100%;
+    background:rgba(0,0,0,0.6);
+}
+
+.row{
+    display:grid;
+    grid-template-columns: repeat(16,1fr);
+}
+
+.cell{
+    aspect-ratio:1;
+    border:1px solid #0f0;
+    cursor:pointer;
+}
+.cell.active{ background:#0f0; }
+.playing{ outline:2px solid red; }
+
+.ui{
+    position:fixed;
+    top:10px;
+    left:10px;
+    color:#0f0;
+}
+
+button,input{
+    background:black;
+    color:#0f0;
+    border:1px solid #0f0;
+    margin-top:5px;
+}
+</style>
+</head>
+
+<body>
+
+<canvas id="c"></canvas>
+
+<div class="ui">
+    <div>BPM</div>
+    <input type="range" min="80" max="160" value="120" id="bpm">
+    <div id="bpmValue">120</div>
+
+    <button id="start">START</button>
+    <button id="stop">STOP</button>
+</div>
+
+<div class="gridWrap">
+    <div class="row kick"></div>
+    <div class="row snare"></div>
+    <div class="row hat"></div>
+</div>
+
+<script>
+// ================= CANVAS =================
+const canvas = document.getElementById("c");
+const g = canvas.getContext("2d");
+
+function resize(){
+    canvas.width = innerWidth;
+    canvas.height = innerHeight;
+}
+resize();
+onresize = resize;
+
+// ================= AUDIO =================
+const ctx = new (window.AudioContext||window.webkitAudioContext)();
+const master = ctx.createGain();
+master.gain.value = 0.7;
+master.connect(ctx.destination);
+
+function kick(){
+    const o=ctx.createOscillator();
+    const g=ctx.createGain();
+    o.frequency.setValueAtTime(150,ctx.currentTime);
+    o.frequency.exponentialRampToValueAtTime(50,ctx.currentTime+0.2);
+    g.gain.setValueAtTime(1,ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+0.3);
+    o.connect(g); g.connect(master);
+    o.start(); o.stop(ctx.currentTime+0.3);
+}
+
+function snare(){
+    const b=ctx.createBuffer(1,ctx.sampleRate,ctx.sampleRate);
+    const d=b.getChannelData(0);
+    for(let i=0;i<d.length;i++) d[i]=Math.random()*2-1;
+    const s=ctx.createBufferSource();
+    s.buffer=b;
+    const g=ctx.createGain();
+    g.gain.setValueAtTime(0.5,ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.01,ctx.currentTime+0.2);
+    s.connect(g); g.connect(master);
+    s.start();
+}
+
+function hat(){
+    const o=ctx.createOscillator();
+    const g=ctx.createGain();
+    o.type="square";
+    o.frequency.value=6000;
+    g.gain.setValueAtTime(0.3,ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+0.05);
+    o.connect(g); g.connect(master);
+    o.start(); o.stop(ctx.currentTime+0.05);
+}
+
+// ================= GRID =================
+const rows=["kick","snare","hat"];
+const steps=16;
+
+const data={
+    kick:Array(steps).fill(0),
+    snare:Array(steps).fill(0),
+    hat:Array(steps).fill(0)
+};
+
+rows.forEach(r=>{
+    const el=document.querySelector("."+r);
+    for(let i=0;i<steps;i++){
+        const c=document.createElement("div");
+        c.classList.add("cell");
+
+        c.onclick=()=>{
+            data[r][i]^=1;
+            c.classList.toggle("active");
+        };
+
+        el.appendChild(c);
+    }
+});
+
+// ================= BPM =================
+const bpmSlider = document.getElementById("bpm");
+const bpmValue = document.getElementById("bpmValue");
+bpmValue.innerText = bpmSlider.value;
+
+bpmSlider.oninput = ()=>{
+    bpmValue.innerText = bpmSlider.value;
+};
+
+// ================= TEXT =================
+const vocab = [
+"data","system","signal","visual","machine","network","pattern","structure",
+"code","memory","archive","ritual","interface","process","logic","error",
+"fragment","layer","node","frequency","modulation","sequence","density",
+"protocol","mapping","transmission","feedback","control","syntax","semantic",
+"noise","field","grid","vector","phase","cycle","input","output"
+];
+
+function makeText(n){
+    let t=[];
+    for(let i=0;i<n;i++){
+        t.push(vocab[i % vocab.length]);
+    }
+    return t;
+}
+
+// ================= STATE =================
+let layout=[];
+let alignMode=0;
+let wordCount=40;
+let titleWords=["DATA","SYSTEM","VISUAL"];
+let titleSize=80;
+let scrollY=0;
+
+// BASS
+function generateLayout(){
+    layout=[];
+    alignMode = (alignMode + 1) % 4;
+
+    wordCount += (Math.random()>0.5 ? 20 : -20);
+    wordCount = Math.max(10, Math.min(200, wordCount));
+
+    titleWords = makeText(3).map(w=>w.toUpperCase());
+    titleSize = 60 + Math.random()*120;
+
+    const cols = 2 + (alignMode % 3);
+    const w = canvas.width / cols;
+
+    for(let i=0;i<cols;i++){
+        layout.push({
+            x: i*w + 80,
+            y: 200,
+            words: makeText(wordCount),
+            highlights: [],
+            size: 16 + Math.random()*30
+        });
+    }
+}
+
+// MID
+function transformText(){
+    layout.forEach(b=>{
+        b.words = b.words.map(()=>{
+            return String.fromCharCode(33 + Math.floor(Math.random()*94));
+        });
+    });
+}
+
+// HIGH
+function addBlock(){
+    layout.forEach(b=>{
+        b.highlights = [];
+        for(let i=0;i<b.words.length;i++){
+            if(Math.random()>0.85){
+                b.highlights.push(i);
+            }
+        }
+    });
+}
+
+// ================= DRAW =================
+function draw(){
+    const w = canvas.width;
+    const h = canvas.height;
+
+    g.fillStyle="black";
+    g.fillRect(0,0,w,h);
+
+    const margin = 80;
+    const contentWidth = w - margin*2;
+
+    let baseX = margin;
+
+    if(alignMode===1) baseX = w/2 - contentWidth/2;
+    if(alignMode===2) baseX = w - contentWidth - margin;
+
+    let yOffset = -scrollY;
+
+    // TITLE
+    g.fillStyle="white";
+    g.font="bold "+titleSize+"px sans-serif";
+    g.fillText(titleWords.join(" "), baseX, 120 + yOffset);
+
+    let currentY = 200 + yOffset;
+
+    // BODY
+    layout.forEach((b,index)=>{
+        g.font = b.size+"px monospace";
+
+        let x = baseX;
+        let y = currentY;
+
+        b.words.forEach((word,i)=>{
+            const text = word + " ";
+            const width = g.measureText(text).width;
+
+            if(x > baseX + contentWidth){
+                x = baseX;
+                y += b.size + 10;
+            }
+
+            if(b.highlights.includes(i)){
+                g.fillStyle="white";
+                g.fillRect(x-2, y-(b.size), width+4, b.size+8);
+                g.fillStyle="black";
+            } else {
+                g.fillStyle="white";
+            }
+
+            g.fillText(text, x, y);
+            x += width;
+        });
+
+        currentY = y + 60;
+    });
+
+    // AUTO SCROLL
+    if(currentY > h){
+        scrollY += 1.5;
+    }
+
+    // BASS invert
+    if(data.kick[step]){
+        g.globalCompositeOperation="difference";
+        g.fillStyle="white";
+        g.fillRect(0,0,w,h);
+        g.globalCompositeOperation="source-over";
+    }
+}
+
+// ================= SEQUENCER =================
+let step=0;
+let playing=false;
+let loopTimeout=null;
+
+function loop(){
+    if(!playing) return;
+
+    const bpm=bpmSlider.value;
+    const interval=(60/bpm)/4;
+
+    document.querySelectorAll(".cell").forEach(c=>c.classList.remove("playing"));
+
+    rows.forEach(r=>{
+        const cells=document.querySelectorAll("."+r+" .cell");
+        cells[step].classList.add("playing");
+
+        if(data[r][step]){
+            if(r==="kick"){
+                kick();
+                generateLayout();
+            }
+            if(r==="snare"){
+                snare();
+                transformText();
+            }
+            if(r==="hat"){
+                hat();
+                addBlock();
+            }
+        }
+    });
+
+    draw();
+
+    step=(step+1)%steps;
+
+    loopTimeout = setTimeout(loop,interval*1000);
+}
+
+// ================= CONTROLS =================
+document.getElementById("start").onclick=()=>{
+    ctx.resume();
+    if(!playing){
+        playing=true;
+        scrollY=0;
+        generateLayout();
+        loop();
+    }
+};
+
+document.getElementById("stop").onclick=()=>{
+    playing=false;
+    clearTimeout(loopTimeout);
+    step=0;
+
+    document.querySelectorAll(".cell").forEach(c=>c.classList.remove("playing"));
+};
+</script>
+
+</body>
+</html>
