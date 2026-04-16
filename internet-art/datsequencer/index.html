@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>DATs SEQUENCER</title>
+<title>DATs TEXT INSTRUMENT FINAL</title>
 
 <style>
 html,body{
@@ -44,6 +44,22 @@ canvas{
     top:10px;
     left:10px;
     color:#0f0;
+}
+
+/* ===== PERBESAR BPM + BUTTON ===== */
+.ui div:first-child{
+    font-size:18px;
+}
+
+#bpmValue{
+    font-size:24px;
+    font-weight:bold;
+}
+
+#start, #stop{
+    font-size:18px;
+    padding:8px 16px;
+    border-width:2px;
 }
 
 button,input{
@@ -257,7 +273,6 @@ function draw(){
 
     let currentY = 200 + yOffset;
 
-    // BODY
     layout.forEach((b,index)=>{
         g.font = b.size+"px monospace";
 
@@ -288,12 +303,10 @@ function draw(){
         currentY = y + 60;
     });
 
-    // AUTO SCROLL
     if(currentY > h){
         scrollY += 1.5;
     }
 
-    // BASS invert
     if(data.kick[step]){
         g.globalCompositeOperation="difference";
         g.fillStyle="white";
