@@ -46,7 +46,7 @@ canvas{
     color:#0f0;
 }
 
-/* ===== PERBESAR BPM + BUTTON ===== */
+/* UI BESAR */
 .ui div:first-child{
     font-size:28px;
 }
@@ -202,7 +202,10 @@ let titleWords=["DATA","SYSTEM","VISUAL"];
 let titleSize=80;
 let scrollY=0;
 
-// BASS
+// 🔥 NEW: kick counter
+let kickCount = 0;
+
+// ================= GENERATE =================
 function generateLayout(){
     layout=[];
     alignMode = (alignMode + 1) % 4;
@@ -219,7 +222,6 @@ function generateLayout(){
     for(let i=0;i<cols;i++){
         layout.push({
             x: i*w + 80,
-            y: 200,
             words: makeText(wordCount),
             highlights: [],
             size: 16 + Math.random()*30
@@ -227,7 +229,7 @@ function generateLayout(){
     }
 }
 
-// MID
+// ================= MODIFY =================
 function transformText(){
     layout.forEach(b=>{
         b.words = b.words.map(()=>{
@@ -236,7 +238,6 @@ function transformText(){
     });
 }
 
-// HIGH
 function addBlock(){
     layout.forEach(b=>{
         b.highlights = [];
@@ -266,14 +267,13 @@ function draw(){
 
     let yOffset = -scrollY;
 
-    // TITLE
     g.fillStyle="white";
     g.font="bold "+titleSize+"px sans-serif";
     g.fillText(titleWords.join(" "), baseX, 120 + yOffset);
 
     let currentY = 200 + yOffset;
 
-    layout.forEach((b,index)=>{
+    layout.forEach((b)=>{
         g.font = b.size+"px monospace";
 
         let x = baseX;
@@ -304,7 +304,7 @@ function draw(){
     });
 
     if(currentY > h){
-        scrollY += 1.5;
+        scrollY += 4;
     }
 
     if(data.kick[step]){
@@ -336,6 +336,12 @@ function loop(){
             if(r==="kick"){
                 kick();
                 generateLayout();
+
+                // 🔥 COUNT & RESET
+                kickCount++;
+                if(kickCount % 4 === 0){
+                    scrollY = 0;
+                }
             }
             if(r==="snare"){
                 snare();
@@ -351,7 +357,6 @@ function loop(){
     draw();
 
     step=(step+1)%steps;
-
     loopTimeout = setTimeout(loop,interval*1000);
 }
 
@@ -361,6 +366,7 @@ document.getElementById("start").onclick=()=>{
     if(!playing){
         playing=true;
         scrollY=0;
+        kickCount=0;
         generateLayout();
         loop();
     }
