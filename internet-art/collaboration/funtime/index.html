@@ -35,12 +35,56 @@ html, body {
     pointer-events:none;
 }
 
+/* METEOR */
+.meteor{
+    position:absolute;
+    width:420px;
+
+    top:-180px;
+    right:-180px;
+
+    z-index:1;
+    pointer-events:auto;
+    cursor:pointer;
+
+    opacity:.9;
+
+    animation: meteorFly 7s linear infinite;
+
+    transition:
+        opacity 1s ease,
+        transform 1s ease;
+}
+
+@keyframes meteorFly{
+    0%{
+        transform: translate(0px,0px) rotate(-25deg);
+        opacity:0;
+    }
+
+    8%{
+        opacity:1;
+    }
+
+    100%{
+        transform: translate(-1400px,1400px) rotate(-25deg);
+        opacity:0;
+    }
+}
+
+.meteor-hide{
+    opacity:0 !important;
+    animation-play-state: paused;
+    transform: scale(0.7) rotate(-40deg) !important;
+    pointer-events:none;
+}
+
 /* ASTEROID */
 .asteroid {
     position:absolute;
     width:100%;
     top:350px;
-    z-index:1;
+    z-index:2;
     pointer-events:none;
     transition: transform 0.5s ease;
 }
@@ -164,6 +208,10 @@ html, body {
 <div class="scene">
 
     <img class="bg" src="gif/galaxy.gif">
+
+    <!-- METEOR -->
+    <img class="meteor" src="gif/meteor.gif">
+
     <img id="asteroid" class="asteroid" src="gif/asteroid.gif">
 
     <!-- EARTH LINK -->
@@ -329,6 +377,17 @@ window.addEventListener('touchend', () => {
         girl.src = "gif/anime-girl.gif";
         holding = false;
     }
+});
+
+/* METEOR CLICK */
+const meteors = document.querySelectorAll('.meteor');
+
+meteors.forEach(meteor => {
+    meteor.addEventListener('click', () => {
+        if (meteor.classList.contains('meteor-hide')) return;
+
+        meteor.classList.add('meteor-hide');
+    });
 });
 </script>
 
