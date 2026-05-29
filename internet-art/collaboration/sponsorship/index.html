@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DATS 3X - Windows XP Large Dialogue Edition</title>
+    <title>DATs 3X - Windows XP Large Dialogue Edition</title>
     <style>
         /* --- Windows XP Luna Blue & Y2K Fusion Aesthetics --- */
         * {
@@ -341,7 +341,7 @@
 
 <div class="viewport-16-9" id="main-viewport">
     <div class="xp-header">
-        <span>🎰 DATS_XP_MATRIX.exe</span>
+        <span>🎰 DATs_JACKPOT.exe</span>
         <div class="xp-controls">
             <div class="xp-btn-ctrl xp-min">_</div>
             <div class="xp-btn-ctrl xp-close">X</div>
@@ -357,7 +357,7 @@
         <div class="slot-container-centered">
             
             <div class="boot-overlay" id="reboot-screen">
-                <div id="boot-text">WINDOWS IS REBOOTING...</div>
+                <div id="boot-text">DATs IS REBOOTING...</div>
                 <div class="loading-bar-container">
                     <div class="loading-bar-progress" id="load-progress"></div>
                 </div>
@@ -368,11 +368,11 @@
             </div>
 
             <div class="reel-viewport">
-                <div class="slot-tile" id="box2">🚬</div>
+                <div class="slot-tile" id="box2">📦</div>
             </div>
 
             <div class="reel-viewport">
-                <div class="slot-tile" id="box3"><span class="dats-plain-white">DATS</span></div>
+                <div class="slot-tile" id="box3"><span class="DATs-plain-white">DATs</span></div>
             </div>
 
         </div>
@@ -387,19 +387,19 @@
             <div id="code-output" class="unique-code-text"></div>
         </div>
 
-        <button class="btn btn-link" onclick="window.open('https://datspace.club', '_blank')">🌐 Kunjungi Datspace.club</button>
+        <button class="btn btn-link" onclick="window.open('https://DATspace.club', '_blank')">🌐 Kunjungi DATspace.club</button>
     </div>
 
     <div class="assistant-panel">
         <div class="avatar-frame-text">
-            <div class="animated-dats-logo">&lt;DATS&gt;</div>
+            <div class="animated-DATs-logo">&lt;DATs&gt;</div>
         </div>
         <div class="dialog-bubble" id="msg-box">
             <b>CARA BERMAIN:</b> Tekan SPIN untuk memutar silinder matriks, lalu klik tombol STOP pada setiap kotak secara manual satu per satu. Sejajarkan 3 gambar kembar untuk memenangkan hadiah!<br><br>
             <b>DAFTAR HADIAH JACKPOT:</b><br>
             • 3x Sinyal 🍺 = Klaim Gratis 1 BOTOL BEER<br>
-            • 3x Sinyal 🚬 = Klaim VOUCHER DISKON IQOS<br>
-            • 3x Sinyal DATS = Klaim EXCLUSIVE STICKER PACK
+            • 3x Sinyal 📦 = Klaim FREE PRODUCT<br>
+            • 3x Sinyal DATs = Klaim EXCLUSIVE STICKER PACK
         </div>
     </div>
 </div>
@@ -407,8 +407,8 @@
 <script>
     const itemData = [
         { code: 'BEER', html: '🍺' },
-        { code: 'IQOS', html: '🚬' },
-        { code: 'DATS', html: '<span class="dats-plain-white">DATS</span>' }
+        { code: 'PACKAGE', html: '📦' },
+        { code: 'DATs', html: '<span class="dats-plain-white">DATS</span>' }
     ];
 
     let chancesLeft = 3;
@@ -488,12 +488,12 @@
                 const uniqueCode = generateUniqueCode('BEER');
                 codeText.innerText = `VERIFY_ID: ${uniqueCode}`;
                 msgBox.innerHTML = "🎉 <b>SELAMAT!</b> Anda sukses menyejajarkan matriks 3 BEER. Berhak mendapatkan <b>Gratis 1 Botol Beer</b>! Tunjukkan VERIFY_ID unik di atas kepada petugas bar.";
-            } else if (c1 === 'IQOS') {
-                rewardText.innerText = "DISKON IQOS!";
-                const uniqueCode = generateUniqueCode('IQOS');
+            } else if (c1 === 'FREE PRODUCT') {
+                rewardText.innerText = "DISKON FREE PRODUCT!";
+                const uniqueCode = generateUniqueCode('MAKAN');
                 codeText.innerText = `VERIFY_ID: ${uniqueCode}`;
-                msgBox.innerHTML = "🎉 <b>SELAMAT!</b> Anda sukses menyejajarkan matriks 3 IQOS. Berhak memenangkan <b>Voucher Diskon Pembelian IQOS</b>! Ambil tangkapan layar bersama VERIFY_ID unik di atas.";
-            } else if (c1 === 'DATS') {
+                msgBox.innerHTML = "🎉 <b>SELAMAT!</b> Anda sukses menyejajarkan matriks 3 PAKET. Berhak memenangkan <b>Voucher Free Product</b>! Ambil tangkapan layar bersama VERIFY_ID unik di atas.";
+            } else if (c1 === 'DATs') {
                 rewardText.innerText = "STICKER PACK!";
                 const uniqueCode = generateUniqueCode('DATS');
                 codeText.innerText = `VERIFY_ID: ${uniqueCode}`;
@@ -547,7 +547,7 @@
             } else {
                 progressWidth += 5; 
                 progressBar.style.width = progressWidth + "%";
-                if(progressWidth === 35) bootText.innerText = "RELOADING LUNA DESKTOP ASSETS...";
+                if(progressWidth === 35) bootText.innerText = "RELOADING DESKTOP ASSETS...";
                 if(progressWidth === 70) bootText.innerText = "RE-INDEXING SECURE REWARD MATRIX...";
             }
         }, 40);
@@ -570,7 +570,7 @@
         document.getElementById('code-output').innerText = "";
         document.getElementById('engine-status').innerText = "XP_ACTIVE";
         document.getElementById('engine-status').style.color = "#0053e2";
-        document.getElementById('msg-box').innerHTML = "<b>CARA BERMAIN:</b> Tekan SPIN untuk memutar silinder matriks, lalu klik tombol STOP pada setiap kotak secara manual satu per satu. Sejajarkan 3 gambar kembar untuk memenangkan hadiah!<br><br><b>DAFTAR HADIAH JACKPOT:</b><br>• 3x Sinyal 🍺 = Klaim Gratis 1 BOTOL BEER<br>• 3x Sinyal 🚬 = Klaim VOUCHER DISKON IQOS<br>• 3x Sinyal DATS = Klaim EXCLUSIVE STICKER PACK";
+        document.getElementById('msg-box').innerHTML = "<b>CARA BERMAIN:</b> Tekan SPIN untuk memutar silinder matriks, lalu klik tombol STOP pada setiap kotak secara manual satu per satu. Sejajarkan 3 gambar kembar untuk memenangkan hadiah!<br><br><b>DAFTAR HADIAH JACKPOT:</b><br>• 3x Sinyal 🍺 = Klaim Gratis 1 BOTOL BEER<br>• 3x Sinyal 📦 = Klaim FREE PRODUCT<br>• 3x Sinyal DATs = Klaim EXCLUSIVE STICKER PACK";
 
         document.getElementById('box1').innerHTML = itemData[0].html;
         document.getElementById('box2').innerHTML = itemData[1].html;
