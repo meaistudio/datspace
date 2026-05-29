@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DATs 3X - Windows XP Large Dialogue Edition</title>
+    <title>DATS 3X - Windows XP Large Dialogue Edition</title>
     <style>
         /* --- Windows XP Luna Blue & Y2K Fusion Aesthetics --- */
         * {
@@ -23,6 +23,36 @@
             min-height: 100vh;
             overflow: hidden;
             position: relative;
+        }
+
+        /* Keterangan Kombinasi Hadiah di Background Sisi Kiri */
+        body::before {
+            content: "🏆 REWARD MATRIX 🏆\A\A 🍺 + 🍺 + 🍺\A = GRATIS 1 BEER\A\A 📦 + 📦 + 📦\A = FREE PRODUCT\A\A DATS + DATS + DATS\A = STICKER PACK";
+            position: absolute;
+            left: 5%;
+            top: 30%;
+            white-space: pre;
+            color: rgba(0, 83, 226, 0.25); 
+            font-size: 16px;
+            font-family: 'Courier New', monospace;
+            text-align: left;
+            pointer-events: none;
+            line-height: 1.5;
+        }
+
+        /* Keterangan Kombinasi Hadiah di Background Sisi Kanan */
+        body::after {
+            content: "🎰 RULES & INFO 🎰\A\A - LIMIT 3 CHANCES\A - MANUAL LOCK SYSTEM\A - VERIFY SECURITY CODE\A - ANTI-CHEAT ACTIVE\A - REBOOT LOCK ON SPIN";
+            position: absolute;
+            right: 5%;
+            top: 35%;
+            white-space: pre;
+            color: rgba(0, 83, 226, 0.25);
+            font-size: 16px;
+            font-family: 'Courier New', monospace;
+            text-align: left;
+            pointer-events: none;
+            line-height: 1.5;
         }
 
         @media (max-width: 900px) {
@@ -323,7 +353,6 @@
             50% { transform: scale(0.95); color: #ff00ff; opacity: 0.4; }
         }
 
-        /* PERBAIKAN: Tinggi bubble keterangan diperbesar dari 60px menjadi 100px */
         .dialog-bubble {
             flex: 1;
             background: #fff;
@@ -341,7 +370,7 @@
 
 <div class="viewport-16-9" id="main-viewport">
     <div class="xp-header">
-        <span>🎰 DATs_JACKPOT.exe</span>
+        <span>🎰 DATS_XP_MATRIX.exe</span>
         <div class="xp-controls">
             <div class="xp-btn-ctrl xp-min">_</div>
             <div class="xp-btn-ctrl xp-close">X</div>
@@ -357,7 +386,7 @@
         <div class="slot-container-centered">
             
             <div class="boot-overlay" id="reboot-screen">
-                <div id="boot-text">DATs IS REBOOTING...</div>
+                <div id="boot-text">DATS IS REBOOTING...</div>
                 <div class="loading-bar-container">
                     <div class="loading-bar-progress" id="load-progress"></div>
                 </div>
@@ -372,7 +401,7 @@
             </div>
 
             <div class="reel-viewport">
-                <div class="slot-tile" id="box3"><span class="DATs-plain-white">DATs</span></div>
+                <div class="slot-tile" id="box3"><span class="dats-plain-white">DATS</span></div>
             </div>
 
         </div>
@@ -387,19 +416,19 @@
             <div id="code-output" class="unique-code-text"></div>
         </div>
 
-        <button class="btn btn-link" onclick="window.open('https://DATspace.club', '_blank')">🌐 Kunjungi DATspace.club</button>
+        <button class="btn btn-link" onclick="window.open('https://datspace.club', '_blank')">🌐 Kunjungi Datspace.club</button>
     </div>
 
     <div class="assistant-panel">
         <div class="avatar-frame-text">
-            <div class="animated-DATs-logo">&lt;DATs&gt;</div>
+            <div class="animated-dats-logo">&lt;DATS&gt;</div>
         </div>
         <div class="dialog-bubble" id="msg-box">
             <b>CARA BERMAIN:</b> Tekan SPIN untuk memutar silinder matriks, lalu klik tombol STOP pada setiap kotak secara manual satu per satu. Sejajarkan 3 gambar kembar untuk memenangkan hadiah!<br><br>
             <b>DAFTAR HADIAH JACKPOT:</b><br>
             • 3x Sinyal 🍺 = Klaim Gratis 1 BOTOL BEER<br>
             • 3x Sinyal 📦 = Klaim FREE PRODUCT<br>
-            • 3x Sinyal DATs = Klaim EXCLUSIVE STICKER PACK
+            • 3x Sinyal DATS = Klaim EXCLUSIVE STICKER PACK
         </div>
     </div>
 </div>
@@ -408,7 +437,7 @@
     const itemData = [
         { code: 'BEER', html: '🍺' },
         { code: 'PACKAGE', html: '📦' },
-        { code: 'DATs', html: '<span class="dats-plain-white">DATS</span>' }
+        { code: 'DATS', html: '<span class="dats-plain-white">DATS</span>' }
     ];
 
     let chancesLeft = 3;
@@ -482,18 +511,19 @@
         const rebootBtn = document.getElementById('reset-btn');
         const viewport = document.getElementById('main-viewport');
 
+        // PERBAIKAN: Deteksi string c1, c2, c3 sekarang disinkronkan secara presisi dengan itemData.code
         if (c1 === c2 && c2 === c3) {
             if (c1 === 'BEER') {
                 rewardText.innerText = "GRATIS 1 BEER!";
                 const uniqueCode = generateUniqueCode('BEER');
                 codeText.innerText = `VERIFY_ID: ${uniqueCode}`;
                 msgBox.innerHTML = "🎉 <b>SELAMAT!</b> Anda sukses menyejajarkan matriks 3 BEER. Berhak mendapatkan <b>Gratis 1 Botol Beer</b>! Tunjukkan VERIFY_ID unik di atas kepada petugas bar.";
-            } else if (c1 === 'FREE PRODUCT') {
-                rewardText.innerText = "DISKON FREE PRODUCT!";
-                const uniqueCode = generateUniqueCode('MAKAN');
+            } else if (c1 === 'PACKAGE') { // Perbaikan: Menyesuaikan string pengecekan dari 'FREE PRODUCT' ke 'PACKAGE'
+                rewardText.innerText = "FREE PRODUCT!";
+                const uniqueCode = generateUniqueCode('PAKET');
                 codeText.innerText = `VERIFY_ID: ${uniqueCode}`;
                 msgBox.innerHTML = "🎉 <b>SELAMAT!</b> Anda sukses menyejajarkan matriks 3 PAKET. Berhak memenangkan <b>Voucher Free Product</b>! Ambil tangkapan layar bersama VERIFY_ID unik di atas.";
-            } else if (c1 === 'DATs') {
+            } else if (c1 === 'DATS') {
                 rewardText.innerText = "STICKER PACK!";
                 const uniqueCode = generateUniqueCode('DATS');
                 codeText.innerText = `VERIFY_ID: ${uniqueCode}`;
@@ -570,7 +600,7 @@
         document.getElementById('code-output').innerText = "";
         document.getElementById('engine-status').innerText = "XP_ACTIVE";
         document.getElementById('engine-status').style.color = "#0053e2";
-        document.getElementById('msg-box').innerHTML = "<b>CARA BERMAIN:</b> Tekan SPIN untuk memutar silinder matriks, lalu klik tombol STOP pada setiap kotak secara manual satu per satu. Sejajarkan 3 gambar kembar untuk memenangkan hadiah!<br><br><b>DAFTAR HADIAH JACKPOT:</b><br>• 3x Sinyal 🍺 = Klaim Gratis 1 BOTOL BEER<br>• 3x Sinyal 📦 = Klaim FREE PRODUCT<br>• 3x Sinyal DATs = Klaim EXCLUSIVE STICKER PACK";
+        document.getElementById('msg-box').innerHTML = "<b>CARA BERMAIN:</b> Tekan SPIN untuk memutar silinder matriks, lalu klik tombol STOP pada setiap kotak secara manual satu per satu. Sejajarkan 3 gambar kembar untuk memenangkan hadiah!<br><br><b>DAFTAR HADIAH JACKPOT:</b><br>• 3x Sinyal 🍺 = Klaim Gratis 1 BOTOL BEER<br>• 3x Sinyal 📦 = Klaim FREE PRODUCT<br>• 3x Sinyal DATS = Klaim EXCLUSIVE STICKER PACK";
 
         document.getElementById('box1').innerHTML = itemData[0].html;
         document.getElementById('box2').innerHTML = itemData[1].html;
