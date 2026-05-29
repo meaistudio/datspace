@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DATS 3X - Windows XP Large Dialogue Edition</title>
+    <style>
+        /* --- Windows XP Luna Blue & Y2K Fusion Aesthetics --- */
+        * {
+            box-sizing: border-box;
+            font-family: 'Tahoma', 'Segoe UI', sans-serif;
+            font-weight: bold;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background: #0b001a;
+            color: #00ff00;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Keterangan Kombinasi Hadiah di Background Sisi Kiri */
+        body::before {
+            content: "🏆 REWARD MATRIX 🏆\A\A 🍺 + 🍺 + 🍺\A = GRATIS 1 BEER\A\A 🚬 + 🚬 + 🚬\A = DISKON IQOS\A\A DATS + DATS + DATS\A = STICKER PACK";
+            position: absolute;
+            left: 5%;
+            top: 30%;
+            white-space: pre;
+            color: rgba(0, 83, 226, 0.25); 
+            font-size: 16px;
+            font-family: 'Courier New', monospace;
+            text-align: left;
+            pointer-events: none;
+            line-height: 1.5;
+        }
+
+        /* Keterangan Kombinasi Hadiah di Background Sisi Kanan */
+        body::after {
+            content: "🎰 RULES & INFO 🎰\A\A - LIMIT 3 CHANCES\A - MANUAL LOCK SYSTEM\A - VERIFY SECURITY CODE\A - ANTI-CHEAT ACTIVE\A - REBOOT LOCK ON SPIN";
+            position: absolute;
+            right: 5%;
+            top: 35%;
+            white-space: pre;
+            color: rgba(0, 83, 226, 0.25);
+            font-size: 16px;
+            font-family: 'Courier New', monospace;
+            text-align: left;
+            pointer-events: none;
+            line-height: 1.5;
+        }
+
+        @media (max-width: 900px) {
+            body::before, body::after {
+                display: none;
+            }
+        }
+
+        /* --- Layout 16:9 Vertical Terpusat --- */
+        .viewport-16-9 {
+            position: relative;
+            width: 100vw;
+            height: calc(100vw * 16 / 9);
+            max-width: 430px;
+            max-height: 765px;
+            background: #110022;
+            border: 4px solid #0053e2;
+            border-radius: 8px 8px 0 0;
+            box-shadow: 0 0 25px rgba(0, 83, 226, 0.5);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 12px;
+            transition: background 0.1s ease;
+            z-index: 2; 
+        }
+
+        /* --- Windows XP Title Bar Style --- */
+        .xp-header {
+            background: linear-gradient(to bottom, #0058f5 0%, #0076f7 12%, #0053e2 25%, #0046d5 70%, #003bcb 100%);
+            color: white;
+            padding: 6px 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+            border-radius: 7px 7px 0 0;
+            box-shadow: inset 0 1px 1px #80b2ff;
+            text-shadow: 1px 1px 1px rgba(0,0,0,0.7);
+            margin: -12px -12px 0 -12px;
+        }
+
+        .xp-controls {
+            display: flex;
+            gap: 4px;
+        }
+
+        .xp-btn-ctrl {
+            width: 16px;
+            height: 16px;
+            border: 1px solid #fff;
+            border-radius: 3px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 9px;
+            color: white;
+            box-shadow: inset 0 1px 2px rgba(255,255,255,0.5);
+        }
+
+        .xp-min { background: linear-gradient(to bottom, #3c82ff, #0a46b9); }
+        .xp-close { 
+            background: linear-gradient(to bottom, #e7633c, #b61d00); 
+            border-color: #fff;
+            font-size: 10px;
+        }
+
+        /* --- Info Bar --- */
+        .slot-header {
+            display: flex;
+            justify-content: space-between;
+            background: #f1efe2; 
+            padding: 8px;
+            border: 1px solid #aca899;
+            color: #000;
+            font-size: 11px;
+            margin-top: 10px;
+            box-shadow: inset 1px 1px 2px #fff;
+        }
+
+        /* --- ENGINE SLOT --- */
+        .slot-window-outer {
+            background: #7ca5ff;
+            padding: 12px;
+            border: 2px solid #0053e2;
+            border-radius: 4px;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.3);
+            position: relative;
+            margin: auto 0;
+        }
+
+        .slot-container-centered {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            background: #000;
+            padding: 10px;
+            height: 120px;
+            overflow: hidden;
+            position: relative;
+            border: 2px inset #003bcb;
+        }
+
+        .reel-viewport {
+            width: 90px;
+            height: 100%;
+            background: #111;
+            border: 2px solid #7ca5ff;
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.8);
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .slot-tile {
+            height: 100%;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 35px;
+        }
+
+        .dats-plain-white {
+            font-size: 20px;
+            color: #ffffff;
+            font-family: 'Arial Black', sans-serif;
+            letter-spacing: 1px;
+            text-shadow: none;
+        }
+
+        /* --- Animasi Flash XP Style --- */
+        .jackpot-flash {
+            animation: hyperFlash 0.15s linear infinite;
+        }
+
+        @keyframes hyperFlash {
+            0%, 100% { background-color: #110022; border-color: #ff00ff; }
+            50% { background-color: #0053e2; border-color: #ffff00; }
+        }
+
+        /* --- XP Reboot Loading Overlay --- */
+        .boot-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: #000;
+            color: #fff;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+            font-size: 13px;
+        }
+
+        .loading-bar-container {
+            width: 70%;
+            height: 12px;
+            border: 2px solid #999;
+            background: #111;
+            margin-top: 15px;
+            border-radius: 3px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .loading-bar-progress {
+            width: 0%;
+            height: 100%;
+            background: linear-gradient(to right, #39a639, #227a22);
+        }
+
+        /* --- Footer Controls & FIXED REWARD PANEL --- */
+        .controls-area {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+            background: #f1efe2;
+            padding: 8px;
+            border: 1px solid #aca899;
+            box-shadow: inset 1px 1px 2px #fff;
+        }
+
+        .btn {
+            padding: 10px;
+            font-size: 12px;
+            cursor: pointer;
+            border: 1px solid #003bcb;
+            border-radius: 3px;
+            text-shadow: 1px 1px 0px rgba(255,255,255,0.4);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.5), 1px 1px 2px rgba(0,0,0,0.2);
+        }
+
+        .btn-spin { 
+            background: linear-gradient(to bottom, #4bf14b 0%, #32c832 15%, #229622 85%, #156415 100%); 
+            color: #fff;
+            border-color: #156415;
+            text-shadow: 1px 1px 2px #000;
+        }
+        .btn-stop { 
+            background: linear-gradient(to bottom, #f14b4b 0%, #c83232 15%, #962222 85%, #641515 100%); 
+            color: #fff;
+            border-color: #641515;
+            text-shadow: 1px 1px 2px #000;
+        }
+        .btn-reset { 
+            background: linear-gradient(to bottom, #4b96f1 0%, #327ec8 15%, #225996 85%, #153a64 100%); 
+            color: #fff;
+            border-color: #153a64;
+            text-shadow: 1px 1px 2px #000;
+        }
+        
+        .btn-link {
+            grid-column: span 2;
+            background: linear-gradient(to bottom, #ffffff 0%, #ece9d8 100%);
+            color: #003bcb;
+            border-color: #0053e2;
+            padding: 8px;
+            font-size: 11px;
+            text-transform: uppercase;
+        }
+        .btn-link:active {
+            background: #ece9d8;
+            box-shadow: inset 1px 1px 2px rgba(0,0,0,0.2);
+        }
+
+        .btn:disabled { 
+            background: #dcd9d1 !important; 
+            color: #aca899 !important; 
+            border-color: #aca899 !important; 
+            cursor: not-allowed;
+            text-shadow: none !important;
+            box-shadow: none !important;
+        }
+
+        .reward-banner {
+            grid-column: span 2;
+            background: linear-gradient(to bottom, #ffffff 0%, #dedcd3 100%);
+            border: 1px solid #716f64;
+            height: 70px; 
+            text-align: center;
+            font-size: 15px;
+            color: #b61d00; 
+            font-family: 'Arial Black', sans-serif;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            box-shadow: inset 1px 1px 3px rgba(0,0,0,0.2);
+            overflow: hidden; 
+        }
+
+        .unique-code-text {
+            font-size: 11px;
+            color: #0053e2;
+            font-family: 'Courier New', monospace;
+            letter-spacing: 1px;
+            margin-top: 2px;
+            height: 14px; 
+        }
+
+        /* --- Cyber Assistant Interface (XP Dialog Style) --- */
+        .assistant-panel {
+            background: #f1efe2;
+            border: 1px solid #aca899;
+            padding: 8px;
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            box-shadow: inset 1px 1px 2px #fff;
+        }
+
+        .avatar-frame-text {
+            width: 55px;
+            height: 50px;
+            border: 1px solid #716f64;
+            background: #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            flex-shrink: 0;
+            box-shadow: inset 0 0 5px rgba(0, 255, 0, 0.5);
+        }
+
+        .animated-dats-logo {
+            font-size: 13px;
+            color: #00ff00;
+            font-family: 'Courier New', monospace;
+            letter-spacing: 1px;
+            animation: datsBlink 0.8s steps(2, start) infinite;
+        }
+
+        @keyframes datsBlink {
+            0%, 100% { transform: scale(1); color: #00ff00; opacity: 1; }
+            50% { transform: scale(0.95); color: #ff00ff; opacity: 0.4; }
+        }
+
+        /* PERBAIKAN: Tinggi bubble keterangan diperbesar dari 60px menjadi 100px */
+        .dialog-bubble {
+            flex: 1;
+            background: #fff;
+            color: #333;
+            padding: 8px;
+            font-size: 11px;
+            height: 100px; 
+            overflow-y: auto;
+            border: 1px solid #716f64;
+            line-height: 1.4;
+        }
+    </style>
+</head>
+<body>
+
+<div class="viewport-16-9" id="main-viewport">
+    <div class="xp-header">
+        <span>🎰 DATS_XP_MATRIX.exe</span>
+        <div class="xp-controls">
+            <div class="xp-btn-ctrl xp-min">_</div>
+            <div class="xp-btn-ctrl xp-close">X</div>
+        </div>
+    </div>
+
+    <div class="slot-header">
+        <div>SYSTEM: <span id="engine-status" style="color:#0053e2;">XP_ACTIVE</span></div>
+        <div>QUOTA: <span id="chances-num" style="color:#b61d00;">3</span> / 3</div>
+    </div>
+
+    <div class="slot-window-outer">
+        <div class="slot-container-centered">
+            
+            <div class="boot-overlay" id="reboot-screen">
+                <div id="boot-text">WINDOWS IS REBOOTING...</div>
+                <div class="loading-bar-container">
+                    <div class="loading-bar-progress" id="load-progress"></div>
+                </div>
+            </div>
+            
+            <div class="reel-viewport">
+                <div class="slot-tile" id="box1">🍺</div>
+            </div>
+
+            <div class="reel-viewport">
+                <div class="slot-tile" id="box2">🚬</div>
+            </div>
+
+            <div class="reel-viewport">
+                <div class="slot-tile" id="box3"><span class="dats-plain-white">DATS</span></div>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="controls-area">
+        <button class="btn btn-spin" id="action-btn" onclick="handleAction()">SPIN</button>
+        <button class="btn btn-reset" id="reset-btn" onclick="systemReboot()" disabled>REBOOT</button>
+        
+        <div class="reward-banner">
+            <div id="reward-output">REWARD: NONE</div>
+            <div id="code-output" class="unique-code-text"></div>
+        </div>
+
+        <button class="btn btn-link" onclick="window.open('https://datspace.club', '_blank')">🌐 Kunjungi Datspace.club</button>
+    </div>
+
+    <div class="assistant-panel">
+        <div class="avatar-frame-text">
+            <div class="animated-dats-logo">&lt;DATS&gt;</div>
+        </div>
+        <div class="dialog-bubble" id="msg-box">
+            <b>CARA BERMAIN:</b> Tekan SPIN untuk memutar silinder matriks, lalu klik tombol STOP pada setiap kotak secara manual satu per satu. Sejajarkan 3 gambar kembar untuk memenangkan hadiah!<br><br>
+            <b>DAFTAR HADIAH JACKPOT:</b><br>
+            • 3x Sinyal 🍺 = Klaim Gratis 1 BOTOL BEER<br>
+            • 3x Sinyal 🚬 = Klaim VOUCHER DISKON IQOS<br>
+            • 3x Sinyal DATS = Klaim EXCLUSIVE STICKER PACK
+        </div>
+    </div>
+</div>
+
+<script>
+    const itemData = [
+        { code: 'BEER', html: '🍺' },
+        { code: 'IQOS', html: '🚬' },
+        { code: 'DATS', html: '<span class="dats-plain-white">DATS</span>' }
+    ];
+
+    let chancesLeft = 3;
+    let gameState = "IDLE"; 
+    
+    let interval1, interval2, interval3;
+    let currentIdx1 = 0; let currentIdx2 = 1; let currentIdx3 = 2;
+
+    function handleAction() {
+        const btn = document.getElementById('action-btn');
+        const rebootBtn = document.getElementById('reset-btn');
+
+        if (gameState === "IDLE") {
+            if (chancesLeft <= 0) return;
+
+            chancesLeft--;
+            document.getElementById('chances-num').innerText = chancesLeft;
+            document.getElementById('reward-output').innerText = "ROLLING...";
+            document.getElementById('code-output').innerText = "";
+            document.getElementById('msg-box').innerHTML = "<b>STATUS:</b> Prosedur sinkronisasi berjalan... Tekan tombol merah untuk menghentikan KOTAK 1!";
+            
+            rebootBtn.disabled = true;
+
+            interval1 = setInterval(() => { currentIdx1 = (currentIdx1 + 1) % itemData.length; document.getElementById('box1').innerHTML = itemData[currentIdx1].html; }, 60);
+            interval2 = setInterval(() => { currentIdx2 = (currentIdx2 + 1) % itemData.length; document.getElementById('box2').innerHTML = itemData[currentIdx2].html; }, 70);
+            interval3 = setInterval(() => { currentIdx3 = (currentIdx3 + 1) % itemData.length; document.getElementById('box3').innerHTML = itemData[currentIdx3].html; }, 80);
+
+            btn.className = "btn btn-stop";
+            btn.innerText = "STOP 1";
+            gameState = "ROLLING";
+
+        } else if (gameState === "ROLLING") {
+            clearInterval(interval1);
+            btn.innerText = "STOP 2";
+            gameState = "STOPPED_1";
+            document.getElementById('msg-box').innerHTML = "<b>STATUS:</b> Jalur 1 terkunci! Silakan tekan tombol merah untuk menghentikan KOTAK 2.";
+
+        } else if (gameState === "STOPPED_1") {
+            clearInterval(interval2);
+            btn.innerText = "STOP 3";
+            gameState = "STOPPED_2";
+            document.getElementById('msg-box').innerHTML = "<b>STATUS:</b> Jalur 2 terkunci! Tekan tombol merah sekali lagi untuk mengunci KOTAK TERAKHIR.";
+
+        } else if (gameState === "STOPPED_2") {
+            clearInterval(interval3);
+            
+            btn.className = "btn btn-spin";
+            btn.innerText = "SPIN";
+            btn.disabled = true; 
+            gameState = "IDLE";
+
+            evaluateMatrix(itemData[currentIdx1].code, itemData[currentIdx2].code, itemData[currentIdx3].code);
+        }
+    }
+
+    function generateUniqueCode(prefix) {
+        const chars = '0123456789ABCDEF';
+        let randomPart = '';
+        for (let i = 0; i < 4; i++) {
+            randomPart += chars[Math.floor(Math.random() * chars.length)];
+        }
+        const timestamp = new Date().getMilliseconds(); 
+        return `${prefix}-${randomPart}-${timestamp}`;
+    }
+
+    function evaluateMatrix(c1, c2, c3) {
+        const rewardText = document.getElementById('reward-output');
+        const codeText = document.getElementById('code-output');
+        const msgBox = document.getElementById('msg-box');
+        const btn = document.getElementById('action-btn');
+        const rebootBtn = document.getElementById('reset-btn');
+        const viewport = document.getElementById('main-viewport');
+
+        if (c1 === c2 && c2 === c3) {
+            if (c1 === 'BEER') {
+                rewardText.innerText = "GRATIS 1 BEER!";
+                const uniqueCode = generateUniqueCode('BEER');
+                codeText.innerText = `VERIFY_ID: ${uniqueCode}`;
+                msgBox.innerHTML = "🎉 <b>SELAMAT!</b> Anda sukses menyejajarkan matriks 3 BEER. Berhak mendapatkan <b>Gratis 1 Botol Beer</b>! Tunjukkan VERIFY_ID unik di atas kepada petugas bar.";
+            } else if (c1 === 'IQOS') {
+                rewardText.innerText = "DISKON IQOS!";
+                const uniqueCode = generateUniqueCode('IQOS');
+                codeText.innerText = `VERIFY_ID: ${uniqueCode}`;
+                msgBox.innerHTML = "🎉 <b>SELAMAT!</b> Anda sukses menyejajarkan matriks 3 IQOS. Berhak memenangkan <b>Voucher Diskon Pembelian IQOS</b>! Ambil tangkapan layar bersama VERIFY_ID unik di atas.";
+            } else if (c1 === 'DATS') {
+                rewardText.innerText = "STICKER PACK!";
+                const uniqueCode = generateUniqueCode('DATS');
+                codeText.innerText = `VERIFY_ID: ${uniqueCode}`;
+                msgBox.innerHTML = "🎉 <b>SELAMAT!</b> Anda sukses menyejajarkan matriks 3 DATS Logo. Berhak memenangkan merchandise eksklusif <b>DATs Sticker Pack</b>! Simpan screenshot VERIFY_ID di atas.";
+            }
+            
+            viewport.classList.add('jackpot-flash'); 
+            btn.disabled = true;
+            rebootBtn.disabled = false; 
+        } else {
+            if (chancesLeft > 0) {
+                rewardText.innerText = "REWARD: NONE";
+                codeText.innerText = "";
+                msgBox.innerHTML = `❌ <b>BELUM BERUNTUNG!</b> Kombinasi penguncian manual (${c1}-${c2}-${c3}) tidak sejajar. Sisa kuota kesempatan putaran Anda: <b>${chancesLeft} kali lagi</b>. Atur waktu putaran Anda dan coba kembali!`;
+                btn.disabled = false;
+                rebootBtn.disabled = true; 
+            } else {
+                rewardText.innerText = "GAME OVER";
+                codeText.innerText = "ACCESS_DENIED";
+                msgBox.innerHTML = "⚠️ <b>ALOKASI KESEMPATAN HABIS!</b> 3 kali percobaan Anda telah digunakan tanpa hasil kembar. Tombol REBOOT di atas sekarang terbuka, silakan klik untuk memulihkan kuota sirkuit.";
+                btn.disabled = true;
+                rebootBtn.disabled = false; 
+            }
+        }
+    }
+
+    function systemReboot() {
+        document.getElementById('action-btn').disabled = true;
+        document.getElementById('reset-btn').disabled = true;
+        document.getElementById('engine-status').innerText = "LOADING...";
+        document.getElementById('engine-status').style.color = "#ff3300";
+        
+        document.getElementById('main-viewport').classList.remove('jackpot-flash');
+
+        const rebootScreen = document.getElementById('reboot-screen');
+        const progressBar = document.getElementById('load-progress');
+        const bootText = document.getElementById('boot-text');
+        
+        rebootScreen.style.display = "flex";
+        progressBar.style.width = "0%";
+        bootText.innerText = "SAVING XP_SETTING CONFIGURATION...";
+
+        let progressWidth = 0;
+        const loadingInterval = setInterval(() => {
+            if (progressWidth >= 100) {
+                clearInterval(loadingInterval);
+                setTimeout(() => {
+                    rebootScreen.style.display = "none";
+                    completeResetLogic();
+                }, 200);
+            } else {
+                progressWidth += 5; 
+                progressBar.style.width = progressWidth + "%";
+                if(progressWidth === 35) bootText.innerText = "RELOADING LUNA DESKTOP ASSETS...";
+                if(progressWidth === 70) bootText.innerText = "RE-INDEXING SECURE REWARD MATRIX...";
+            }
+        }, 40);
+    }
+
+    function completeResetLogic() {
+        chancesLeft = 3;
+        gameState = "IDLE";
+        currentIdx1 = 0; currentIdx2 = 1; currentIdx3 = 2;
+        
+        const btn = document.getElementById('action-btn');
+        btn.className = "btn btn-spin";
+        btn.innerText = "SPIN";
+        btn.disabled = false;
+
+        document.getElementById('reset-btn').disabled = true;
+        
+        document.getElementById('chances-num').innerText = chancesLeft;
+        document.getElementById('reward-output').innerText = "REWARD: NONE";
+        document.getElementById('code-output').innerText = "";
+        document.getElementById('engine-status').innerText = "XP_ACTIVE";
+        document.getElementById('engine-status').style.color = "#0053e2";
+        document.getElementById('msg-box').innerHTML = "<b>CARA BERMAIN:</b> Tekan SPIN untuk memutar silinder matriks, lalu klik tombol STOP pada setiap kotak secara manual satu per satu. Sejajarkan 3 gambar kembar untuk memenangkan hadiah!<br><br><b>DAFTAR HADIAH JACKPOT:</b><br>• 3x Sinyal 🍺 = Klaim Gratis 1 BOTOL BEER<br>• 3x Sinyal 🚬 = Klaim VOUCHER DISKON IQOS<br>• 3x Sinyal DATS = Klaim EXCLUSIVE STICKER PACK";
+
+        document.getElementById('box1').innerHTML = itemData[0].html;
+        document.getElementById('box2').innerHTML = itemData[1].html;
+        document.getElementById('box3').innerHTML = itemData[2].html;
+    }
+</script>
+</body>
+</html>
