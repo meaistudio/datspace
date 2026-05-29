@@ -25,36 +25,6 @@
             position: relative;
         }
 
-        /* Keterangan Kombinasi Hadiah di Background Sisi Kiri */
-        body::before {
-            content: "🏆 REWARD MATRIX 🏆\A\A 🍺 + 🍺 + 🍺\A = GRATIS 1 BEER\A\A 🚬 + 🚬 + 🚬\A = DISKON IQOS\A\A DATS + DATS + DATS\A = STICKER PACK";
-            position: absolute;
-            left: 5%;
-            top: 30%;
-            white-space: pre;
-            color: rgba(0, 83, 226, 0.25); 
-            font-size: 16px;
-            font-family: 'Courier New', monospace;
-            text-align: left;
-            pointer-events: none;
-            line-height: 1.5;
-        }
-
-        /* Keterangan Kombinasi Hadiah di Background Sisi Kanan */
-        body::after {
-            content: "🎰 RULES & INFO 🎰\A\A - LIMIT 3 CHANCES\A - MANUAL LOCK SYSTEM\A - VERIFY SECURITY CODE\A - ANTI-CHEAT ACTIVE\A - REBOOT LOCK ON SPIN";
-            position: absolute;
-            right: 5%;
-            top: 35%;
-            white-space: pre;
-            color: rgba(0, 83, 226, 0.25);
-            font-size: 16px;
-            font-family: 'Courier New', monospace;
-            text-align: left;
-            pointer-events: none;
-            line-height: 1.5;
-        }
-
         @media (max-width: 900px) {
             body::before, body::after {
                 display: none;
