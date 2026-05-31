@@ -86,14 +86,47 @@ h1{
 
 .doc-grid{
     display:grid;
-    grid-template-columns:repeat(auto-fit,minmax(300px,1fr));
+    grid-template-columns:repeat(2, 1fr);
     gap:20px;
+}
+
+@media(max-width:768px){
+    .doc-grid{
+        grid-template-columns:1fr;
+    }
 }
 
 .doc-grid img,
 .doc-grid video{
     width:100%;
     border:1px solid #111;
+}
+/* LIGHTBOX */
+.lightbox{
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,0.95);
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    opacity:0;
+    pointer-events:none;
+    transition:0.3s;
+    z-index:9999;
+}
+
+.lightbox img{
+    max-width:90%;
+    max-height:90%;
+}
+
+.lightbox.active{
+    opacity:1;
+    pointer-events:auto;
+}
+
+.doc-grid img{
+    cursor:pointer;
 }
 </style>
 </head>
@@ -134,28 +167,28 @@ h1{
         <!-- AUTO LINK FILES HERE -->
 
         <!-- Example image -->
-        <img src="Documentation/img1.jpeg">
+        <img src="Documentation/img1.jpg">
 
         <!-- Example image -->
-        <img src="Documentation/img2.jpeg">
+        <img src="Documentation/img2.jpg">
 
         <!-- Example image -->
-        <img src="Documentation/img3.jpeg">
+        <img src="Documentation/img3.jpg">
 
         <!-- Example image -->
-        <img src="Documentation/img4.jpeg">
+        <img src="Documentation/img4.jpg">
 
         <!-- Example image -->
-        <img src="Documentation/img5.jpeg">
+        <img src="Documentation/img5.jpg">
 
         <!-- Example image -->
-        <img src="Documentation/img6.jpeg">
+        <img src="Documentation/img6.jpg">
 
         <!-- Example image -->
-        <img src="Documentation/img7.jpeg">
+        <img src="Documentation/img7.jpg">
 
         <!-- Example image -->
-        <img src="Documentation/img8.jpeg">
+        <img src="Documentation/img8.jpg">
 
     </div>
 </div>
