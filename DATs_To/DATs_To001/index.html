@@ -131,13 +131,53 @@ h1{
     <h2>Documentation</h2>
 
     <div class="doc-grid">
+        <!-- AUTO LINK FILES HERE -->
 
-        <div style="opacity:0.4; font-size:18px;">
-            Documentation will be available after the session.
-        </div>
+        <!-- Example image -->
+        <img src="Documentation/img1.jpg">
+
+        <!-- Example image -->
+        <img src="Documentation/img2.jpg">
+
+        <!-- Example image -->
+        <img src="Documentation/img3.jpg">
+
+        <!-- Example image -->
+        <img src="Documentation/img4.jpg">
+
+        <!-- Example image -->
+        <img src="Documentation/img5.jpg">
+
+        <!-- Example image -->
+        <img src="Documentation/img6.jpg">
+
+        <!-- Example image -->
+        <img src="Documentation/img7.jpg">
+
+        <!-- Example image -->
+        <img src="Documentation/img8.jpg">
 
     </div>
 </div>
+<div class="lightbox" id="lightbox">
+    <img src="" id="lightbox-img">
+</div>
 
+<script>
+const images = document.querySelectorAll(".doc-grid img");
+const lightbox = document.getElementById("lightbox");
+const lightboxImg = document.getElementById("lightbox-img");
+
+images.forEach(img => {
+    img.addEventListener("click", () => {
+        lightbox.classList.add("active");
+        lightboxImg.src = img.src;
+    });
+});
+
+lightbox.addEventListener("click", () => {
+    lightbox.classList.remove("active");
+});
+</script>
 </body>
 </html>
