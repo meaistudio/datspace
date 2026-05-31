@@ -2,42 +2,503 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-
-<meta name="viewport"
-content="width=device-width, initial-scale=0.5,
-maximum-scale=1.0, user-scalable=no">
-
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
 <title>DATs_Out2 TU'TUR'ANG'RING'</title>
 
 <style>
-html,
-body{
-    margin:0;
-    width:100%;
-    height:100%;
-    overflow:hidden;
-    background:black;
+:root{--sceneScale:1;}
+
+html,body{
+    margin:0;width:100%;height:100%;overflow:hidden;background:black;
+    cursor:none;touch-action:none;overscroll-behavior:none;user-select:none;
+    position:fixed;inset:0;
 }
 
-/* FULLSCREEN GIF */
-.bg{
+.scene{
+    position:fixed;top:50%;left:50%;width:700px;
+    transform:translate(-50%,-50%) scale(var(--sceneScale));
+    transform-origin:center center;
+    display:flex;align-items:center;justify-content:center;
+}
+
+.bg1{position:absolute;width:95%;opacity:.5;z-index:1;pointer-events:none;}
+
+.mata-hitam-wrap{position:absolute;inset:0;z-index:2;pointer-events:none;}
+
+.mata-hitam{
+    position:absolute;width:9%;pointer-events:auto;cursor:none;
+    transform-origin:center center;
+    transition:transform 1.4s ease-in-out,filter .25s ease,opacity .45s ease;
+}
+
+.mata-hitam.clicked{
+    filter:brightness(20) invert(1) drop-shadow(0 0 14px white);
+    opacity:0;
+}
+
+.mata-hitam-1{left:14%; top:21.1%;}
+.mata-hitam-2{left:26.5%; top:21.1%;}
+.mata-hitam-3{left:38.6%; top:21.1%;}
+.mata-hitam-4{left:52.2%; top:21.1%;}
+.mata-hitam-5{left:64.7%; top:21.1%;}
+.mata-hitam-6{left:76.9%; top:21.1%;}
+
+.mata1,.mata2,.mata3,.mata4{
+    position:absolute;left:8%;bottom:4.1%;width:35%;z-index:2;pointer-events:none;
+}
+
+.mata2{will-change:transform;transition:transform .05s linear;}
+.mata4{opacity:0;transition:opacity .04s linear;}
+
+.artist-link{
+    position:absolute;left:71%;width:230px;z-index:4;
+    cursor:none;pointer-events:auto;overflow:visible;transform:translateX(-50%);
+}
+
+.artist-link img{
+    width:100%;display:block;pointer-events:none;
+    transition:transform .25s ease,filter .25s ease;
+}
+
+.artist-link.hovered img{
+    transform:translateX(-8px);
+    filter:brightness(15) drop-shadow(0 0 8px white);
+}
+
+.hue-link{top:60%;}
+.graung-link{top:65%;}
+.badsoju-link{top:70%;}
+.bazooka-link{top:75%;}
+.cahya-link{top:80%;}
+.discotit-link{top:85%;}
+.allam-link{top:90%;}
+
+.hover-box{
     position:fixed;
-    inset:0;
+    border:1px solid transparent;
+    background:transparent;
+    pointer-events:none;
+    z-index:99998;
+}
 
-    width:100%;
-    height:100%;
+.bg2{position:relative;width:79.5%;z-index:3;pointer-events:none;}
 
-    object-fit:cover;
-
-    image-rendering:auto;
+.cursor{
+    position:fixed;width:200px;pointer-events:none;z-index:999999;
+    left:0;top:0;will-change:transform;
 }
 </style>
 </head>
 
 <body>
 
-<!-- STATIC BG GIF -->
-<img class="bg" src="asset/gif/Ceki 2.gif">
+<div class="scene">
+    <img class="bg1" src="asset/gif/particle.gif">
+
+    <div class="mata-hitam-wrap">
+        <img class="mata-hitam mata-hitam-1" src="asset/gif/MATA HITAM.png">
+        <img class="mata-hitam mata-hitam-2" src="asset/gif/MATA HITAM.png">
+        <img class="mata-hitam mata-hitam-3" src="asset/gif/MATA HITAM.png">
+        <img class="mata-hitam mata-hitam-4" src="asset/gif/MATA HITAM.png">
+        <img class="mata-hitam mata-hitam-5" src="asset/gif/MATA HITAM.png">
+        <img class="mata-hitam mata-hitam-6" src="asset/gif/MATA HITAM.png">
+    </div>
+
+    <img class="mata1" src="asset/gif/MATA1.png">
+    <img class="mata2" id="mata2" src="asset/gif/MATA2.png">
+    <img class="mata3" src="asset/gif/MATA3.png">
+    <img class="mata4" src="asset/gif/MATA4.png">
+
+    <div class="artist-link hue-link" id="hueLink"><img src="asset/gif/hue.png"></div>
+    <div class="artist-link graung-link" id="graungLink"><img src="asset/gif/graung.png"></div>
+    <div class="artist-link badsoju-link" id="badsojuLink"><img src="asset/gif/badsoju.png"></div>
+    <div class="artist-link bazooka-link" id="bazookaLink"><img src="asset/gif/bazooka.png"></div>
+    <div class="artist-link cahya-link" id="cahyaLink"><img src="asset/gif/cahya.png"></div>
+    <div class="artist-link discotit-link" id="discotitLink"><img src="asset/gif/discotit.png"></div>
+    <div class="artist-link allam-link" id="allamLink"><img src="asset/gif/allam.png"></div>
+
+    <img class="bg2" src="asset/gif/DATS WEBSITE.png">
+</div>
+
+<img class="cursor" id="cursor" src="asset/gif/cursor.gif">
+
+<script>
+const cursor = document.getElementById("cursor");
+const mata2 = document.getElementById("mata2");
+const mata4 = document.querySelector(".mata4");
+const mataHitamList = document.querySelectorAll(".mata-hitam");
+
+const artists = [
+    { el: document.getElementById("hueLink"), page:"hue.html", tone:120 },
+    { el: document.getElementById("graungLink"), page:"graung.html", tone:170 },
+    { el: document.getElementById("badsojuLink"), page:"badsoju.html", tone:220 },
+    { el: document.getElementById("bazookaLink"), page:"bazooka.html", tone:280 },
+    { el: document.getElementById("cahyaLink"), page:"cahya.html", tone:340 },
+    { el: document.getElementById("discotitLink"), page:"discotit.html", tone:410 },
+    { el: document.getElementById("allamLink"), page:"allam.html", tone:520 }
+];
+
+artists.forEach((artist)=>{
+    const box = document.createElement("div");
+    box.className = "hover-box";
+    document.body.appendChild(box);
+    artist.box = box;
+    artist.isHovering = false;
+});
+
+function lockSceneScale(){
+    const scale = Math.min(window.innerWidth / 700, window.innerHeight / 700);
+    document.documentElement.style.setProperty("--sceneScale", scale);
+}
+lockSceneScale();
+window.addEventListener("resize", lockSceneScale);
+
+/* AUDIO */
+let audioCtx = null;
+let lastArtistSoundTime = 0;
+
+function initAudio(){
+    if(!audioCtx){
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    if(audioCtx.state === "suspended"){
+        audioCtx.resume();
+    }
+}
+
+function playArtistHoverSound(tone){
+    initAudio();
+    const now = audioCtx.currentTime;
+
+    const master = audioCtx.createGain();
+    master.gain.setValueAtTime(0, now);
+    master.gain.linearRampToValueAtTime(0.36, now + 0.015);
+    master.gain.exponentialRampToValueAtTime(0.001, now + 0.55);
+
+    const filter = audioCtx.createBiquadFilter();
+    filter.type = "bandpass";
+    filter.frequency.setValueAtTime(tone * 2.2, now);
+    filter.Q.setValueAtTime(9, now);
+
+    const osc = audioCtx.createOscillator();
+    osc.type = "triangle";
+    osc.frequency.setValueAtTime(tone, now);
+    osc.frequency.exponentialRampToValueAtTime(tone * 1.9, now + 0.22);
+
+    const osc2 = audioCtx.createOscillator();
+    osc2.type = "sine";
+    osc2.frequency.setValueAtTime(tone * 0.5, now);
+    osc2.frequency.exponentialRampToValueAtTime(tone * 0.7, now + 0.3);
+
+    osc.connect(filter);
+    osc2.connect(filter);
+    filter.connect(master);
+    master.connect(audioCtx.destination);
+
+    osc.start(now);
+    osc2.start(now);
+    osc.stop(now + 0.55);
+    osc2.stop(now + 0.55);
+}
+
+function playGenerativeAmbience(index){
+    initAudio();
+    const now = audioCtx.currentTime;
+
+    const master = audioCtx.createGain();
+    master.gain.setValueAtTime(0, now);
+    master.gain.linearRampToValueAtTime(0.48, now + 0.12);
+    master.gain.exponentialRampToValueAtTime(0.001, now + 2.4);
+
+    const filter = audioCtx.createBiquadFilter();
+    filter.type = "lowpass";
+    filter.frequency.setValueAtTime(320 + index * 120, now);
+    filter.frequency.exponentialRampToValueAtTime(900 + index * 90, now + 1.8);
+    filter.Q.setValueAtTime(5 + index, now);
+
+    const delay = audioCtx.createDelay();
+    delay.delayTime.setValueAtTime(0.18 + index * 0.025, now);
+
+    const feedback = audioCtx.createGain();
+    feedback.gain.setValueAtTime(0.66, now);
+
+    const delayGain = audioCtx.createGain();
+    delayGain.gain.setValueAtTime(0.54, now);
+
+    delay.connect(feedback);
+    feedback.connect(delay);
+    delay.connect(delayGain);
+    delayGain.connect(master);
+
+    filter.connect(master);
+    filter.connect(delay);
+    master.connect(audioCtx.destination);
+
+    const baseFreq = 70 + index * 31;
+
+    const osc1 = audioCtx.createOscillator();
+    const osc2 = audioCtx.createOscillator();
+    const oscGain = audioCtx.createGain();
+
+    osc1.type = "sine";
+    osc2.type = "triangle";
+    osc1.frequency.setValueAtTime(baseFreq, now);
+    osc2.frequency.setValueAtTime(baseFreq * 1.5, now);
+    osc1.detune.setValueAtTime(-9, now);
+    osc2.detune.setValueAtTime(13, now);
+
+    oscGain.gain.setValueAtTime(0.33, now);
+    oscGain.gain.exponentialRampToValueAtTime(0.001, now + 2.1);
+
+    osc1.connect(oscGain);
+    osc2.connect(oscGain);
+    oscGain.connect(filter);
+
+    const noiseBuffer = audioCtx.createBuffer(1, audioCtx.sampleRate * 2.2, audioCtx.sampleRate);
+    const noiseData = noiseBuffer.getChannelData(0);
+
+    for(let i = 0; i < noiseData.length; i++){
+        noiseData[i] = (Math.random() * 2 - 1) * 0.12;
+    }
+
+    const noise = audioCtx.createBufferSource();
+    const noiseGain = audioCtx.createGain();
+
+    noise.buffer = noiseBuffer;
+    noiseGain.gain.setValueAtTime(0.27, now);
+    noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 2.2);
+
+    noise.connect(noiseGain);
+    noiseGain.connect(filter);
+
+    osc1.start(now);
+    osc2.start(now);
+    noise.start(now);
+
+    osc1.stop(now + 2.4);
+    osc2.stop(now + 2.4);
+    noise.stop(now + 2.4);
+}
+
+/* POINTER CONTROL: DESKTOP + HP */
+let virtualX = window.innerWidth / 2;
+let virtualY = window.innerHeight / 2;
+
+function updateCursorByXY(x, y){
+    const inverseZoom = 1 / (window.devicePixelRatio || 1);
+    cursor.style.transform = `
+        translate(${x}px, ${y}px)
+        translate(-40%, -30%)
+        scale(${inverseZoom})
+    `;
+}
+
+function updateMata2ByXY(x, y){
+    const centerX = window.innerWidth / 2;
+    const centerY = window.innerHeight / 2 + 170;
+
+    const mouseX = x - centerX;
+    const mouseY = y - centerY;
+
+    mata2.style.transform = `
+        translate(${(mouseX / centerX) * 45}px, ${(mouseY / centerY) * 35}px)
+        rotate(${(mouseX / centerX) * 10}deg)
+        scale(${1 + Math.abs(mouseX / centerX) * .08})
+    `;
+}
+
+function updateHoverBoxesByXY(x, y){
+    artists.forEach((artist)=>{
+        const rect = artist.el.getBoundingClientRect();
+
+        const boxScaleX = 1.15;
+        const boxScaleY = .5;
+
+        const boxWidth = rect.width * boxScaleX;
+        const boxHeight = rect.height * boxScaleY;
+        const boxLeft = rect.left + rect.width / 2 - boxWidth / 2;
+        const boxTop = rect.top + rect.height / 2 - boxHeight / 2;
+
+        artist.box.style.left = boxLeft + "px";
+        artist.box.style.top = boxTop + "px";
+        artist.box.style.width = boxWidth + "px";
+        artist.box.style.height = boxHeight + "px";
+
+        const inside =
+            x >= boxLeft &&
+            x <= boxLeft + boxWidth &&
+            y >= boxTop &&
+            y <= boxTop + boxHeight;
+
+        artist.el.classList.toggle("hovered", inside);
+
+        if(inside && !artist.isHovering){
+            const nowTime = Date.now();
+            if(nowTime - lastArtistSoundTime > 120){
+                playArtistHoverSound(artist.tone);
+                lastArtistSoundTime = nowTime;
+            }
+        }
+
+        artist.isHovering = inside;
+    });
+}
+
+function handlePointerMove(x, y){
+    virtualX = x;
+    virtualY = y;
+
+    updateCursorByXY(x, y);
+    updateMata2ByXY(x, y);
+    updateHoverBoxesByXY(x, y);
+}
+
+window.addEventListener("mousemove", (e)=>{
+    handlePointerMove(e.clientX, e.clientY);
+});
+
+window.addEventListener("touchstart", (e)=>{
+    initAudio();
+
+    const touch = e.touches[0];
+    if(!touch) return;
+
+    handlePointerMove(touch.clientX, touch.clientY);
+},{passive:false});
+
+window.addEventListener("touchmove", (e)=>{
+    e.preventDefault();
+
+    const touch = e.touches[0];
+    if(!touch) return;
+
+    handlePointerMove(touch.clientX, touch.clientY);
+},{passive:false});
+
+window.addEventListener("touchend", (e)=>{
+    const target = document.elementFromPoint(virtualX, virtualY);
+
+    if(target){
+        target.dispatchEvent(
+            new MouseEvent("mousedown", {
+                bubbles:true,
+                clientX:virtualX,
+                clientY:virtualY
+            })
+        );
+
+        target.dispatchEvent(
+            new MouseEvent("click", {
+                bubbles:true,
+                clientX:virtualX,
+                clientY:virtualY
+            })
+        );
+    }
+},{passive:false});
+
+/* MATA HITAM RANDOM EASE ROTATE */
+function rotateMataHitamRandom(){
+    mataHitamList.forEach((mata)=>{
+        if(mata.classList.contains("clicked")) return;
+
+        const angle = Math.random() * 80 - 40;
+        const moveX = Math.random() * 8 - 4;
+        const moveY = Math.random() * 8 - 4;
+
+        mata.style.transform = `
+            translate(${moveX}px, ${moveY}px)
+            rotate(${angle}deg)
+        `;
+    });
+
+    const nextTime = Math.random() * 1200 + 900;
+    setTimeout(rotateMataHitamRandom, nextTime);
+}
+rotateMataHitamRandom();
+
+/* CLICK MATA HITAM */
+mataHitamList.forEach((mata, index)=>{
+    function triggerMata(e){
+        e.stopPropagation();
+
+        playGenerativeAmbience(index);
+
+        mata.classList.add("clicked");
+
+        setTimeout(()=>{
+            mata.style.transform = "rotate(0deg)";
+        }, 50);
+
+        setTimeout(()=>{
+            mata.classList.remove("clicked");
+            mata.style.opacity = "1";
+        }, 900);
+    }
+
+    mata.addEventListener("mousedown", triggerMata);
+});
+
+/* MATA4 BLINK */
+let blinkTimeout = null;
+
+function blinkMata4(){
+    clearTimeout(blinkTimeout);
+    mata4.style.opacity = "1";
+    blinkTimeout = setTimeout(()=>{ mata4.style.opacity = "0"; },120);
+}
+
+function randomBlinkLoop(){
+    const randomTime = Math.random() * 4000 + 2000;
+    setTimeout(()=>{
+        blinkMata4();
+        randomBlinkLoop();
+    },randomTime);
+}
+randomBlinkLoop();
+
+window.addEventListener("mousedown", ()=>{
+    initAudio();
+    blinkMata4();
+});
+
+/* ARTIST CLICK */
+artists.forEach((artist)=>{
+    artist.el.addEventListener("click", ()=>{
+        initAudio();
+        setTimeout(()=>{
+            window.location.href = artist.page;
+        }, 120);
+    });
+});
+
+document.addEventListener("gesturestart", e=>e.preventDefault());
+document.addEventListener("gesturechange", e=>e.preventDefault());
+document.addEventListener("gestureend", e=>e.preventDefault());
+
+window.addEventListener("wheel", e=>{
+    if(e.ctrlKey) e.preventDefault();
+},{passive:false});
+
+let lastTouchEnd = 0;
+document.addEventListener("touchend", e=>{
+    const now = Date.now();
+    if(now - lastTouchEnd <= 300) e.preventDefault();
+    lastTouchEnd = now;
+},false);
+
+window.addEventListener("keydown", e=>{
+    if((e.ctrlKey || e.metaKey) && ["+","-","=","_","0"].includes(e.key)){
+        e.preventDefault();
+    }
+},{passive:false});
+
+window.addEventListener("contextmenu", e=>e.preventDefault());
+window.addEventListener("dragstart", e=>e.preventDefault());
+
+handlePointerMove(virtualX, virtualY);
+window.scrollTo(0,0);
+</script>
 
 </body>
 </html>
