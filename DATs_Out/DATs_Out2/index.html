@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>DATs_Out2 — TU'TUR'ANG'RING' 060626</title>
+
+<link rel="icon" type="image/png" href="../../dats.png">
+
+<style>
+html,body{
+    margin:0;
+    padding:0;
+    background:#000;
+    color:white;
+    font-family:monospace;
+}
+
+.section{
+    padding:100px 12vw;
+}
+
+.hero{
+    min-height:40vh;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+}
+
+h1{
+    font-size:72px;
+    margin:0 0 20px 0;
+}
+
+.subtitle{
+    font-size:22px;
+    opacity:0.6;
+    margin-bottom:40px;
+}
+
+.manifesto{
+    max-width:800px;
+    line-height:1.8;
+    font-size:18px;
+    opacity:0.9;
+}
+
+.meta{
+    margin-top:50px;
+    font-size:16px;
+    opacity:0.7;
+    line-height:1.6;
+}
+
+/* LINK REGISTRASI */
+.register-link {
+    display: inline-block;
+    margin-top: 20px;
+    color: white;
+    text-decoration: underline;
+    opacity: 0.8;
+    transition: 0.3s;
+}
+
+.register-link:hover {
+    opacity: 1;
+    letter-spacing: 1px;
+    text-decoration: underline;
+}
+
+.divider{
+    height:1px;
+    background:#111;
+    margin:80px 0;
+}
+
+/* BACK BUTTON */
+.back{
+    position:fixed;
+    top:30px;
+    left:40px;
+    font-size:25px;
+    opacity:0.6;
+    text-decoration: underline; /* DIUBAH: Menggunakan underline */
+    color:white;
+    transition:0.3s;
+}
+
+.back:hover{
+    opacity:1;
+    letter-spacing:2px;
+    text-decoration: underline; /* MEMASTIKAN tetap underline saat hover */
+}
+
+/* DOCUMENTATION */
+.docs{
+    padding:80px 12vw;
+}
+
+.docs h2{
+    font-size:28px;
+    margin-bottom:40px;
+    opacity:0.8;
+}
+
+.doc-grid{
+    display:grid;
+    grid-template-columns:repeat(2, 1fr);
+    gap:20px;
+}
+
+@media(max-width:768px){
+    .doc-grid{
+        grid-template-columns:1fr;
+    }
+}
+
+.doc-grid img,
+.doc-grid video{
+    width:100%;
+    border:1px solid #111;
+}
+/* LIGHTBOX */
+.lightbox{
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,0.95);
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    opacity:0;
+    pointer-events:none;
+    transition:0.3s;
+    z-index:9999;
+}
+
+.lightbox img{
+    max-width:90%;
+    max-height:90%;
+}
+
+.lightbox.active{
+    opacity:1;
+    pointer-events:auto;
+}
+
+.doc-grid img{
+    cursor:pointer;
+}
+</style>
+</head>
+<body>
+
+<a href="../index.html" class="back">← BACK</a>
+
+<div class="section hero">
+
+    <h1>DATs_Out2</h1>
+    <div class="subtitle">TU'TUR'ANG'RING' 060626</div>
+
+    <div class="manifesto">
+        DATs_Out2 COMING SOON.
+        <br><br>
+        COMING SOON
+        <br><br>
+        COMING SOON
+        <br><br>
+        COMING SOON
+    </div>
+
+    <div class="meta">
+        06 June 2026<br>
+        17.00–23.00 WITA<br>
+        Location: KROMA 1984 Madahuis, Denpasar<br>
+        <a href="https://tally.so/r/kdv0pe" target="_blank" class="register-link">REGISTRATION HERE→</a>
+    </div>
+
+</div>
+
+<div class="divider"></div>
+
+<div class="docs">
+    <h2>Documentation</h2>
+
+    <div class="doc-grid">
+        <!-- AUTO LINK FILES HERE -->
+
+        <!-- Example image -->
+        <img src="Documentation/img1.jpg">
+        
+        <!-- Example video -->
+        <video src="Documentation/video.mp4" controls></video>
+
+    </div>
+</div>
+<div class="lightbox" id="lightbox">
+    <img src="" id="lightbox-img">
+</div>
+
+<script>
+const images = document.querySelectorAll(".doc-grid img");
+const lightbox = document.getElementById("lightbox");
+const lightboxImg = document.getElementById("lightbox-img");
+
+images.forEach(img => {
+    img.addEventListener("click", () => {
+        lightbox.classList.add("active");
+        lightboxImg.src = img.src;
+    });
+});
+
+lightbox.addEventListener("click", () => {
+    lightbox.classList.remove("active");
+});
+</script>
+</body>
+</html>
