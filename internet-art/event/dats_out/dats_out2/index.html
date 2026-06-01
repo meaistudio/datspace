@@ -81,6 +81,44 @@ html,body{
     z-index:99998;
 }
 
+/* CUSTOM TOUCH BOX: ATUR POSISI DI SINI */
+.touch-link-box{
+    position:absolute;
+    z-index:5;
+    cursor:none;
+    pointer-events:auto;
+    background:transparent;
+    border:1px solid transparent;
+}
+
+/* GOOGLE MAPS BOX */
+.maps-box{
+    left:13%;
+    top:83%;
+    width:20%;
+    height:7%;
+}
+
+/* IG BOX 1 */
+.ig-box-1{
+    left:37%;
+    top:83%;
+    width:20%;
+    height:7%;
+}
+
+/* IG BOX 2 */
+.ig-box-2{
+    left:61%;
+    top:83%;
+    width:20%;
+    height:7%;
+}
+
+.touch-link-box.hovered{
+    background:rgba(255,255,255,.04);
+}
+
 .bg2{position:relative;width:79.5%;z-index:3;pointer-events:none;}
 
 .cursor{
@@ -117,6 +155,11 @@ html,body{
     <div class="artist-link discotit-link" id="discotitLink"><img src="asset/gif/discotit.png"></div>
     <div class="artist-link allam-link" id="allamLink"><img src="asset/gif/allam.png"></div>
 
+    <!-- CUSTOM BOX LINK -->
+    <div class="touch-link-box maps-box" id="mapsBox"></div>
+    <div class="touch-link-box ig-box-1" id="igBox1"></div>
+    <div class="touch-link-box ig-box-2" id="igBox2"></div>
+
     <img class="bg2" src="asset/gif/DATS WEBSITE.png">
 </div>
 
@@ -138,6 +181,21 @@ const artists = [
     { el: document.getElementById("allamLink"), page:"allam.html", tone:520 }
 ];
 
+const customLinks = [
+    {
+        el:document.getElementById("mapsBox"),
+        url:"https://maps.google.com/"
+    },
+    {
+        el:document.getElementById("igBox1"),
+        url:"https://www.instagram.com/"
+    },
+    {
+        el:document.getElementById("igBox2"),
+        url:"https://www.instagram.com/"
+    }
+];
+
 artists.forEach((artist)=>{
     const box = document.createElement("div");
     box.className = "hover-box";
@@ -146,10 +204,23 @@ artists.forEach((artist)=>{
     artist.isHovering = false;
 });
 
+function isMobile(){
+    return window.innerWidth <= 768;
+}
+
 function lockSceneScale(){
-    const scale = Math.min(window.innerWidth / 700, window.innerHeight / 700);
+    let scale = Math.min(
+        window.innerWidth / 700,
+        window.innerHeight / 700
+    );
+
+    if(isMobile()){
+        scale *= 1.2;
+    }
+
     document.documentElement.style.setProperty("--sceneScale", scale);
 }
+
 lockSceneScale();
 window.addEventListener("resize", lockSceneScale);
 
@@ -161,6 +232,7 @@ function initAudio(){
     if(!audioCtx){
         audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     }
+
     if(audioCtx.state === "suspended"){
         audioCtx.resume();
     }
@@ -168,6 +240,7 @@ function initAudio(){
 
 function playArtistHoverSound(tone){
     initAudio();
+
     const now = audioCtx.currentTime;
 
     const master = audioCtx.createGain();
@@ -203,6 +276,7 @@ function playArtistHoverSound(tone){
 
 function playGenerativeAmbience(index){
     initAudio();
+
     const now = audioCtx.currentTime;
 
     const master = audioCtx.createGain();
@@ -254,7 +328,12 @@ function playGenerativeAmbience(index){
     osc2.connect(oscGain);
     oscGain.connect(filter);
 
-    const noiseBuffer = audioCtx.createBuffer(1, audioCtx.sampleRate * 2.2, audioCtx.sampleRate);
+    const noiseBuffer = audioCtx.createBuffer(
+        1,
+        audioCtx.sampleRate * 2.2,
+        audioCtx.sampleRate
+    );
+
     const noiseData = noiseBuffer.getChannelData(0);
 
     for(let i = 0; i < noiseData.length; i++){
@@ -280,12 +359,16 @@ function playGenerativeAmbience(index){
     noise.stop(now + 2.4);
 }
 
-/* POINTER CONTROL: DESKTOP + HP */
+/* POINTER CONTROL */
 let virtualX = window.innerWidth / 2;
 let virtualY = window.innerHeight / 2;
 
+let lastTouchX = null;
+let lastTouchY = null;
+
 function updateCursorByXY(x, y){
     const inverseZoom = 1 / (window.devicePixelRatio || 1);
+
     cursor.style.transform = `
         translate(${x}px, ${y}px)
         translate(-40%, -30%)
@@ -316,6 +399,7 @@ function updateHoverBoxesByXY(x, y){
 
         const boxWidth = rect.width * boxScaleX;
         const boxHeight = rect.height * boxScaleY;
+
         const boxLeft = rect.left + rect.width / 2 - boxWidth / 2;
         const boxTop = rect.top + rect.height / 2 - boxHeight / 2;
 
@@ -334,6 +418,7 @@ function updateHoverBoxesByXY(x, y){
 
         if(inside && !artist.isHovering){
             const nowTime = Date.now();
+
             if(nowTime - lastArtistSoundTime > 120){
                 playArtistHoverSound(artist.tone);
                 lastArtistSoundTime = nowTime;
@@ -341,6 +426,18 @@ function updateHoverBoxesByXY(x, y){
         }
 
         artist.isHovering = inside;
+    });
+
+    customLinks.forEach((item)=>{
+        const rect = item.el.getBoundingClientRect();
+
+        const inside =
+            x >= rect.left &&
+            x <= rect.right &&
+            y >= rect.top &&
+            y <= rect.bottom;
+
+        item.el.classList.toggle("hovered", inside);
     });
 }
 
@@ -353,17 +450,21 @@ function handlePointerMove(x, y){
     updateHoverBoxesByXY(x, y);
 }
 
+/* DESKTOP */
 window.addEventListener("mousemove", (e)=>{
     handlePointerMove(e.clientX, e.clientY);
 });
 
+/* HP TOUCHPAD MODE */
 window.addEventListener("touchstart", (e)=>{
     initAudio();
 
     const touch = e.touches[0];
     if(!touch) return;
 
-    handlePointerMove(touch.clientX, touch.clientY);
+    lastTouchX = touch.clientX;
+    lastTouchY = touch.clientY;
+
 },{passive:false});
 
 window.addEventListener("touchmove", (e)=>{
@@ -372,15 +473,59 @@ window.addEventListener("touchmove", (e)=>{
     const touch = e.touches[0];
     if(!touch) return;
 
-    handlePointerMove(touch.clientX, touch.clientY);
+    if(lastTouchX === null || lastTouchY === null){
+        lastTouchX = touch.clientX;
+        lastTouchY = touch.clientY;
+        return;
+    }
+
+    const deltaX = touch.clientX - lastTouchX;
+    const deltaY = touch.clientY - lastTouchY;
+
+    const sensitivity = 1.6;
+
+    virtualX += deltaX * sensitivity;
+    virtualY += deltaY * sensitivity;
+
+    virtualX = Math.max(0, Math.min(window.innerWidth, virtualX));
+    virtualY = Math.max(0, Math.min(window.innerHeight, virtualY));
+
+    lastTouchX = touch.clientX;
+    lastTouchY = touch.clientY;
+
+    handlePointerMove(virtualX, virtualY);
+
 },{passive:false});
 
+/* HP TAP = CLICK DI POSISI CURSOR, BUKAN POSISI JARI */
 window.addEventListener("touchend", (e)=>{
-    const target = document.elementFromPoint(virtualX, virtualY);
+
+    const target =
+    document.elementFromPoint(
+        virtualX,
+        virtualY
+    );
 
     if(target){
+
+        target.dispatchEvent(
+            new MouseEvent("mousemove", {
+                bubbles:true,
+                clientX:virtualX,
+                clientY:virtualY
+            })
+        );
+
         target.dispatchEvent(
             new MouseEvent("mousedown", {
+                bubbles:true,
+                clientX:virtualX,
+                clientY:virtualY
+            })
+        );
+
+        target.dispatchEvent(
+            new MouseEvent("mouseup", {
                 bubbles:true,
                 clientX:virtualX,
                 clientY:virtualY
@@ -395,6 +540,10 @@ window.addEventListener("touchend", (e)=>{
             })
         );
     }
+
+    lastTouchX = null;
+    lastTouchY = null;
+
 },{passive:false});
 
 /* MATA HITAM RANDOM EASE ROTATE */
@@ -415,6 +564,7 @@ function rotateMataHitamRandom(){
     const nextTime = Math.random() * 1200 + 900;
     setTimeout(rotateMataHitamRandom, nextTime);
 }
+
 rotateMataHitamRandom();
 
 /* CLICK MATA HITAM */
@@ -445,16 +595,21 @@ let blinkTimeout = null;
 function blinkMata4(){
     clearTimeout(blinkTimeout);
     mata4.style.opacity = "1";
-    blinkTimeout = setTimeout(()=>{ mata4.style.opacity = "0"; },120);
+
+    blinkTimeout = setTimeout(()=>{
+        mata4.style.opacity = "0";
+    },120);
 }
 
 function randomBlinkLoop(){
     const randomTime = Math.random() * 4000 + 2000;
+
     setTimeout(()=>{
         blinkMata4();
         randomBlinkLoop();
     },randomTime);
 }
+
 randomBlinkLoop();
 
 window.addEventListener("mousedown", ()=>{
@@ -466,12 +621,21 @@ window.addEventListener("mousedown", ()=>{
 artists.forEach((artist)=>{
     artist.el.addEventListener("click", ()=>{
         initAudio();
+
         setTimeout(()=>{
             window.location.href = artist.page;
         }, 120);
     });
 });
 
+/* CUSTOM LINK CLICK */
+customLinks.forEach((item)=>{
+    item.el.addEventListener("click", ()=>{
+        window.location.href = item.url;
+    });
+});
+
+/* PREVENT DEFAULT */
 document.addEventListener("gesturestart", e=>e.preventDefault());
 document.addEventListener("gesturechange", e=>e.preventDefault());
 document.addEventListener("gestureend", e=>e.preventDefault());
@@ -481,10 +645,16 @@ window.addEventListener("wheel", e=>{
 },{passive:false});
 
 let lastTouchEnd = 0;
+
 document.addEventListener("touchend", e=>{
     const now = Date.now();
-    if(now - lastTouchEnd <= 300) e.preventDefault();
+
+    if(now - lastTouchEnd <= 300){
+        e.preventDefault();
+    }
+
     lastTouchEnd = now;
+
 },false);
 
 window.addEventListener("keydown", e=>{
