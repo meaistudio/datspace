@@ -6,7 +6,13 @@
 <title>DATs_Out2 TU'TUR'ANG'RING'</title>
 
 <style>
-:root{--sceneScale:1;}
+:root{
+    --sceneScale:1;
+
+    /* ATUR POSISI CURSOR HP */
+    --mobileCursorOffsetX:10px;
+    --mobileCursorOffsetY:-6px;
+}
 
 html,body{
     margin:0;width:100%;height:100%;overflow:hidden;background:black;
@@ -73,11 +79,6 @@ html,body{
 .discotit-link{top:85%;}
 .allam-link{top:90%;}
 
-/* CUSTOM BOX ARTIST
-   Untuk menyamarkan lagi:
-   ubah border menjadi:
-   border:1px solid transparent;
-*/
 .hover-box{
     position:fixed;
     border:1px solid transparent;
@@ -86,15 +87,6 @@ html,body{
     z-index:99998;
 }
 
-/* CUSTOM TOUCH BOX
-   Untuk mengatur posisi:
-   ubah left, top, width, height pada .maps-box, .ig-box-1, .ig-box-2
-    rgba(255,255,255,.65)
-   Untuk menyamarkan lagi:
-   ubah border menjadi:
-   border:1px solid transparent;
-   background:transparent;
-*/
 .touch-link-box{
     position:absolute;
     z-index:5;
@@ -104,44 +96,15 @@ html,body{
     border:1px solid transparent;
 }
 
-.maps-box{
-    left:11%;
-    top:2%;
-    width:37%;
-    height:7%;
-}
-
-.ig-box-1{
-    left:12%;
-    top:90%;
-    width:20%;
-    height:7%;
-}
-
-.ig-box-2{
-    left:74%;
-    top:3%;
-    width:15%;
-    height:7%;
-}
-
-.ig-box-3{
-    left:65%;
-    top:45%;
-    width:22%;
-    height:4%;
-}
-
-.ig-box-4{
-    left:50%;
-    top:45%;
-    width:9%;
-    height:4%;
-}
+.maps-box{left:11%;top:2%;width:37%;height:7%;}
+.ig-box-1{left:12%;top:90%;width:20%;height:7%;}
+.ig-box-2{left:74%;top:3%;width:15%;height:7%;}
+.ig-box-3{left:65%;top:45%;width:22%;height:4%;}
+.ig-box-4{left:50%;top:45%;width:9%;height:4%;}
 
 .touch-link-box.hovered{
     background:rgba(255,255,255,.1);
-    border-color:rgb(44, 216, 13);
+    border-color:rgb(44,216,13);
 }
 
 .bg2{position:relative;width:79.5%;z-index:3;pointer-events:none;}
@@ -180,12 +143,12 @@ html,body{
     <div class="artist-link discotit-link" id="discotitLink"><img src="asset/gif/discotit.png"></div>
     <div class="artist-link allam-link" id="allamLink"><img src="asset/gif/allam.png"></div>
 
-    <!-- CUSTOM BOX LINK -->
     <div class="touch-link-box maps-box" id="mapsBox"></div>
     <div class="touch-link-box ig-box-1" id="igBox1"></div>
     <div class="touch-link-box ig-box-2" id="igBox2"></div>
     <div class="touch-link-box ig-box-3" id="igBox3"></div>
     <div class="touch-link-box ig-box-4" id="igBox4"></div>
+
     <img class="bg2" src="asset/gif/DATS WEBSITE.png">
 </div>
 
@@ -228,22 +191,14 @@ function isMobile(){
 }
 
 function lockSceneScale(){
-    let scale = Math.min(
-        window.innerWidth / 700,
-        window.innerHeight / 700
-    );
-
-    if(isMobile()){
-        scale *= 1.2;
-    }
-
+    let scale = Math.min(window.innerWidth / 700, window.innerHeight / 700);
+    if(isMobile()) scale *= 1.2;
     document.documentElement.style.setProperty("--sceneScale", scale);
 }
 
 lockSceneScale();
 window.addEventListener("resize", lockSceneScale);
 
-/* AUDIO */
 let audioCtx = null;
 let lastArtistSoundTime = 0;
 
@@ -251,7 +206,6 @@ function initAudio(){
     if(!audioCtx){
         audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     }
-
     if(audioCtx.state === "suspended"){
         audioCtx.resume();
     }
@@ -259,7 +213,6 @@ function initAudio(){
 
 function playArtistHoverSound(tone){
     initAudio();
-
     const now = audioCtx.currentTime;
 
     const master = audioCtx.createGain();
@@ -295,7 +248,6 @@ function playArtistHoverSound(tone){
 
 function playGenerativeAmbience(index){
     initAudio();
-
     const now = audioCtx.currentTime;
 
     const master = audioCtx.createGain();
@@ -347,12 +299,7 @@ function playGenerativeAmbience(index){
     osc2.connect(oscGain);
     oscGain.connect(filter);
 
-    const noiseBuffer = audioCtx.createBuffer(
-        1,
-        audioCtx.sampleRate * 2.2,
-        audioCtx.sampleRate
-    );
-
+    const noiseBuffer = audioCtx.createBuffer(1,audioCtx.sampleRate * 2.2,audioCtx.sampleRate);
     const noiseData = noiseBuffer.getChannelData(0);
 
     for(let i = 0; i < noiseData.length; i++){
@@ -378,7 +325,6 @@ function playGenerativeAmbience(index){
     noise.stop(now + 2.4);
 }
 
-/* POINTER CONTROL */
 let virtualX = window.innerWidth / 2;
 let virtualY = window.innerHeight / 2;
 
@@ -387,11 +333,29 @@ let lastTouchY = null;
 let touchMoved = false;
 let totalTouchMove = 0;
 
+function getMobileOffset(){
+    const root = getComputedStyle(document.documentElement);
+
+    return {
+        x: parseFloat(root.getPropertyValue("--mobileCursorOffsetX")) || 0,
+        y: parseFloat(root.getPropertyValue("--mobileCursorOffsetY")) || 0
+    };
+}
+
 function updateCursorByXY(x, y){
     const inverseZoom = 1 / (window.devicePixelRatio || 1);
 
+    let offsetX = 0;
+    let offsetY = 0;
+
+    if(isMobile()){
+        const offset = getMobileOffset();
+        offsetX = offset.x;
+        offsetY = offset.y;
+    }
+
     cursor.style.transform = `
-        translate(${x}px, ${y}px)
+        translate(${x + offsetX}px, ${y + offsetY}px)
         translate(-40%, -30%)
         scale(${inverseZoom})
     `;
@@ -439,7 +403,6 @@ function updateHoverBoxesByXY(x, y){
 
         if(inside && !artist.isHovering){
             const nowTime = Date.now();
-
             if(nowTime - lastArtistSoundTime > 120){
                 playArtistHoverSound(artist.tone);
                 lastArtistSoundTime = nowTime;
@@ -472,52 +435,20 @@ function handlePointerMove(x, y){
 }
 
 function clickAtVirtualCursor(){
-    const target = document.elementFromPoint(
-        virtualX,
-        virtualY
-    );
+    const target = document.elementFromPoint(virtualX, virtualY);
 
     if(target){
-        target.dispatchEvent(
-            new MouseEvent("mousemove", {
-                bubbles:true,
-                clientX:virtualX,
-                clientY:virtualY
-            })
-        );
-
-        target.dispatchEvent(
-            new MouseEvent("mousedown", {
-                bubbles:true,
-                clientX:virtualX,
-                clientY:virtualY
-            })
-        );
-
-        target.dispatchEvent(
-            new MouseEvent("mouseup", {
-                bubbles:true,
-                clientX:virtualX,
-                clientY:virtualY
-            })
-        );
-
-        target.dispatchEvent(
-            new MouseEvent("click", {
-                bubbles:true,
-                clientX:virtualX,
-                clientY:virtualY
-            })
-        );
+        target.dispatchEvent(new MouseEvent("mousemove",{bubbles:true,clientX:virtualX,clientY:virtualY}));
+        target.dispatchEvent(new MouseEvent("mousedown",{bubbles:true,clientX:virtualX,clientY:virtualY}));
+        target.dispatchEvent(new MouseEvent("mouseup",{bubbles:true,clientX:virtualX,clientY:virtualY}));
+        target.dispatchEvent(new MouseEvent("click",{bubbles:true,clientX:virtualX,clientY:virtualY}));
     }
 }
 
-/* DESKTOP */
 window.addEventListener("mousemove", (e)=>{
     handlePointerMove(e.clientX, e.clientY);
 });
 
-/* HP TOUCHPAD MODE */
 window.addEventListener("touchstart", (e)=>{
     initAudio();
 
@@ -529,7 +460,6 @@ window.addEventListener("touchstart", (e)=>{
 
     touchMoved = false;
     totalTouchMove = 0;
-
 },{passive:false});
 
 window.addEventListener("touchmove", (e)=>{
@@ -547,11 +477,7 @@ window.addEventListener("touchmove", (e)=>{
     const deltaX = touch.clientX - lastTouchX;
     const deltaY = touch.clientY - lastTouchY;
 
-    const distance = Math.sqrt(
-        deltaX * deltaX +
-        deltaY * deltaY
-    );
-
+    const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
     totalTouchMove += distance;
 
     if(totalTouchMove > 8){
@@ -570,11 +496,8 @@ window.addEventListener("touchmove", (e)=>{
     lastTouchY = touch.clientY;
 
     handlePointerMove(virtualX, virtualY);
-
 },{passive:false});
 
-/* TAP ONLY = CLICK
-   DRAG / GESER = TIDAK KLIK */
 window.addEventListener("touchend", (e)=>{
     e.preventDefault();
 
@@ -586,10 +509,8 @@ window.addEventListener("touchend", (e)=>{
     lastTouchY = null;
     touchMoved = false;
     totalTouchMove = 0;
-
 },{passive:false});
 
-/* MATA HITAM RANDOM EASE ROTATE */
 function rotateMataHitamRandom(){
     mataHitamList.forEach((mata)=>{
         if(mata.classList.contains("clicked")) return;
@@ -610,7 +531,6 @@ function rotateMataHitamRandom(){
 
 rotateMataHitamRandom();
 
-/* CLICK MATA HITAM */
 mataHitamList.forEach((mata, index)=>{
     function triggerMata(e){
         e.stopPropagation();
@@ -632,7 +552,6 @@ mataHitamList.forEach((mata, index)=>{
     mata.addEventListener("mousedown", triggerMata);
 });
 
-/* MATA4 BLINK */
 let blinkTimeout = null;
 
 function blinkMata4(){
@@ -660,7 +579,6 @@ window.addEventListener("mousedown", ()=>{
     blinkMata4();
 });
 
-/* ARTIST CLICK */
 artists.forEach((artist)=>{
     artist.el.addEventListener("click", ()=>{
         initAudio();
@@ -671,14 +589,12 @@ artists.forEach((artist)=>{
     });
 });
 
-/* CUSTOM LINK CLICK */
 customLinks.forEach((item)=>{
     item.el.addEventListener("click", ()=>{
         window.location.href = item.url;
     });
 });
 
-/* PREVENT DEFAULT */
 document.addEventListener("gesturestart", e=>e.preventDefault());
 document.addEventListener("gesturechange", e=>e.preventDefault());
 document.addEventListener("gestureend", e=>e.preventDefault());
@@ -697,7 +613,6 @@ document.addEventListener("touchend", e=>{
     }
 
     lastDoubleTap = now;
-
 },{passive:false});
 
 window.addEventListener("keydown", e=>{
