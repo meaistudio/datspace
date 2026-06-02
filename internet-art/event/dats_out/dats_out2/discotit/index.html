@@ -12,8 +12,7 @@
 
 html, body{
     margin: 0; width: 100%; height: 100%; overflow: hidden; background: black;
-    cursor: none; /* Menghilangkan kursor default browser */
-    touch-action: none; overscroll-behavior: none; user-select: none;
+    cursor: none; touch-action: none; overscroll-behavior: none; user-select: none;
     position: fixed; inset: 0;
     font-family: sans-serif;
 }
@@ -29,18 +28,60 @@ html, body{
 .bg1{
     position: absolute; width: 68%; opacity:100%; z-index: 1; pointer-events: none;
 }
+
+/* Tombol interaksi suara di pojok kanan atas */
+.audio-control {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 999;
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 14px;
+    pointer-events: auto; /* Agar bisa diklik meskipun cursor: none */
+}
 </style>
 </head>
 
 <body>
 
+<!-- Tombol pemicu suara -->
+<button class="audio-control" id="audioBtn">TAP TO UNMUTE 🔊</button>
+
 <div class="scene">
-    <!-- Menambahkan susunan atribut standar industri & penyesuaian jalur file video -->
-    <video class="bg1" autoplay="autoplay" loop="loop" playsinline="playsinline">
+    <!-- Video tetap dimulai dengan muted secara teknis agar autostart di browser lolos -->
+    <video id="myVideo" class="bg1" autoplay loop muted playsinline>
         <source src="DISCOTIT post.mp4" type="video/mp4">
         Your browser does not support the video tag.
     </video>
 </div>
+
+<script>
+    const video = document.getElementById('myVideo');
+    const audioBtn = document.getElementById('audioBtn');
+
+    // Aktifkan suara saat tombol di-klik/di-tap
+    audioBtn.addEventListener('click', function() {
+        if (video.muted) {
+            video.muted = false;
+            audioBtn.textContent = "MUTE 🔇";
+        } else {
+            video.muted = true;
+            audioBtn.textContent = "UNMUTE 🔊";
+        }
+    });
+
+    // Alternatif tambahan: Jika pengguna klik di mana saja pada layar, aktifkan suara
+    document.body.addEventListener('click', function() {
+        if (video.muted) {
+            video.muted = false;
+            audioBtn.textContent = "MUTE 🔇";
+        }
+    }, { once: true }); // Hanya berjalan 1 kali pada klik pertama
+</script>
 
 </body>
 </html>
