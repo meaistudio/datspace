@@ -23,7 +23,7 @@ html, body{
 }
 
 .scene{
-    position: fixed; top: 50%; left: 50%; width: 700px;
+    position: fixed; top: 50%; left: 50%; width: 700px; height: 700px; /* Menentukan tinggi dasar scene agar koordinat presisi */
     transform: translate(-50%, -50%) scale(var(--sceneScale));
     transform-origin: center center;
     display: flex; align-items: center; justify-content: center;
@@ -54,6 +54,31 @@ html, body{
     position: fixed; width: 200px; pointer-events: none; z-index: 999999;
     left: 0; top: 0; will-change: transform;
 }
+
+/* --- TAMBAHAN LINK BOX INSTAGRAM --- */
+.instagram-box {
+    position: absolute;
+    z-index: 5;
+    cursor: none;
+    pointer-events: auto;
+    background: transparent;
+    border: 2px solid transparent;
+    box-sizing: border-box;
+    transition: background 0.25s ease, border-color 0.25s ease;
+    
+    /* Atur Posisi & Ukuran Kotak di Sini */
+    left: 10%; 
+    top: 41.2%; 
+    width: 28%; 
+    height: 5%;
+}
+
+/* Efek visual ketika kursor berada di dalam area kotak */
+.instagram-box.hovered {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: #2cd80d; /* Garis kotak warna hijau menyala seperti konsep halaman utama */
+    box-shadow: 0 0 10px rgba(44, 216, 13, 0.5);
+}
 </style>
 </head>
 
@@ -68,6 +93,9 @@ html, body{
         <source src="BADSOJU post.mp4" type="video/mp4">
         Your browser does not support the video tag.
     </video>
+
+    <!-- Elemen Link Box Kotak Baru -->
+    <div class="instagram-box" id="igBox"></div>
 </div>
 
 <!-- Menyisipkan elemen kursor kustom kembali ke halaman -->
@@ -77,6 +105,7 @@ html, body{
 const cursor = document.getElementById("cursor");
 const video = document.getElementById('myVideo');
 const audioBtn = document.getElementById('audioBtn');
+const igBox = document.getElementById('igBox');
 
 let virtualX = window.innerWidth / 2;
 let virtualY = window.innerHeight / 2;
@@ -85,6 +114,9 @@ let lastTouchX = null;
 let lastTouchY = null;
 let touchMoved = false;
 let totalTouchMove = 0;
+
+// Konfigurasi URL tujuan untuk Link Box
+const targetUrl = "https://www.instagram.com/badsoju"; 
 
 // --- SISTEM SUARA (AUDIO CONTROLLER) ---
 audioBtn.addEventListener('click', function(e) {
@@ -148,10 +180,19 @@ function updateCursorByXY(x, y){
     `;
 }
 
+// Fungsi mendeteksi apakah kursor virtual berada di dalam koordinat persegi kotak
+function updateHoverBoxesByXY(x, y) {
+    const rect = igBox.getBoundingClientRect();
+    const inside = x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom;
+    
+    igBox.classList.toggle("hovered", inside);
+}
+
 function handlePointerMove(x, y){
     virtualX = x;
     virtualY = y;
     updateCursorByXY(x, y);
+    updateHoverBoxesByXY(x, y); // Menjalankan pengecekan posisi kursor terhadap area kotak
 }
 
 function clickAtVirtualCursor(){
@@ -163,6 +204,11 @@ function clickAtVirtualCursor(){
         target.dispatchEvent(new MouseEvent("click",{bubbles:true,clientX:virtualX,clientY:virtualY}));
     }
 }
+
+// Event handler ketika kotak diklik menggunakan sistem kursor kustom
+igBox.addEventListener("click", () => {
+    window.location.href = targetUrl;
+});
 
 // --- CONTROLLER EVENT (MOUSE & TOUCH HP) ---
 window.addEventListener("mousemove", (e)=>{
