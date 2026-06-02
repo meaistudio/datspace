@@ -8,11 +8,16 @@
 <style>
 :root{
     --sceneScale: 1;
+
+    /* ATUR POSISI CURSOR HP */
+    --mobileCursorOffsetX: 0px;
+    --mobileCursorOffsetY: -14px;
 }
 
 html, body{
     margin: 0; width: 100%; height: 100%; overflow: hidden; background: black;
-    cursor: none; touch-action: none; overscroll-behavior: none; user-select: none;
+    cursor: none; /* Menyembunyikan kursor asli bawaan OS */
+    touch-action: none; overscroll-behavior: none; user-select: none;
     position: fixed; inset: 0;
     font-family: sans-serif;
 }
@@ -26,7 +31,7 @@ html, body{
 }
 
 .bg1{
-    position: absolute; width: 95%; opacity: .5; z-index: 1; pointer-events: none;
+    position: absolute; width: 68%; opacity: 1; z-index: 1; pointer-events: none;
 }
 
 /* Tombol interaksi suara di pojok kanan atas */
@@ -41,7 +46,13 @@ html, body{
     padding: 8px 16px;
     border-radius: 20px;
     font-size: 14px;
-    pointer-events: auto; /* Agar bisa diklik meskipun cursor: none */
+    pointer-events: auto; /* Agar tetap dapat diklik/di-tap dengan kursor kustom */
+}
+
+/* Kursor GIF Kustom */
+.cursor{
+    position: fixed; width: 200px; pointer-events: none; z-index: 999999;
+    left: 0; top: 0; will-change: transform;
 }
 </style>
 </head>
@@ -59,28 +70,190 @@ html, body{
     </video>
 </div>
 
+<!-- Menyisipkan elemen kursor kustom kembali ke halaman -->
+<img class="cursor" id="cursor" src="asset/gif/cursor.gif">
+
 <script>
-    const video = document.getElementById('myVideo');
-    const audioBtn = document.getElementById('audioBtn');
+const cursor = document.getElementById("cursor");
+const video = document.getElementById('myVideo');
+const audioBtn = document.getElementById('audioBtn');
 
-    // Aktifkan suara saat tombol di-klik/di-tap
-    audioBtn.addEventListener('click', function() {
-        if (video.muted) {
-            video.muted = false;
-            audioBtn.textContent = "MUTE 🔇";
-        } else {
-            video.muted = true;
-            audioBtn.textContent = "UNMUTE 🔊";
-        }
-    });
+let virtualX = window.innerWidth / 2;
+let virtualY = window.innerHeight / 2;
 
-    // Alternatif tambahan: Jika pengguna klik di mana saja pada layar, aktifkan suara
-    document.body.addEventListener('click', function() {
-        if (video.muted) {
-            video.muted = false;
-            audioBtn.textContent = "MUTE 🔇";
-        }
-    }, { once: true }); // Hanya berjalan 1 kali pada klik pertama
+let lastTouchX = null;
+let lastTouchY = null;
+let touchMoved = false;
+let totalTouchMove = 0;
+
+// --- SISTEM SUARA (AUDIO CONTROLLER) ---
+audioBtn.addEventListener('click', function(e) {
+    e.stopPropagation(); // Mencegah bentrokan event click pada body
+    if (video.muted) {
+        video.muted = false;
+        audioBtn.textContent = "MUTE 🔇";
+    } else {
+        video.muted = true;
+        audioBtn.textContent = "UNMUTE 🔊";
+    }
+});
+
+// Otomatis unmute pada ketukan pertama di layar
+document.body.addEventListener('click', function() {
+    if (video.muted) {
+        video.muted = false;
+        audioBtn.textContent = "MUTE 🔇";
+    }
+}, { once: true });
+
+
+// --- SISTEM DETEKSI DAN SCALE LAYER INTERAKTIF ---
+function isMobile(){
+    return window.innerWidth <= 768;
+}
+
+function lockSceneScale(){
+    let scale = Math.min(window.innerWidth / 700, window.innerHeight / 700);
+    if(isMobile()) scale *= 1.2;
+    document.documentElement.style.setProperty("--sceneScale", scale);
+}
+lockSceneScale();
+window.addEventListener("resize", lockSceneScale);
+
+
+// --- SISTEM PENGATUR KOORDINAT KURSOR KUSTOM ---
+function getMobileOffset(){
+    const root = getComputedStyle(document.documentElement);
+    return {
+        x: parseFloat(root.getPropertyValue("--mobileCursorOffsetX")) || 0,
+        y: parseFloat(root.getPropertyValue("--mobileCursorOffsetY")) || 0
+    };
+}
+
+function updateCursorByXY(x, y){
+    const inverseZoom = 1 / (window.devicePixelRatio || 1);
+    let offsetX = 0;
+    let offsetY = 0;
+
+    if(isMobile()){
+        const offset = getMobileOffset();
+        offsetX = offset.x;
+        offsetY = offset.y;
+    }
+
+    cursor.style.transform = `
+        translate(${x + offsetX}px, ${y + offsetY}px)
+        translate(-40%, -30%)
+        scale(${inverseZoom})
+    `;
+}
+
+function handlePointerMove(x, y){
+    virtualX = x;
+    virtualY = y;
+    updateCursorByXY(x, y);
+}
+
+function clickAtVirtualCursor(){
+    const target = document.elementFromPoint(virtualX, virtualY);
+    if(target){
+        target.dispatchEvent(new MouseEvent("mousemove",{bubbles:true,clientX:virtualX,clientY:virtualY}));
+        target.dispatchEvent(new MouseEvent("mousedown",{bubbles:true,clientX:virtualX,clientY:virtualY}));
+        target.dispatchEvent(new MouseEvent("mouseup",{bubbles:true,clientX:virtualX,clientY:virtualY}));
+        target.dispatchEvent(new MouseEvent("click",{bubbles:true,clientX:virtualX,clientY:virtualY}));
+    }
+}
+
+// --- CONTROLLER EVENT (MOUSE & TOUCH HP) ---
+window.addEventListener("mousemove", (e)=>{
+    handlePointerMove(e.clientX, e.clientY);
+});
+
+window.addEventListener("touchstart", (e)=>{
+    const touch = e.touches[0];
+    if(!touch) return;
+
+    lastTouchX = touch.clientX;
+    lastTouchY = touch.clientY;
+    touchMoved = false;
+    totalTouchMove = 0;
+},{passive:false});
+
+window.addEventListener("touchmove", (e)=>{
+    e.preventDefault();
+    const touch = e.touches[0];
+    if(!touch) return;
+
+    if(lastTouchX === null || lastTouchY === null){
+        lastTouchX = touch.clientX;
+        lastTouchY = touch.clientY;
+        return;
+    }
+
+    const deltaX = touch.clientX - lastTouchX;
+    const deltaY = touch.clientY - lastTouchY;
+    const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+    totalTouchMove += distance;
+
+    if(totalTouchMove > 8){
+        touchMoved = true;
+    }
+
+    const sensitivity = 1.6;
+    virtualX += deltaX * sensitivity;
+    virtualY += deltaY * sensitivity;
+
+    virtualX = Math.max(0, Math.min(window.innerWidth, virtualX));
+    virtualY = Math.max(0, Math.min(window.innerHeight, virtualY));
+
+    lastTouchX = touch.clientX;
+    lastTouchY = touch.clientY;
+
+    handlePointerMove(virtualX, virtualY);
+},{passive:false});
+
+window.addEventListener("touchend", (e)=>{
+    e.preventDefault();
+    if(!touchMoved){
+        clickAtVirtualCursor();
+    }
+    lastTouchX = null;
+    lastTouchY = null;
+    touchMoved = false;
+    totalTouchMove = 0;
+},{passive:false});
+
+
+// --- PENGAMAN DAN BLOKIR SYSTEM JESTUR DEFAULT ---
+document.addEventListener("gesturestart", e=>e.preventDefault());
+document.addEventListener("gesturechange", e=>e.preventDefault());
+document.addEventListener("gestureend", e=>e.preventDefault());
+
+window.addEventListener("wheel", e=>{
+    if(e.ctrlKey) e.preventDefault();
+},{passive:false});
+
+let lastDoubleTap = 0;
+document.addEventListener("touchend", e=>{
+    const now = Date.now();
+    if(now - lastDoubleTap <= 300){
+        e.preventDefault();
+    }
+    lastDoubleTap = now;
+},{passive:false});
+
+window.addEventListener("keydown", e=>{
+    if((e.ctrlKey || e.metaKey) && ["+","-","=","_","0"].includes(e.key)){
+        e.preventDefault();
+    }
+},{passive:false});
+
+window.addEventListener("contextmenu", e=>e.preventDefault());
+window.addEventListener("dragstart", e=>e.preventDefault());
+
+// Inisialisasi awal posisi kursor kustom
+handlePointerMove(virtualX, virtualY);
+window.scrollTo(0,0);
 </script>
 
 </body>
