@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
+<title>DATs_Out2 TU'TUR'ANG'RING'</title>
+
+<style>
+:root{
+    --sceneScale: 1;
+
+    /* ATUR POSISI CURSOR HP */
+    --mobileCursorOffsetX: 0px;
+    --mobileCursorOffsetY: -14px;
+}
+
+html, body{
+    margin: 0; width: 100%; height: 100%; overflow: hidden; background: black;
+    cursor: none; /* Menyembunyikan kursor asli bawaan OS */
+    touch-action: none; overscroll-behavior: none; user-select: none;
+    position: fixed; inset: 0;
+    font-family: sans-serif;
+}
+
+.scene{
+    position: fixed; top: 50%; left: 50%; width: 700px; height: 700px; /* Menentukan tinggi dasar scene agar koordinat presisi */
+    transform: translate(-50%, -50%) scale(var(--sceneScale));
+    transform-origin: center center;
+    display: flex; align-items: center; justify-content: center;
+    flex-direction: column;
+}
+
+.bg1{
+    position: absolute; width: 85%; opacity: 1; z-index: 1; pointer-events: none;
+}
+
+/* Tombol interaksi suara di pojok kanan atas */
+.audio-control {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 999;
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 14px;
+    pointer-events: auto; /* Agar tetap dapat diklik/di-tap dengan kursor kustom */
+}
+
+/* Kursor GIF Kustom */
+.cursor{
+    position: fixed; width: 200px; pointer-events: none; z-index: 999999;
+    left: 0; top: 0; will-change: transform;
+}
+
+/* --- TAMBAHAN LINK BOX INSTAGRAM --- */
+.instagram-box {
+    position: absolute;
+    z-index: 5;
+    cursor: none;
+    pointer-events: auto;
+    background: transparent;
+    border: 2px solid transparent;
+    box-sizing: border-box;
+    transition: background 0.25s ease, border-color 0.25s ease;
+    
+    /* Atur Posisi & Ukuran Kotak di Sini */
+    left: 10%; 
+    top: 41.8%; 
+    width: 24.5%; 
+    height: 5%;
+}
+
+/* Efek visual ketika kursor berada di dalam area kotak */
+.instagram-box.hovered {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: #2cd80d; /* Garis kotak warna hijau menyala seperti konsep halaman utama */
+    box-shadow: 0 0 10px rgba(44, 216, 13, 0.5);
+}
+</style>
+</head>
+
+<body>
+
+<!-- Tombol pemicu suara -->
+<button class="audio-control" id="audioBtn">TAP TO UNMUTE 🔊</button>
+
+<div class="scene">
+    <!-- Video tetap dimulai dengan muted secara teknis agar autostart di browser lolos -->
+    <video id="myVideo" class="bg1" autoplay loop muted playsinline>
+        <source src="GRAUNG post.mp4" type="video/mp4">
+        Your browser does not support the video tag.
+    </video>
+
+    <!-- Elemen Link Box Kotak Baru -->
+    <div class="instagram-box" id="igBox"></div>
+</div>
+
+<!-- Menyisipkan elemen kursor kustom kembali ke halaman -->
+<img class="cursor" id="cursor" src="cursor.gif">
+
+<script>
+const cursor = document.getElementById("cursor");
+const video = document.getElementById('myVideo');
+const audioBtn = document.getElementById('audioBtn');
+const igBox = document.getElementById('igBox');
+
+let virtualX = window.innerWidth / 2;
+let virtualY = window.innerHeight / 2;
+
+let lastTouchX = null;
+let lastTouchY = null;
+let touchMoved = false;
+let totalTouchMove = 0;
+
+// Konfigurasi URL tujuan untuk Link Box
+const targetUrl = "https://www.instagram.com/__graung"; 
+
+// --- SISTEM SUARA (AUDIO CONTROLLER) ---
+audioBtn.addEventListener('click', function(e) {
+    e.stopPropagation(); // Mencegah bentrokan event click pada body
+    if (video.muted) {
+        video.muted = false;
+        audioBtn.textContent = "MUTE 🔇";
+    } else {
+        video.muted = true;
+        audioBtn.textContent = "UNMUTE 🔊";
+    }
+});
+
+// Otomatis unmute pada ketukan pertama di layar
+document.body.addEventListener('click', function() {
+    if (video.muted) {
+        video.muted = false;
+        audioBtn.textContent = "MUTE 🔇";
+    }
+}, { once: true });
+
+
+// --- SISTEM DETEKSI DAN SCALE LAYER INTERAKTIF ---
+function isMobile(){
+    return window.innerWidth <= 768;
+}
+
+function lockSceneScale(){
+    let scale = Math.min(window.innerWidth / 700, window.innerHeight / 700);
+    if(isMobile()) scale *= 1.2;
+    document.documentElement.style.setProperty("--sceneScale", scale);
+}
+lockSceneScale();
+window.addEventListener("resize", lockSceneScale);
+
+
+// --- SISTEM PENGATUR KOORDINAT KURSOR KUSTOM ---
+function getMobileOffset(){
+    const root = getComputedStyle(document.documentElement);
+    return {
+        x: parseFloat(root.getPropertyValue("--mobileCursorOffsetX")) || 0,
+        y: parseFloat(root.getPropertyValue("--mobileCursorOffsetY")) || 0
+    };
+}
+
+function updateCursorByXY(x, y){
+    const inverseZoom = 1 / (window.devicePixelRatio || 1);
+    let offsetX = 0;
+    let offsetY = 0;
+
+    if(isMobile()){
+        const offset = getMobileOffset();
+        offsetX = offset.x;
+        offsetY = offset.y;
+    }
+
+    cursor.style.transform = `
+        translate(${x + offsetX}px, ${y + offsetY}px)
+        translate(-40%, -30%)
+        scale(${inverseZoom})
+    `;
+}
+
+// Fungsi mendeteksi apakah kursor virtual berada di dalam koordinat persegi kotak
+function updateHoverBoxesByXY(x, y) {
+    const rect = igBox.getBoundingClientRect();
+    const inside = x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom;
+    
+    igBox.classList.toggle("hovered", inside);
+}
+
+function handlePointerMove(x, y){
+    virtualX = x;
+    virtualY = y;
+    updateCursorByXY(x, y);
+    updateHoverBoxesByXY(x, y); // Menjalankan pengecekan posisi kursor terhadap area kotak
+}
+
+function clickAtVirtualCursor(){
+    const target = document.elementFromPoint(virtualX, virtualY);
+    if(target){
+        target.dispatchEvent(new MouseEvent("mousemove",{bubbles:true,clientX:virtualX,clientY:virtualY}));
+        target.dispatchEvent(new MouseEvent("mousedown",{bubbles:true,clientX:virtualX,clientY:virtualY}));
+        target.dispatchEvent(new MouseEvent("mouseup",{bubbles:true,clientX:virtualX,clientY:virtualY}));
+        target.dispatchEvent(new MouseEvent("click",{bubbles:true,clientX:virtualX,clientY:virtualY}));
+    }
+}
+
+// Event handler ketika kotak diklik menggunakan sistem kursor kustom
+igBox.addEventListener("click", () => {
+    window.location.href = targetUrl;
+});
+
+// --- CONTROLLER EVENT (MOUSE & TOUCH HP) ---
+window.addEventListener("mousemove", (e)=>{
+    handlePointerMove(e.clientX, e.clientY);
+});
+
+window.addEventListener("touchstart", (e)=>{
+    const touch = e.touches[0];
+    if(!touch) return;
+
+    lastTouchX = touch.clientX;
+    lastTouchY = touch.clientY;
+    touchMoved = false;
+    totalTouchMove = 0;
+},{passive:false});
+
+window.addEventListener("touchmove", (e)=>{
+    e.preventDefault();
+    const touch = e.touches[0];
+    if(!touch) return;
+
+    if(lastTouchX === null || lastTouchY === null){
+        lastTouchX = touch.clientX;
+        lastTouchY = touch.clientY;
+        return;
+    }
+
+    const deltaX = touch.clientX - lastTouchX;
+    const deltaY = touch.clientY - lastTouchY;
+    const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+    totalTouchMove += distance;
+
+    if(totalTouchMove > 8){
+        touchMoved = true;
+    }
+
+    const sensitivity = 1.6;
+    virtualX += deltaX * sensitivity;
+    virtualY += deltaY * sensitivity;
+
+    virtualX = Math.max(0, Math.min(window.innerWidth, virtualX));
+    virtualY = Math.max(0, Math.min(window.innerHeight, virtualY));
+
+    lastTouchX = touch.clientX;
+    lastTouchY = touch.clientY;
+
+    handlePointerMove(virtualX, virtualY);
+},{passive:false});
+
+window.addEventListener("touchend", (e)=>{
+    e.preventDefault();
+    if(!touchMoved){
+        clickAtVirtualCursor();
+    }
+    lastTouchX = null;
+    lastTouchY = null;
+    touchMoved = false;
+    totalTouchMove = 0;
+},{passive:false});
+
+
+// --- PENGAMAN DAN BLOKIR SYSTEM JESTUR DEFAULT ---
+document.addEventListener("gesturestart", e=>e.preventDefault());
+document.addEventListener("gesturechange", e=>e.preventDefault());
+document.addEventListener("gestureend", e=>e.preventDefault());
+
+window.addEventListener("wheel", e=>{
+    if(e.ctrlKey) e.preventDefault();
+},{passive:false});
+
+let lastDoubleTap = 0;
+document.addEventListener("touchend", e=>{
+    const now = Date.now();
+    if(now - lastDoubleTap <= 300){
+        e.preventDefault();
+    }
+    lastDoubleTap = now;
+},{passive:false});
+
+window.addEventListener("keydown", e=>{
+    if((e.ctrlKey || e.metaKey) && ["+","-","=","_","0"].includes(e.key)){
+        e.preventDefault();
+    }
+},{passive:false});
+
+window.addEventListener("contextmenu", e=>e.preventDefault());
+window.addEventListener("dragstart", e=>e.preventDefault());
+
+// Inisialisasi awal posisi kursor kustom
+handlePointerMove(virtualX, virtualY);
+window.scrollTo(0,0);
+</script>
+
+</body>
+</html>
