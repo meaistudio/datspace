@@ -457,11 +457,18 @@ window.addEventListener("touchstart", (e)=>{
     const touch = e.touches[0];
     if(!touch) return;
 
+    // Langsung posisikan koordinat virtual ke tempat jari menyentuh layar pertama kali
+    virtualX = touch.clientX;
+    virtualY = touch.clientY;
+
     lastTouchX = touch.clientX;
     lastTouchY = touch.clientY;
 
     touchMoved = false;
     totalTouchMove = 0;
+
+    // Trigger update posisi secara instan agar tidak terjadi lag transisi
+    handlePointerMove(virtualX, virtualY);
 },{passive:false});
 
 window.addEventListener("touchmove", (e)=>{
@@ -478,21 +485,15 @@ window.addEventListener("touchmove", (e)=>{
 
     const deltaX = touch.clientX - lastTouchX;
     const deltaY = touch.clientY - lastTouchY;
-
-    const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
-    totalTouchMove += distance;
+    totalTouchMove += Math.sqrt(deltaX * deltaX + deltaY * deltaY);
 
     if(totalTouchMove > 8){
         touchMoved = true;
     }
 
-    const sensitivity = 1.6;
-
-    virtualX += deltaX * sensitivity;
-    virtualY += deltaY * sensitivity;
-
-    virtualX = Math.max(0, Math.min(window.innerWidth, virtualX));
-    virtualY = Math.max(0, Math.min(window.innerHeight, virtualY));
+    // Mengambil koordinat absolut dari touch secara langsung untuk menghindari getaran (jitter)
+    virtualX = touch.clientX;
+    virtualY = touch.clientY;
 
     lastTouchX = touch.clientX;
     lastTouchY = touch.clientY;
