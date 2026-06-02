@@ -457,18 +457,11 @@ window.addEventListener("touchstart", (e)=>{
     const touch = e.touches[0];
     if(!touch) return;
 
-    // Langsung posisikan koordinat virtual ke tempat jari menyentuh layar pertama kali
-    virtualX = touch.clientX;
-    virtualY = touch.clientY;
-
     lastTouchX = touch.clientX;
     lastTouchY = touch.clientY;
 
     touchMoved = false;
     totalTouchMove = 0;
-
-    // Trigger update posisi secara instan agar tidak terjadi lag transisi
-    handlePointerMove(virtualX, virtualY);
 },{passive:false});
 
 window.addEventListener("touchmove", (e)=>{
@@ -485,15 +478,27 @@ window.addEventListener("touchmove", (e)=>{
 
     const deltaX = touch.clientX - lastTouchX;
     const deltaY = touch.clientY - lastTouchY;
-    totalTouchMove += Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+
+    const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+    
+    // DEADZONE FILTER: Mengabaikan geseran mikro di bawah 0.2px agar mata tidak bergetar saat jari diam
+    if (distance < 0.2) {
+        return; 
+    }
+
+    totalTouchMove += distance;
 
     if(totalTouchMove > 8){
         touchMoved = true;
     }
 
-    // Mengambil koordinat absolut dari touch secara langsung untuk menghindari getaran (jitter)
-    virtualX = touch.clientX;
-    virtualY = touch.clientY;
+    // Mengembalikan fitur Akumulasi Delta Trackpad dengan sensitivitas 1.6
+    const sensitivity = 1.6;
+    virtualX += deltaX * sensitivity;
+    virtualY += deltaY * sensitivity;
+
+    virtualX = Math.max(0, Math.min(window.innerWidth, virtualX));
+    virtualY = Math.max(0, Math.min(window.innerHeight, virtualY));
 
     lastTouchX = touch.clientX;
     lastTouchY = touch.clientY;
