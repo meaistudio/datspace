@@ -180,6 +180,47 @@ const customLinks = [
     { el:document.getElementById("igBox4"), url:"https://www.instagram.com/_____dats" }
 ];
 
+// ================= SISTEM KOMBINASI RAHASIA =================
+const TARGET_SEQUENCE = "06062026";
+let currentSequence = "";
+let secretAudio = null;
+
+function inputSecretNumber(num) {
+    currentSequence += num;
+    
+    // Cek kesesuaian input dengan deretan target
+    if (!TARGET_SEQUENCE.startsWith(currentSequence)) {
+        // Jika meleset, reset dari awal (atau mulai baru jika klik adalah angka '0')
+        currentSequence = num === "0" ? "0" : "";
+        return;
+    }
+
+    // Jika kombinasi sukses sepenuhnya
+    if (currentSequence === TARGET_SEQUENCE) {
+        triggerSecretMusic();
+        currentSequence = ""; 
+    }
+}
+
+function triggerSecretMusic() {
+    if (secretAudio) {
+        secretAudio.pause();
+        secretAudio.currentTime = 0;
+    }
+    
+    secretAudio = new Audio("asset/music/jkw.mp3");
+    secretAudio.volume = 0.8;
+    
+    if (audioCtx && audioCtx.state === "suspended") {
+        audioCtx.resume();
+    }
+    
+    secretAudio.play().catch(err => {
+        console.log("Audio terblokir sistem browser:", err);
+    });
+}
+// =====================================================
+
 artists.forEach((artist)=>{
     const box = document.createElement("div");
     box.className = "hover-box";
@@ -481,7 +522,6 @@ window.addEventListener("touchmove", (e)=>{
 
     const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
     
-    // DEADZONE FILTER: Mengabaikan geseran mikro di bawah 0.2px agar mata tidak bergetar saat jari diam
     if (distance < 0.2) {
         return; 
     }
@@ -492,7 +532,6 @@ window.addEventListener("touchmove", (e)=>{
         touchMoved = true;
     }
 
-    // Mengembalikan fitur Akumulasi Delta Trackpad dengan sensitivitas 1.6
     const sensitivity = 1.6;
     virtualX += deltaX * sensitivity;
     virtualY += deltaY * sensitivity;
@@ -541,7 +580,11 @@ rotateMataHitamRandom();
 
 mataHitamList.forEach((mata, index)=>{
     function triggerMata(e){
-        e.stopPropagation();
+        e.stopPropagation(); // Mencegah bentrokan dengan deteksi angka '0' di window klik
+
+        // Input angka mata (Mata ke-1 sampai ke-6 dibaca string "1" - "6")
+        const mataNumber = (index + 1).toString();
+        inputSecretNumber(mataNumber);
 
         playGenerativeAmbience(index);
 
@@ -582,9 +625,12 @@ function randomBlinkLoop(){
 
 randomBlinkLoop();
 
-window.addEventListener("mousedown", ()=>{
+window.addEventListener("mousedown", (e)=>{
     initAudio();
     blinkMata4();
+
+    // INPUT '0': Jika klik mendeteksi area luar / mata utama (Bukan mata hitam kecil)
+    inputSecretNumber("0");
 });
 
 artists.forEach((artist)=>{
