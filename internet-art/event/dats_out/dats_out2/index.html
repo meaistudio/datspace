@@ -180,35 +180,55 @@ const customLinks = [
     { el:document.getElementById("igBox4"), url:"https://www.instagram.com/_____dats" }
 ];
 
-// ================= SISTEM KOMBINASI RAHASIA =================
-const TARGET_SEQUENCE = "06062026";
+// ================= SISTEM MULTI-KOMBINASI RAHASIA =================
 let currentSequence = "";
 let secretAudio = null;
+
+const SECRET_COMBOS = {
+    "06062026": "asset/music/jkw.mp3",
+    "1630": "asset/music/prbw.mp3"
+};
 
 function inputSecretNumber(num) {
     currentSequence += num;
     
-    // Cek kesesuaian input dengan deretan target
-    if (!TARGET_SEQUENCE.startsWith(currentSequence)) {
-        // Jika meleset, reset dari awal (atau mulai baru jika klik adalah angka '0')
-        currentSequence = num === "0" ? "0" : "";
+    // Cek apakah input saat ini masih cocok sebagai awalan dari salah satu kombinasi rahasia
+    let potentialMatch = false;
+    for (let code in SECRET_COMBOS) {
+        if (code.startsWith(currentSequence)) {
+            potentialMatch = true;
+            break;
+        }
+    }
+
+    // Jika meleset dari semua target kombinasi, reset input secara cerdas
+    if (!potentialMatch) {
+        // Cek kembali apakah klik barusan bisa menjadi awal baru (misal '0' atau '1')
+        let resetToCurrent = false;
+        for (let code in SECRET_COMBOS) {
+            if (code.startsWith(num)) {
+                resetToCurrent = true;
+                break;
+            }
+        }
+        currentSequence = resetToCurrent ? num : "";
         return;
     }
 
-    // Jika kombinasi sukses sepenuhnya
-    if (currentSequence === TARGET_SEQUENCE) {
-        triggerSecretMusic();
-        currentSequence = ""; 
+    // Jika salah satu kombinasi berhasil terpenuhi secara utuh
+    if (SECRET_COMBOS[currentSequence]) {
+        triggerSecretMusic(SECRET_COMBOS[currentSequence]);
+        currentSequence = ""; // Reset setelah lagu diputar
     }
 }
 
-function triggerSecretMusic() {
+function triggerSecretMusic(audioPath) {
     if (secretAudio) {
         secretAudio.pause();
         secretAudio.currentTime = 0;
     }
     
-    secretAudio = new Audio("asset/music/jkw.mp3");
+    secretAudio = new Audio(audioPath);
     secretAudio.volume = 0.8;
     
     if (audioCtx && audioCtx.state === "suspended") {
@@ -216,10 +236,10 @@ function triggerSecretMusic() {
     }
     
     secretAudio.play().catch(err => {
-        console.log("Audio terblokir sistem browser:", err);
+        console.log("Audio play blocked or error:", err);
     });
 }
-// =====================================================
+// =================================================================
 
 artists.forEach((artist)=>{
     const box = document.createElement("div");
@@ -580,9 +600,9 @@ rotateMataHitamRandom();
 
 mataHitamList.forEach((mata, index)=>{
     function triggerMata(e){
-        e.stopPropagation(); // Mencegah bentrokan dengan deteksi angka '0' di window klik
+        e.stopPropagation(); // Biar klik mata hitam nggak bocor jadi angka '0' di window
 
-        // Input angka mata (Mata ke-1 sampai ke-6 dibaca string "1" - "6")
+        // Ambil ID Mata berbasis string ("1" s/d "6")
         const mataNumber = (index + 1).toString();
         inputSecretNumber(mataNumber);
 
@@ -629,7 +649,7 @@ window.addEventListener("mousedown", (e)=>{
     initAudio();
     blinkMata4();
 
-    // INPUT '0': Jika klik mendeteksi area luar / mata utama (Bukan mata hitam kecil)
+    // Input angka '0' (Mata Utama / Background area klik)
     inputSecretNumber("0");
 });
 
