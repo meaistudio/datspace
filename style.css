@@ -1,0 +1,445 @@
+/* ======================================================== 
+   BASE ELEMENT RESET & LAYOUT SYSTEMS
+   ======================================================== */
+   html, body {
+    margin: 0; padding: 0; background: black; color: white;
+    font-family: Consolas, monospace; overflow: hidden;
+    -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none;
+
+}
+
+canvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 1;
+}
+
+/* Global Reset Anchor */
+a, a:visited, a:hover, a:active { 
+    color: white; 
+    text-decoration: none; 
+}
+
+/* ANIMASI TRANSISI SPA */
+.fade-out { 
+    opacity: 0; 
+    transition: opacity 0.4s ease;
+}
+
+.fade-in { 
+    opacity: 1; 
+    transition: opacity 0.4s ease;
+}
+
+/* ======================================================== 
+   NAVIGATION SYSTEMS (TABS)
+   ======================================================== */
+.tabs {
+    position: fixed;
+    top: 40px;
+    right: 80px;
+    font-size: 30px;
+    z-index: 10;
+}
+
+.tab {
+    margin-left: 30px;
+    cursor: pointer;
+    display: inline-block;
+    transition: all 0.2s ease-in-out;
+}
+
+.tab:hover {
+    color: #888;
+}
+
+.active {
+    border: 1px solid white;
+    padding: 6px 12px;
+}
+
+.internet-art-tab {
+    position: fixed;
+    top: 40px;
+    left: 80px;
+    font-size: 30px;
+    z-index: 10;
+}
+
+.back { 
+    position: fixed; 
+    top: 40px; 
+    left: 40px; 
+    z-index: 20;
+}
+
+/* ======================================================== 
+   GENERAL CONTENT WRAPPERS
+   ======================================================== */
+.content {
+    position: fixed;
+    bottom: 120px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 20px;
+    text-align: center;
+    z-index: 10;
+    max-width: 1100px;
+}  
+
+/* Teks Deskripsi Beranda (Home Landing) */
+.content.home-desc {
+    position: fixed; 
+    top: 50%; 
+    left: 50%; 
+    transform: translate(-50%, -50%); 
+    text-align: left; 
+    max-width: 720px; 
+    line-height: 1.6; 
+    letter-spacing: 0.4px;
+}
+
+/* Container Scrollable Internal (Digunakan oleh Tab Event, Program & Archive) */
+.content-event {
+    position: fixed;
+    top: 300px;
+    bottom: 40px;
+    left: 55%;
+    transform: translateX(-50%);
+    width: min(1100px, calc(100vw - 56px));
+    overflow-y: auto;
+    overflow-x: hidden;
+    text-align: left;
+    z-index: 10;
+    padding-right: 8px;
+    box-sizing: border-box;
+}
+
+/* Wadah Sekunder di dalam Arsip */
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0;
+}
+
+/* ======================================================== 
+   HOVER INTERFACE UNIVERSAL & IDLE PULSE ANIMATION
+   ======================================================== */
+@keyframes pulse-border {
+    0% { border-color: rgba(255, 255, 255, 0.15); }
+    50% { border-color: rgba(255, 255, 255, 0.65); }
+    100% { border-color: rgba(255, 255, 255, 0.15); }
+}
+
+.program-item,
+.content a,
+.clickable,
+.internet-art-tab a,
+.back,
+.sub-prog-back,
+.sub-prog-link,
+.collaboration span {
+    color: white;
+    text-decoration: none;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    display: inline-block;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+    animation: pulse-border 2s infinite ease-in-out;
+}
+
+/* Ukuran Desktop Utama */
+.program-item, .sub-prog-back, .sub-prog-link { font-size: 24px; padding: 5px 15px; width: max-content; }
+.back { font-size: 25px; padding: 5px 15px; }
+.internet-art-tab a { font-size: 30px; padding: 5px 15px; }
+.collaboration span { font-size: 24px; padding: 5px 15px; white-space: nowrap; }
+
+.program-item:hover,
+.content a:hover,
+.clickable:hover,
+.internet-art-tab a:hover,
+.back:hover,
+.sub-prog-back:hover,
+.sub-prog-link:hover,
+.collaboration span:hover {
+    animation: none;
+    border: 1px solid white;
+    background-color: white;
+    color: black !important;
+    text-decoration: none;
+    opacity: 1;
+}
+
+.content-event .clickable {
+    font-size: 20px;
+}
+
+/* ======================================================== 
+   TAB MENU SPECIFIC MODULES (EVENT & PROGRAM)
+   ======================================================== */
+.event-wrap {
+    display: flex;
+    flex-direction: row; 
+    gap: 40px;
+    align-items: flex-start;
+}
+
+.event-flyer {
+    display: block;
+    width: 500px;
+    max-width: 100%;
+    height: auto;
+    object-fit: contain;
+}
+
+.event-info {
+    font-size: 25px;
+    line-height: 1.7;
+    max-width: 760px;
+    width: 100%;
+}
+
+.event-title {
+    font-size: 30px;
+    margin-bottom: 12px;
+    font-weight: 600;
+}
+
+.program-menu {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    align-items: center;
+}
+
+.program-menu .program-item:nth-child(1) { animation-delay: 0s; }
+.program-menu .program-item:nth-child(2) { animation-delay: 0.66s; }
+.program-menu .program-item:nth-child(3) { animation-delay: 1.33s; }
+
+/* ======================================================== 
+   SUB-PROGRAM DETAILS LAYER (DATs_In, DATs_Out, DATs_To)
+   ======================================================== */
+.sub-prog-wrap {
+    padding: 20px 2vw;
+    text-align: left;
+}
+
+.sub-prog-hero {
+    margin-top: 40px;
+}
+
+.sub-prog-title {
+    font-size: 72px;
+    font-weight: normal;
+    margin: 0 0 10px 0;
+    letter-spacing: -1px;
+}
+
+.sub-prog-subtitle {
+    font-size: 20px;
+    opacity: 0.6;
+    margin-bottom: 40px;
+    letter-spacing: 1px;
+}
+
+.sub-prog-manifesto {
+    max-width: 750px;
+    line-height: 1.7;
+    font-size: 18px;
+    opacity: 0.9;
+}
+
+.sub-prog-events {
+    margin-top: 60px;
+    border-top: 1px solid #222;
+    padding-top: 40px;
+}
+
+.sub-prog-events h2 {
+    font-size: 28px;
+    margin-bottom: 30px;
+    opacity: 0.8;
+    font-weight: normal;
+}
+
+.sub-prog-list {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* ======================================================== 
+   UNIVERSAL DOCUMENTATION SYSTEM (FOR ARCHIVE LOGS)
+   ======================================================== */
+.doc-header {
+    margin-top: 30px;
+    margin-bottom: 40px;
+    border-bottom: 1px dashed rgba(255, 255, 255, 0.2);
+    padding-bottom: 25px;
+}
+
+.doc-meta {
+    font-size: 16px;
+    opacity: 0.5;
+    margin-top: 8px;
+    letter-spacing: 1px;
+}
+
+.doc-gallery {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 25px;
+    margin-top: 40px;
+    padding-bottom: 60px;
+}
+
+.doc-media-box {
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    padding: 8px;
+    background: #050505;
+}
+
+.doc-media {
+    width: 100%;
+    height: auto;
+    display: block;
+    filter: grayscale(100%);
+    transition: filter 0.4s ease;
+}
+
+.doc-media-box:hover .doc-media {
+    filter: grayscale(0%);
+}
+
+/* ======================================================== 
+   INTERNET ART ARCHIVE ELEMENTS
+   ======================================================== */
+.title-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 20px;
+    width: 100%;
+}
+
+.title {
+    font-size: 60px;
+    font-weight: normal;
+    letter-spacing: -1px;
+}
+
+.description-text {
+    font-size: 16px;
+    line-height: 1.6;
+    max-width: 800px;
+    opacity: 0.8;
+    margin-bottom: 60px;
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 40px;
+    width: 100%;
+    padding-bottom: 80px;
+}
+
+.card {
+    border: 1px solid white;
+    padding: 24px;
+    background: transparent;
+    transition: all 0.3s ease-in-out;
+}
+
+.card a {
+    color: inherit;
+    text-decoration: none;
+    display: block;
+    height: 100%;
+    border: none !important;
+    animation: none !important;
+}
+
+.card h2 {
+    font-size: 22px;
+    margin-top: 0;
+    margin-bottom: 14px;
+    line-height: 1.3;
+    font-weight: normal;
+}
+
+.card p {
+    font-size: 14px;
+    line-height: 1.6;
+    margin: 0;
+    opacity: 0.85;
+}
+
+.card:hover {
+    background: white;
+    color: black;
+    transform: translateY(-2px);
+}
+
+.card:hover p,
+.card:hover h2 span {
+    color: black !important;
+    opacity: 1;
+}
+
+/* ======================================================== 
+   COMPACT MOBILE RESPONSIVE MEDIA QUERIES (MAX 768px)
+   ======================================================== */
+@media (max-width: 768px) {
+    .internet-art-tab { top: 60px; left: 20px; font-size: 12px; }
+    .tabs { top: 30px; right: 10px; font-size: 12px; }
+    .tab { margin-left: 10px; }
+    .active { padding: 4px 8px; }
+    .back { position: absolute; top: 25px; left: 20px; }
+
+    /* Ukuran teks tombol menu utama, back, log, dan collaboration di mobile */
+    .program-item, .content a, .clickable, .internet-art-tab a, .back, .sub-prog-back, .sub-prog-link { 
+        font-size: 16px; 
+        padding: 4px 10px; 
+    }
+    .collaboration span { font-size: 16px; padding: 4px 10px; }
+
+    .content { font-size: 16px; bottom: 80px; left: 51%; padding: 0 0px; max-width: 100%; }
+
+    .content.home-desc {
+        top: 80%; left: 50%; transform: translate(-50%, -50%);
+        width: 82%; height: 100%; max-width: 420px; padding: 0 10px;
+        font-size: 12px; line-height: 1.9; max-height: 120vh; overflow-y: auto;
+    }
+
+    .content-event {
+        top: 100px; left: 51%; bottom: 20px;
+        width: calc(100vw - 32px); padding-right: 4px; margin: 25px 0px;
+    }
+
+    .event-wrap { flex-direction: column; gap: 20px; }
+    .event-flyer { width: 280px; margin: 15px 0px; }
+    .event-info { font-size: 14px; }
+    .event-title { font-size: 20px; }
+    
+    .title-row { flex-direction: column; align-items: flex-start; gap: 15px; }
+    .title { font-size: 32px; }
+    .description-text { font-size: 13px; margin-bottom: 40px; }
+
+    .sub-prog-wrap { padding: 10px 0; }
+    .sub-prog-title { font-size: 36px; }
+    .sub-prog-subtitle { font-size: 14px; margin-bottom: 25px; }
+    .sub-prog-manifesto { font-size: 13px; line-height: 1.6; }
+    .sub-prog-events { margin-top: 40px; }
+    .sub-prog-events h2 { font-size: 18px; margin-bottom: 20px; }
+    
+    .sub-prog-link { max-width: calc(100vw - 40px); white-space: normal; box-sizing: border-box; }
+
+    .doc-header { margin-top: 20px; margin-bottom: 25px; }
+    .doc-gallery { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; }
+
+    .grid { grid-template-columns: 1fr; gap: 10px; }
+    .card { padding: 10px; }
+    .card h2 { font-size: 18px; }
+}
