@@ -530,7 +530,7 @@ function renderDocumentationPage(id) {
     docData.media.forEach(src => {
         galleryHTML += `
             <div class="doc-media-box">
-                <img src="${src}" class="doc-media" alt="Documentation Assets">
+                <img src="${src}" class="doc-media" alt="Documentation/">
             </div>
         `;
     });
