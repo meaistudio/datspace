@@ -106,17 +106,6 @@ const DOCUMENTATION_ARCHIVE = {
         manifesto: "This session will activate the internal studioas a controlled environment for experimentation,rehearsal, and audiovisual testing.",
         media: ["dats.png"] 
     },
-    "dats_out1": {
-        parentProgram: "DATS_OUT",
-        title: "DATs_Out1 — BYOB 140226",
-        date: "February 14, 2026",
-        location: "KROMA 1984 Madahuis, Denpasar",
-        manifesto: "DATs_Out1 was born from the desire to step outside the safe room and ignite the city in its rawest form. For one night, an outdoor space in Denpasar was hacked into a projection field, no stage, no hierarchy. Everyone arrived carrying their own projector, colliding visuals, light, and ideas directly into space. The format adopted the BYOB (Bring Your Own Beamer) concept a collective exhibition practice initiated by Rafaël Rozendaal where large scale exhibitions can emerge from the courage to share tools and territory.",
-        media: Array.from(
-        { length: 70 },
-        (_, i) => `/DATs_Out/DATs_Out1/Documentation/img${i + 1}.jpg`
-    )
-    },
     "dats_out2": {
         parentProgram: "DATS_OUT",
         title: "DATs_Out2 — TU'TUR'ANG'RING'",
