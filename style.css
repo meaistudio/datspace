@@ -103,7 +103,7 @@ a, a:visited, a:hover, a:active {
 /* Container Scrollable Internal (Digunakan oleh Tab Event, Program & Archive) */
 .content-event {
     position: fixed;
-    top: 300px;
+    top: 200px;
     bottom: 40px;
     left: 55%;
     transform: translateX(-50%);
@@ -222,7 +222,7 @@ a, a:visited, a:hover, a:active {
    SUB-PROGRAM DETAILS LAYER (DATs_In, DATs_Out, DATs_To)
    ======================================================== */
 .sub-prog-wrap {
-    padding: 20px 2vw;
+    padding: 0px 2vw;
     text-align: left;
 }
 
