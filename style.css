@@ -1,18 +1,26 @@
 /* ======================================================== 
    BASE ELEMENT RESET & LAYOUT SYSTEMS
    ======================================================== */
-   html, body {
-    margin: 0; padding: 0; background: black; color: white;
-    font-family: Consolas, monospace; overflow: hidden;
-    -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none;
-
+html, body {
+    margin: 0;
+    padding: 0;
+    background: black;
+    color: white;
+    font-family: Consolas, monospace;
+    overflow: hidden;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
 }
 
+/* FIX: canvas tidak boleh menangkap klik */
 canvas {
     position: fixed;
     top: 0;
     left: 0;
     z-index: 1;
+    pointer-events: none;
 }
 
 /* Global Reset Anchor */
@@ -40,7 +48,7 @@ a, a:visited, a:hover, a:active {
     top: 40px;
     right: 80px;
     font-size: 30px;
-    z-index: 10;
+    z-index: 20;
 }
 
 .tab {
@@ -48,6 +56,7 @@ a, a:visited, a:hover, a:active {
     cursor: pointer;
     display: inline-block;
     transition: all 0.2s ease-in-out;
+    pointer-events: auto;
 }
 
 .tab:hover {
@@ -64,14 +73,16 @@ a, a:visited, a:hover, a:active {
     top: 40px;
     left: 80px;
     font-size: 30px;
-    z-index: 10;
+    z-index: 20;
+    pointer-events: auto;
 }
 
 .back { 
     position: fixed; 
     top: 40px; 
     left: 40px; 
-    z-index: 20;
+    z-index: 30;
+    pointer-events: auto;
 }
 
 /* ======================================================== 
@@ -84,11 +95,11 @@ a, a:visited, a:hover, a:active {
     transform: translateX(-50%);
     font-size: 20px;
     text-align: center;
-    z-index: 10;
+    z-index: 20;
     max-width: 1100px;
+    pointer-events: auto;
 }  
 
-/* Teks Deskripsi Beranda (Home Landing) */
 .content.home-desc {
     position: fixed; 
     top: 50%; 
@@ -100,7 +111,6 @@ a, a:visited, a:hover, a:active {
     letter-spacing: 0.4px;
 }
 
-/* Container Scrollable Internal (Digunakan oleh Tab Event, Program & Archive) */
 .content-event {
     position: fixed;
     top: 300px;
@@ -111,12 +121,12 @@ a, a:visited, a:hover, a:active {
     overflow-y: auto;
     overflow-x: hidden;
     text-align: left;
-    z-index: 10;
+    z-index: 20;
     padding-right: 8px;
     box-sizing: border-box;
+    pointer-events: auto;
 }
 
-/* Wadah Sekunder di dalam Arsip */
 .container {
     max-width: 1200px;
     margin: 0 auto;
@@ -147,13 +157,34 @@ a, a:visited, a:hover, a:active {
     cursor: pointer;
     transition: all 0.2s ease-in-out;
     animation: pulse-border 2s infinite ease-in-out;
+    position: relative;
+    z-index: 30;
+    pointer-events: auto;
 }
 
-/* Ukuran Desktop Utama */
-.program-item, .sub-prog-back, .sub-prog-link { font-size: 24px; padding: 5px 15px; width: max-content; }
-.back { font-size: 25px; padding: 5px 15px; }
-.internet-art-tab a { font-size: 30px; padding: 5px 15px; }
-.collaboration span { font-size: 24px; padding: 5px 15px; white-space: nowrap; }
+.program-item,
+.sub-prog-back,
+.sub-prog-link {
+    font-size: 24px;
+    padding: 5px 15px;
+    width: max-content;
+}
+
+.back {
+    font-size: 25px;
+    padding: 5px 15px;
+}
+
+.internet-art-tab a {
+    font-size: 30px;
+    padding: 5px 15px;
+}
+
+.collaboration span {
+    font-size: 24px;
+    padding: 5px 15px;
+    white-space: nowrap;
+}
 
 .program-item:hover,
 .content a:hover,
@@ -211,6 +242,9 @@ a, a:visited, a:hover, a:active {
     flex-direction: column;
     gap: 15px;
     align-items: center;
+    position: relative;
+    z-index: 30;
+    pointer-events: auto;
 }
 
 .program-menu .program-item:nth-child(1) { animation-delay: 0s; }
@@ -218,11 +252,14 @@ a, a:visited, a:hover, a:active {
 .program-menu .program-item:nth-child(3) { animation-delay: 1.33s; }
 
 /* ======================================================== 
-   SUB-PROGRAM DETAILS LAYER (DATs_In, DATs_Out, DATs_To)
+   SUB-PROGRAM DETAILS LAYER
    ======================================================== */
 .sub-prog-wrap {
     padding: 20px 2vw;
     text-align: left;
+    position: relative;
+    z-index: 30;
+    pointer-events: auto;
 }
 
 .sub-prog-hero {
@@ -267,10 +304,13 @@ a, a:visited, a:hover, a:active {
     display: flex;
     flex-direction: column;
     gap: 20px;
+    position: relative;
+    z-index: 30;
+    pointer-events: auto;
 }
 
 /* ======================================================== 
-   UNIVERSAL DOCUMENTATION SYSTEM (FOR ARCHIVE LOGS)
+   UNIVERSAL DOCUMENTATION SYSTEM
    ======================================================== */
 .doc-header {
     margin-top: 30px;
@@ -350,6 +390,9 @@ a, a:visited, a:hover, a:active {
     padding: 24px;
     background: transparent;
     transition: all 0.3s ease-in-out;
+    position: relative;
+    z-index: 30;
+    pointer-events: auto;
 }
 
 .card a {
@@ -359,6 +402,7 @@ a, a:visited, a:hover, a:active {
     height: 100%;
     border: none !important;
     animation: none !important;
+    pointer-events: auto;
 }
 
 .card h2 {
@@ -389,57 +433,168 @@ a, a:visited, a:hover, a:active {
 }
 
 /* ======================================================== 
-   COMPACT MOBILE RESPONSIVE MEDIA QUERIES (MAX 768px)
+   MOBILE RESPONSIVE
    ======================================================== */
 @media (max-width: 768px) {
-    .internet-art-tab { top: 60px; left: 20px; font-size: 12px; }
-    .tabs { top: 30px; right: 10px; font-size: 12px; }
-    .tab { margin-left: 10px; }
-    .active { padding: 4px 8px; }
-    .back { position: absolute; top: 25px; left: 20px; }
+    .internet-art-tab {
+        top: 60px;
+        left: 20px;
+        font-size: 12px;
+    }
 
-    /* Ukuran teks tombol menu utama, back, log, dan collaboration di mobile */
-    .program-item, .content a, .clickable, .internet-art-tab a, .back, .sub-prog-back, .sub-prog-link { 
+    .tabs {
+        top: 30px;
+        right: 10px;
+        font-size: 12px;
+    }
+
+    .tab {
+        margin-left: 10px;
+    }
+
+    .active {
+        padding: 4px 8px;
+    }
+
+    .back {
+        position: absolute;
+        top: 25px;
+        left: 20px;
+    }
+
+    .program-item,
+    .content a,
+    .clickable,
+    .internet-art-tab a,
+    .back,
+    .sub-prog-back,
+    .sub-prog-link { 
         font-size: 16px; 
         padding: 4px 10px; 
     }
-    .collaboration span { font-size: 16px; padding: 4px 10px; }
 
-    .content { font-size: 16px; bottom: 80px; left: 51%; padding: 0 0px; max-width: 100%; }
+    .collaboration span {
+        font-size: 16px;
+        padding: 4px 10px;
+    }
+
+    .content {
+        font-size: 16px;
+        bottom: 80px;
+        left: 51%;
+        padding: 0 0px;
+        max-width: 100%;
+    }
 
     .content.home-desc {
-        top: 70%; left: 50%; transform: translate(-50%, -50%);
-        width: 82%; height: 100%; max-width: 420px; padding: 0 10px;
-        font-size: 12px; line-height: 1.9; max-height: 120vh; overflow-y: auto;
+        top: 70%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 82%;
+        height: 100%;
+        max-width: 420px;
+        padding: 0 10px;
+        font-size: 12px;
+        line-height: 1.9;
+        max-height: 120vh;
+        overflow-y: auto;
     }
 
     .content-event {
-        top: 100px; left: 51%; bottom: 20px;
-        width: calc(100vw - 32px); padding-right: 4px; margin: 25px 0px;
+        top: 100px;
+        left: 51%;
+        bottom: 20px;
+        width: calc(100vw - 32px);
+        padding-right: 4px;
+        margin: 25px 0px;
     }
 
-    .event-wrap { flex-direction: column; gap: 20px; }
-    .event-flyer { width: 280px; margin: 15px 0px; }
-    .event-info { font-size: 14px; }
-    .event-title { font-size: 20px; }
+    .event-wrap {
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .event-flyer {
+        width: 280px;
+        margin: 15px 0px;
+    }
+
+    .event-info {
+        font-size: 14px;
+    }
+
+    .event-title {
+        font-size: 20px;
+    }
     
-    .title-row { flex-direction: column; align-items: flex-start; gap: 15px; }
-    .title { font-size: 32px; }
-    .description-text { font-size: 13px; margin-bottom: 40px; }
+    .title-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+    }
 
-    .sub-prog-wrap { padding: 10px 0; }
-    .sub-prog-title { font-size: 36px; }
-    .sub-prog-subtitle { font-size: 14px; margin-bottom: 25px; }
-    .sub-prog-manifesto { font-size: 13px; line-height: 1.6; }
-    .sub-prog-events { margin-top: 40px; }
-    .sub-prog-events h2 { font-size: 18px; margin-bottom: 20px; }
+    .title {
+        font-size: 32px;
+    }
+
+    .description-text {
+        font-size: 13px;
+        margin-bottom: 40px;
+    }
+
+    .sub-prog-wrap {
+        padding: 10px 0;
+    }
+
+    .sub-prog-title {
+        font-size: 36px;
+    }
+
+    .sub-prog-subtitle {
+        font-size: 14px;
+        margin-bottom: 25px;
+    }
+
+    .sub-prog-manifesto {
+        font-size: 13px;
+        line-height: 1.6;
+    }
+
+    .sub-prog-events {
+        margin-top: 40px;
+    }
+
+    .sub-prog-events h2 {
+        font-size: 18px;
+        margin-bottom: 20px;
+    }
     
-    .sub-prog-link { max-width: calc(100vw - 40px); white-space: normal; box-sizing: border-box; }
+    .sub-prog-link {
+        max-width: calc(100vw - 40px);
+        white-space: normal;
+        box-sizing: border-box;
+    }
 
-    .doc-header { margin-top: 20px; margin-bottom: 25px; }
-    .doc-gallery { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; }
+    .doc-header {
+        margin-top: 20px;
+        margin-bottom: 25px;
+    }
 
-    .grid { grid-template-columns: 1fr; gap: 10px; }
-    .card { padding: 10px; }
-    .card h2 { font-size: 18px; }
+    .doc-gallery {
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+        gap: 12px;
+    }
+
+    .grid {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+
+    .card {
+        padding: 10px;
+    }
+
+    .card h2 {
+        font-size: 18px;
+    }
 }
