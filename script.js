@@ -139,10 +139,7 @@ const DOCUMENTATION_ARCHIVE = {
         date: "April 4, 2026",
         location: "MEAI Studio",
         manifesto: "A visual artist meeting space to share work, processes, and ideas through artist talks, work reviews, and open discussions.",
-        media: Array.from(
-        { length: 8 },
-        (_, i) => `DATs_To/DATs_To001/Documentation/img${i + 1}.jpg`
-)   
+        media: ["DATs_To/DATs_To001/Documentation/img1.jpg"  
 };
 
 /* ======================================================== */
