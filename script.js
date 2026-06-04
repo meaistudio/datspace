@@ -112,7 +112,7 @@ const DOCUMENTATION_ARCHIVE = {
         date: "February 14, 2026",
         location: "KROMA 1984 Madahuis, Denpasar",
         manifesto: "DATs_Out1 was born from the desire to step outside the safe room and ignite the city in its rawest form. For one night, an outdoor space in Denpasar was hacked into a projection field, no stage, no hierarchy. Everyone arrived carrying their own projector, colliding visuals, light, and ideas directly into space. The format adopted the BYOB (Bring Your Own Beamer) concept a collective exhibition practice initiated by Rafaël Rozendaal where large scale exhibitions can emerge from the courage to share tools and territory.",
-        mediaConfig: { path: "DATs_Out/DATs_Out1/Documentation/", count: 2, ext: "jpg" }
+        media: ["dats.png"] 
     },
     "dats_out2": {
         parentProgram: "DATS_OUT",
