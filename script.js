@@ -114,7 +114,8 @@ const DOCUMENTATION_ARCHIVE = {
         manifesto: "DATs_Out1 was born from the desire to step outside the safe room and ignite the city in its rawest form. <br><br> For one night, an outdoor space in Denpasar was hacked into a projection field, no stage, no hierarchy. <br><br> Everyone arrived carrying their own projector, colliding visuals, light, and ideas directly into space. The format adopted the BYOB (Bring Your Own Beamer) concept a collective exhibition practice initiated by Rafaël Rozendaal where large scale exhibitions can emerge from the courage to share tools and territory.",
         media: Array.from(
         { length: 70 },
-        (_, i) => `DATs_Out/DATs_Out1/Documentation/img${i + 1}.jpg)  
+        (_, i) => `DATs_Out/DATs_Out1/Documentation/img${i + 1}.jpg`
+)   
     },
     "dats_out2": {
         parentProgram: "DATS_OUT",
