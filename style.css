@@ -393,7 +393,7 @@ a, a:visited, a:hover, a:active {
    COMPACT MOBILE RESPONSIVE MEDIA QUERIES (MAX 768px)
    ======================================================== */
 @media (max-width: 768px) {
-    .internet-art-tab { top: 60px; left: 20px; font-size: 12px; }
+    .internet-art-tab { top: 65px; left: 20px; font-size: 12px; }
     .tabs { top: 30px; right: 10px; font-size: 12px; }
     .tab { margin-left: 10px; }
     .active { padding: 4px 8px; }
