@@ -150,7 +150,7 @@ const DOCUMENTATION_ARCHIVE = {
     },
     "dats_out2": {
         parentProgram: "DATS_OUT",
-        title: "DATs_Out2 — TU'TUR'ANG'RING'060626",  
+        title: "DATs_Out2 — TU'TUR'ANG'RING'<br>060626",  
         date: "June 06, 2026",
         location: "KROMA 1984 Madahuis, Denpasar",
         manifesto: "Experiments with irregular frequency sound systems and the realization of visual data directly in physical locations.",
@@ -158,7 +158,7 @@ const DOCUMENTATION_ARCHIVE = {
     },
     "dats_out3": {
         parentProgram: "DATS_OUT",
-        title: "DATs_Out3 — THE DOME 130626",  
+        title: "DATs_Out3 — THE DOME <br>130626",  
         date: "June 13, 2026",
         location: "Nuanu Creative City, Tabanan",
         manifesto: "Experiments with irregular frequency sound systems and the realization of visual data directly in physical locations.",
@@ -166,7 +166,7 @@ const DOCUMENTATION_ARCHIVE = {
     },
     "dats_to001": {
         parentProgram: "DATS_TO",
-        title: "DATs_To001 — Visual Talks 040426",
+        title: "DATs_To001 — Visual Talks <br>040426",
         date: "April 4, 2026",
         location: "MEAI Studio",
         manifesto: "A visual artist meeting space to share work, processes, and ideas through artist talks, work reviews, and open discussions.",
