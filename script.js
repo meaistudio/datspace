@@ -116,15 +116,23 @@ const DOCUMENTATION_ARCHIVE = {
     },
     "dats_out2": {
         parentProgram: "DATS_OUT",
-        title: "DATs_Out2 — TU'TUR'ANG'RING'",  
+        title: "DATs_Out2 — TU'TUR'ANG'RING'060626",  
         date: "June 06, 2026",
         location: "KROMA 1984 Madahuis, Denpasar",
         manifesto: "Experiments with irregular frequency sound systems and the realization of visual data directly in physical locations.",
         media: ["dats.png", "dats.png", "dats.png"]
     },
+    "dats_out3": {
+        parentProgram: "DATS_OUT",
+        title: "DATs_Out3 — THE DOME 130626",  
+        date: "June 13, 2026",
+        location: "Nuanu Creative City, Tabanan",
+        manifesto: "Experiments with irregular frequency sound systems and the realization of visual data directly in physical locations.",
+        media: ["dats.png", "dats.png", "dats.png"]
+    },
     "dats_to001": {
         parentProgram: "DATS_TO",
-        title: "DATs_To001 — Visual Talks",
+        title: "DATs_To001 — Visual Talks 040426",
         date: "April 4, 2026",
         location: "MEAI Studio",
         manifesto: "A visual artist meeting space to share work, processes, and ideas through artist talks, work reviews, and open discussions.",
@@ -426,6 +434,7 @@ function updateContent() {
                     <div class="sub-prog-list">
                         <span class="sub-prog-link" onclick="viewDocumentation('dats_out1')">DATs_Out1 — BYOB 140226</span>
                         <span class="sub-prog-link" onclick="viewDocumentation('dats_out2')">DATs_Out2 — TU'TUR'ANG'RING' 060626</span>
+                        <span class="sub-prog-link" onclick="viewDocumentation('dats_out3')">DATs_Out3 — THE DOME 130626</span>
                     </div>
                 </div>
             </div>
