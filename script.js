@@ -531,6 +531,7 @@ function returnToSubProgram(parentProgramState) {
 }
 
 /* FUNGSI UTAMA INJEKSI TEMPLATE DOKUMENTASI */
+/* --- Update bagian fungsi renderDocumentationPage --- */
 function renderDocumentationPage(id) {
     const docData = DOCUMENTATION_ARCHIVE[id];
     content.classList.add("content-event");
@@ -539,7 +540,8 @@ function renderDocumentationPage(id) {
     docData.media.forEach(src => {
         galleryHTML += `
             <div class="doc-media-box">
-                <img src="${src}" class="doc-media" alt="Documentation/">
+                <img src="${src}" class="doc-media" alt="Documentation" 
+                     onclick="openLightbox('${src}')">
             </div>
         `;
     });
@@ -562,6 +564,23 @@ function renderDocumentationPage(id) {
             </div>
         </div>
     `;
+}
+
+/* --- Tambahkan fungsi Lightbox ini di akhir file script.js --- */
+function openLightbox(imgSrc) {
+    const lightbox = document.getElementById("lightbox");
+    const lightboxImg = document.getElementById("lightbox-img");
+    lightboxImg.src = imgSrc;
+    
+    // Jika menggunakan animasi opacity di atas:
+    lightbox.style.display = "flex";
+    setTimeout(() => { lightbox.style.opacity = "1"; }, 10);
+}
+
+function closeLightbox() {
+    const lightbox = document.getElementById("lightbox");
+    lightbox.style.opacity = "0";
+    setTimeout(() => { lightbox.style.display = "none"; }, 300);
 }
 
 document.addEventListener("DOMContentLoaded", updateContent);
