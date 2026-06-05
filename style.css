@@ -444,3 +444,31 @@ a, a:visited, a:hover, a:active {
     .card { padding: 10px; }
     .card h2 { font-size: 18px; }
 }
+/* Lightbox Styles */
+.lightbox {
+    display: none;
+    position: fixed;
+    z-index: 9999;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background-color: rgba(0, 0, 0, 0.9);
+    cursor: pointer;
+    justify-content: center;
+    align-items: center;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    display: none; /* Tetap pertahankan display none untuk logika JS */
+}
+.lightbox.show {
+    display: flex;
+    opacity: 1;
+}
+.lightbox img {
+    max-width: 90%;
+    max-height: 90%;
+    border: 1px solid #333;
+}
+
+.doc-media {
+    cursor: zoom-in;
+}
