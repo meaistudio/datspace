@@ -111,22 +111,14 @@ const DOCUMENTATION_ARCHIVE = {
         title: "DATs_Out1 — BYOB 140226",
         date: "February 14, 2026",
         location: "KROMA 1984 Madahuis, Denpasar",
-        manifesto: "DATs_Out1 was born from the desire to step outside the safe room and ignite the city in its rawest form. <br><br> For one night, an outdoor space in Denpasar was hacked into a projection field, no stage, no hierarchy. <br><br> Everyone arrived carrying their own projector, colliding visuals, light, and ideas directly into space. The format adopted the BYOB (Bring Your Own Beamer) concept a collective exhibition practice initiated by Rafaël Rozendaal where large scale exhibitions can emerge from the courage to share tools and territory.",
-        media: ["dats.png", "dats.png", "dats.png"]   
+        manifesto: "DATs_Out1 was born from the desire to step outside the safe room and ignite the city in its rawest form. For one night, an outdoor space in Denpasar was hacked into a projection field, no stage, no hierarchy. Everyone arrived carrying their own projector, colliding visuals, light, and ideas directly into space. The format adopted the BYOB (Bring Your Own Beamer) concept a collective exhibition practice initiated by Rafaël Rozendaal where large scale exhibitions can emerge from the courage to share tools and territory.",
+        media: ["DATs_Out/DATs_Out1/Documentation/img1.jpg" , "DATs_Out/DATs_Out1/Documentation/img2.jpg", "DATs_Out/DATs_Out1/Documentation/img3.jpg", "DATs_Out/DATs_Out1/Documentation/img4.jpg"] 
     },
     "dats_out2": {
         parentProgram: "DATS_OUT",
-        title: "DATs_Out2 — TU'TUR'ANG'RING'",
+        title: "DATs_Out2 — TU'TUR'ANG'RING'",  
         date: "June 06, 2026",
         location: "KROMA 1984 Madahuis, Denpasar",
-        manifesto: "Experiments with irregular frequency sound systems and the realization of visual data directly in physical locations.",
-        media: ["dats.png", "dats.png", "dats.png"]
-    },
-        "dats_out3": {
-        parentProgram: "DATS_OUT",
-        title: "DATs_Out3 — THE DOME",
-        date: "June 13 , 2026",
-        location: "NUANU Creative City, Tabanan",
         manifesto: "Experiments with irregular frequency sound systems and the realization of visual data directly in physical locations.",
         media: ["dats.png", "dats.png", "dats.png"]
     },
@@ -136,7 +128,8 @@ const DOCUMENTATION_ARCHIVE = {
         date: "April 4, 2026",
         location: "MEAI Studio",
         manifesto: "A visual artist meeting space to share work, processes, and ideas through artist talks, work reviews, and open discussions.",
-        media: ["dats.png", "dats.png", "dats.png"]  
+        media: ["dats.png"]
+    }
 };
 
 /* ======================================================== */
@@ -433,7 +426,6 @@ function updateContent() {
                     <div class="sub-prog-list">
                         <span class="sub-prog-link" onclick="viewDocumentation('dats_out1')">DATs_Out1 — BYOB 140226</span>
                         <span class="sub-prog-link" onclick="viewDocumentation('dats_out2')">DATs_Out2 — TU'TUR'ANG'RING' 060626</span>
-                        <span class="sub-prog-link" onclick="viewDocumentation('dats_out3')">DATs_Out3 — THE DOME 130626</span>
                     </div>
                 </div>
             </div>
@@ -716,15 +708,9 @@ document.addEventListener('touchstart', (e) => {
 }, { passive: false });
 
 let lastTouchEnd = 0;
-function isInteractiveTarget(target) {
-    return target.closest(
-        "a, button, .tab, .program-item, .clickable, .internet-art-tab a, .back, .sub-prog-back, .sub-prog-link, .collaboration span"
-    );
-}
-
 document.addEventListener('touchend', (e) => {
     const now = Date.now();
-    if (now - lastTouchEnd <= 300 && !isInteractiveTarget(e.target)) {
+    if (now - lastTouchEnd <= 300) {
         e.preventDefault();
     }
     lastTouchEnd = now;
