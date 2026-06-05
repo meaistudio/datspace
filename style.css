@@ -105,7 +105,7 @@ a, a:visited, a:hover, a:active {
     position: fixed;
     top: 200px;
     bottom: 40px;
-    left: 55%;
+    left: 50%;
     transform: translateX(-50%);
     width: min(1100px, calc(100vw - 56px));
     overflow-y: auto;
