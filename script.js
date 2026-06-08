@@ -2,12 +2,12 @@
 /* 1. DATA MASTER CONFIGURATION (EVENTS & ARCHIVES)         */
 /* ======================================================== */
 const EVENT_DATA = {
-    title: "DATs_Out2 TU'TUR'ANG'RING",
+    title: "DATs_Out3 The Voyager AV performance",
     flyerImage: "dats.png",
-    description: "Be a part of the atmosphere",
+    description: "AV performance By Dats x Balimotion <br><br> Experiments with irregular frequency sound systems and the realization of visual data directly inside the dome.",
     details: [
-        "// at Kroma 1984 Madahuis",
-        "// June 06, 2026",
+        "// at Nuanu Creative City, Tabanan",
+        "// June 13, 2026",
         "// Free entry with registration"
     ],
     footerNote: "DAT SPACE operates in irregular frequencies.",
@@ -158,7 +158,7 @@ const DOCUMENTATION_ARCHIVE = {
     },
     "dats_out3": {
         parentProgram: "DATS_OUT",
-        title: "DATs_Out3 — The Voyager <br>130626",  
+        title: "DATs_Out3 — The Voyager AV performance <br>130626",  
         date: "June 13, 2026",
         location: "Nuanu Creative City, Tabanan",
         manifesto: "AV performance By Dats x Balimotion <br><br> Experiments with irregular frequency sound systems and the realization of visual data directly inside the dome.",
