@@ -158,10 +158,10 @@ const DOCUMENTATION_ARCHIVE = {
     },
     "dats_out3": {
         parentProgram: "DATS_OUT",
-        title: "DATs_Out3 — THE DOME <br>130626",  
+        title: "DATs_Out3 — The Voyager <br>130626",  
         date: "June 13, 2026",
         location: "Nuanu Creative City, Tabanan",
-        manifesto: "Experiments with irregular frequency sound systems and the realization of visual data directly in physical locations.",
+        manifesto: "AV performance By Dats x Balimotion <br><br> Experiments with irregular frequency sound systems and the realization of visual data directly inside the dome.",
         media: ["dats.png", "dats.png", "dats.png"]
     },
     "dats_to001": {
@@ -475,7 +475,7 @@ function updateContent() {
                     <div class="sub-prog-list">
                         <span class="sub-prog-link" onclick="viewDocumentation('dats_out1')">DATs_Out1 — BYOB 140226</span>
                         <span class="sub-prog-link" onclick="viewDocumentation('dats_out2')">DATs_Out2 — TU'TUR'ANG'RING' 060626</span>
-                        <span class="sub-prog-link" onclick="viewDocumentation('dats_out3')">DATs_Out3 — THE DOME 130626</span>
+                        <span class="sub-prog-link" onclick="viewDocumentation('dats_out3')">DATs_Out3 — The Voyager 130626</span>
                     </div>
                 </div>
             </div>
