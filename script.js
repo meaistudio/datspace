@@ -154,7 +154,8 @@ const DOCUMENTATION_ARCHIVE = {
         date: "June 06, 2026",
         location: "KROMA 1984 Madahuis, Denpasar",
         manifesto: "Experiments with irregular frequency sound systems and the realization of visual data directly in physical locations.",
-        media: ["dats.png", "dats.png", "dats.png"]
+        media: ["dats.png", "dats.png", "dats.png"],
+        link: "https://datspace.club/internet-art/event/dats_out/dats_out2/"
     },
     "dats_out3": {
         parentProgram: "DATS_OUT",
