@@ -11,7 +11,7 @@ const EVENT_DATA = {
         "// Free entry with registration"
     ],
     footerNote: "DAT SPACE operates in irregular frequencies.",
-    registrationLink: "https://tally.so/r/kdv0pe"
+    registrationLink: "https://tally.so/r/vGz180"
 };
 
 const ARCHIVE_PROJECTS = [
