@@ -8,7 +8,7 @@ const EVENT_DATA = {
     details: [
         "// at Nuanu Creative City, Tabanan",
         "// June 13, 2026",
-        "// Free entry with registration"
+        "// Rp. 50K"
     ],
     footerNote: "DAT SPACE operates in irregular frequencies.",
     registrationLink: "https://tally.so/r/vGz180"
