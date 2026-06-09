@@ -641,7 +641,7 @@ function draw() {
         ctx.fillStyle = "white";
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
-        ctx.font = Math.min(window.innerWidth / 6, 180) + "px Consolas";
+        ctx.font = Math.min(window.innerWidth / 6, 180) + "px Monospace";
         ctx.fillText("DATs", window.innerWidth / 2, window.innerHeight / 2);
     }
 
