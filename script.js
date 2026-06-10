@@ -88,7 +88,7 @@ const ARCHIVE_PROJECTS = [
     {   title: "DATSEQUENCER", 
         artist: "DATs", 
         link: "/internet-art/datsequencer/", 
-        desc: "An experimental system that translates rhythmic structures into evolving visual text. Driven by real-time audio signals, each frequency layer reshapes typography, layout, and density—forming a continuous dialogue between sound, structure, and generative composition." }
+        desc: "An experimental system that translates rhythmic structures into evolving visual text. Driven by real-time audio signals, each frequency layer reshapes typography, layout, and density—forming a continuous dialogue between sound, structure, and generative composition." },
     
     {   title: "SQUARECLICK", 
         artist: "DATs", 
