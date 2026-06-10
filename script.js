@@ -3,7 +3,7 @@
 /* ======================================================== */
 const EVENT_DATA = {
     title: "DATs_Out3 The Voyager AV performance",
-    flyerImage: "dats.png",
+    flyerImage: "web-picture/Event/dats_out3.png",
     description: "AV performance By Dats x Balimotion <br><br> Experiments with irregular frequency sound systems and the realization of visual data directly inside the dome.",
     details: [
         "// at Nuanu Creative City, Tabanan",
