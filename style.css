@@ -188,10 +188,11 @@ a, a:visited, a:hover, a:active {
 
 .event-flyer {
     display: block;
-    width: 500px;
+    width: 700px;
     max-width: 100%;
     height: auto;
     object-fit: contain;
+    align-items: center;
 }
 
 .event-info {
