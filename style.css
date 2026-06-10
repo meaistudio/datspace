@@ -422,7 +422,7 @@ a, a:visited, a:hover, a:active {
     }
 
     .event-wrap { flex-direction: column; gap: 20px; }
-    .event-flyer { width: 280px; margin: 15px 0px; }
+    .event-flyer { width: 400px; margin: 15px 0px; }
     .event-info { font-size: 14px; }
     .event-title { font-size: 20px; }
     
