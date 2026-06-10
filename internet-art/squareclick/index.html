@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SQUARECLIK</title>
+    <style>
+        /* --- 1. RESET & BASE STYLE --- */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: #0d0d0d;
+            color: #ffffff;
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 10px;
+            overflow-y: auto;
+            /* UX: Mencegah seleksi teks/highlight biru yang mengganggu saat drag */
+            user-select: none; 
+            -webkit-user-select: none;
+        }
+
+        /* --- 2. ART CANVAS (CSS GRID LAYOUT) --- */
+        .art-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            grid-auto-rows: 50px;
+            gap: 5px; 
+            width: 100%;
+        }
+
+        /* --- 3. ITEM GRID & VARIASI --- */
+        .art-box {
+            background-color: #1a1a1a;
+            border: 1px solid #333;
+            transition: all 0.1s cubic-bezier(0.25, 1, 0.5, 1);
+            cursor: cell; /* UX: Mengubah kursor menjadi tanda plus agar pengguna tahu ini bisa 'digambar' */
+            position: relative;
+            overflow: hidden;
+            /* UX Mobile: Mencegah scroll tertahan/macet saat menyentuh kotak */
+            touch-action: none; 
+        }
+
+        .art-box:hover {
+            border-color: #fff;
+            transform: scale(0.96);
+            z-index: 2;
+        }
+
+        .art-box.wide {
+            grid-column: span 4;
+        }
+
+        .art-box.tall {
+            grid-row: span 4;
+        }
+
+        .art-box.accent-red { background-color: #ff0000; border: none; }
+        .art-box.accent-blue { background-color: #001aff; border: none; }
+        .art-box.accent-yellow { background-color: #fffb00; border: none; }
+
+        .box-number {
+            position: absolute;
+            bottom: 4px;
+            right: 6px;
+            font-size: 0.6rem;
+            color: rgba(255, 255, 255, 0.2);
+            pointer-events: none;
+        }
+
+        @media (max-width: 600px) {
+            .art-box.wide { grid-column: span 2; }
+        }
+    </style>
+</head>
+<body>
+
+    <main class="art-grid" id="grid-container"></main>
+
+    <script>
+        const gridContainer = document.getElementById('grid-container');
+
+        // --- SISTEM AUDIO API ---
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        const audioCtx = new AudioCtx();
+
+        function playBoxSound(modifier) {
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+
+            const oscillator = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+
+            let frequency = 400;
+
+            if (modifier.includes('wide tall')) {
+                frequency = 120;
+                oscillator.type = 'triangle'; 
+            } else if (modifier.includes('wide') || modifier.includes('tall')) {
+                frequency = 220;
+                oscillator.type = 'triangle';
+            } else if (modifier.includes('accent')) {
+                frequency = 580;
+                oscillator.type = 'sine';
+            } else {
+                frequency = 880;
+                oscillator.type = 'sine';
+            }
+
+            oscillator.frequency.setValueAtTime(frequency, audioCtx.currentTime);
+            
+            gainNode.gain.setValueAtTime(0.15, audioCtx.currentTime); 
+            gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.4); 
+
+            oscillator.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+
+            oscillator.start();
+            oscillator.stop(audioCtx.currentTime + 0.4);
+        }
+
+        // --- GLOBAL DRAG STATE (UX LOGIC) ---
+        let isDragging = false;
+
+        // Deteksi klik mouse ditekan/dilepas secara global di window
+        window.addEventListener('mousedown', () => isDragging = true);
+        window.addEventListener('mouseup', () => isDragging = false);
+
+        const modifiers = ['', 'wide', 'tall', '', 'accent-red', 'accent-blue', 'accent-yellow', 'wide tall'];
+
+        // Fungsi utama untuk memicu perubahan kotak & suara
+        function triggerBox(box) {
+            // Mencegah trigger berulang-ulang di kotak yang sama secara instan saat diseret cepat
+            if (box.style.backgroundColor === 'rgb(255, 255, 255)') return;
+
+            playBoxSound(box.className);
+
+            box.className = 'art-box';
+            let currentModifier = modifiers[Math.floor(Math.random() * modifiers.length)];
+            if (currentModifier) {
+                currentModifier.split(' ').forEach(cls => box.classList.add(cls));
+            }
+            
+            box.style.backgroundColor = '#ffffff';
+            box.style.transition = 'none';
+            
+            setTimeout(() => {
+                box.style.backgroundColor = '';
+                box.style.transition = 'all 0.6s cubic-bezier(0.25, 1, 0.5, 1)';
+            }, 1000);
+        }
+
+        function createBox(index) {
+            const box = document.createElement('div');
+            box.classList.add('art-box');
+            
+            let currentModifier = modifiers[Math.floor(Math.random() * modifiers.length)];
+            if (currentModifier) {
+                currentModifier.split(' ').forEach(cls => box.classList.add(cls));
+            }
+
+            box.innerHTML = `<span class="box-number">#${String(index).padStart(3, '0')}</span>`;
+
+            // INTERAKSI DESKTOP: Klik tunggal
+            box.addEventListener('mousedown', (e) => {
+                e.preventDefault();
+                triggerBox(box);
+            });
+
+            // INTERAKSI DESKTOP: Diseret (Drag) melewati kotak lain
+            box.addEventListener('mouseenter', () => {
+                if (isDragging) {
+                    triggerBox(box);
+                }
+            });
+
+            return box;
+        }
+
+        // Pembuatan Mosaik Kotak
+        const totalBoxes = 300;
+        for (let i = 1; i <= totalBoxes; i++) {
+            gridContainer.appendChild(createBox(i));
+        }
+
+        // --- INTERAKSI MOBILE (TOUCH DRAG) ---
+        // Layar sentuh HP membutuhkan logika koordinat karena tidak memiliki event 'mouseenter'
+        window.addEventListener('touchmove', (e) => {
+            const touch = e.touches[0];
+            // Mencari elemen apa yang sedang berada di bawah koordinat jari pengguna
+            const targetElement = document.elementFromPoint(touch.clientX, touch.clientY);
+            
+            if (targetElement && targetElement.classList.contains('art-box')) {
+                triggerBox(targetElement);
+            }
+        }, { passive: true });
+    </script>
+</body>
+</html>
