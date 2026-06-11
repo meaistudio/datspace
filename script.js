@@ -4,7 +4,7 @@
 const EVENT_DATA = {
     title: "DATs_Out3 The Voyager AV performance",
     flyerImage: "web-picture/Event/dats_out3.png",
-    description: "AV performance By Dats x Balimotion <br><br> Experiments with irregular frequency sound systems and the realization of visual data directly inside the dome.",
+    description: "AV performance By Dats x Balimotion <br><br> Experiments with irregular frequency sound systems and the realization of visual data directly inside the dome. <br> The Voyager A live audio-visual performance featuring synthesizer, DJ set, and visual art. Part of FOTO Bali Festival Programme. <br><br> *Ticket is include Nuanu Entrance Fee and also FOTO Bali Festival",
     details: [
         "// at Nuanu Creative City, Tabanan",
         "// June 13, 2026",
@@ -414,26 +414,19 @@ if (currentTab === "EVENT") {
 
         <div class="event-info">
             <div class="event-title">${EVENT_DATA.title}</div>
-
             ${detailsHTML}
-
             <br><br>
-
             ${EVENT_DATA.footerNote}
-
             <div style="margin-top:30px;">
                 <a href="${EVENT_DATA.ticketLink}" target="_blank" class="clickable" style="font-weight:bold;">
                     // TICKET HERE
                 </a>
-
-                <br><br>
-
+                <br>
                 <a href="${EVENT_DATA.registrationLink}" target="_blank" class="clickable" style="font-weight:bold;">
                     // REGISTER HERE
                 </a>
             </div>
         </div>
-
     </div>
     `;
 }
