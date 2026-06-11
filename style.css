@@ -181,7 +181,7 @@ a, a:visited, a:hover, a:active {
    ======================================================== */
 .event-wrap {
     display: flex;
-    flex-direction: row; 
+    flex-direction: column; 
     gap: 40px;
     align-items: flex-start;
 }
