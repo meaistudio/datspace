@@ -11,7 +11,8 @@ const EVENT_DATA = {
         "// Rp. 50K"
     ],
     footerNote: "DAT SPACE operates in irregular frequencies.",
-    registrationLink: "https://tally.so/r/vGz180"
+    registrationLink: "https://tally.so/r/vGz180",
+    ticketLink: "https://www.nuanu.com/events/the-voyager-dats-out3"
 };
 
 const ARCHIVE_PROJECTS = [
@@ -394,31 +395,48 @@ function updateContent() {
         `;
     }
 
-    if (currentTab === "EVENT") {
-        showTitle = false;
-        content.classList.add("content-event");
+if (currentTab === "EVENT") {
+    showTitle = false;
+    content.classList.add("content-event");
 
-        const detailsHTML = EVENT_DATA.details.join("<br>");
+    const detailsHTML = EVENT_DATA.details.join("<br>");
 
-        content.innerHTML = `
-        <div class="event-wrap">
+    content.innerHTML = `
+    <div class="event-wrap">
+
+        <div class="event-left">
             <img class="event-flyer" src="${EVENT_DATA.flyerImage}" alt="Event Flyer">
-            <div class="event-info">
-                <div class="event-title">${EVENT_DATA.title}</div>
+
+            <div class="event-description">
                 ${EVENT_DATA.description}
-                <br><br>
-                ${detailsHTML}
-                <br><br>
-                ${EVENT_DATA.footerNote}
-                <div style="margin-top:30px;">
-                    <a href="${EVENT_DATA.registrationLink}" target="_blank" class="clickable" style="font-weight:bold;">
-                    // REGISTER HERE
-                    </a>
-                </div>
             </div>
         </div>
-        `;
-    }
+
+        <div class="event-info">
+            <div class="event-title">${EVENT_DATA.title}</div>
+
+            ${detailsHTML}
+
+            <br><br>
+
+            ${EVENT_DATA.footerNote}
+
+            <div style="margin-top:30px;">
+                <a href="${EVENT_DATA.ticketLink}" target="_blank" class="clickable" style="font-weight:bold;">
+                    // TICKET HERE
+                </a>
+
+                <br><br>
+
+                <a href="${EVENT_DATA.registrationLink}" target="_blank" class="clickable" style="font-weight:bold;">
+                    // REGISTER HERE
+                </a>
+            </div>
+        </div>
+
+    </div>
+    `;
+}
 
     if (currentTab === "LOCATION") {
         showTitle = true;
