@@ -158,7 +158,7 @@ const DOCUMENTATION_ARCHIVE = {
         title: "DATs_Out2 — TU'TUR'ANG'RING'<br>060626",  
         date: "June 06, 2026",
         location: "KROMA 1984 Madahuis, Denpasar",
-        manifesto: "Experiments with irregular frequency sound systems and the realization of visual data directly in physical locations.",
+        manifesto: "Dats x Goof.house <br><br> Experiments with irregular frequency sound systems and the realization of visual data directly in physical locations.",
         media: ["DATs_Out/DATs_Out2/Documentation/img1.jpg", "DATs_Out/DATs_Out2/Documentation/img2.jpg",
 "DATs_Out/DATs_Out2/Documentation/img3.jpg", "DATs_Out/DATs_Out2/Documentation/img4.jpg",
 "DATs_Out/DATs_Out2/Documentation/img5.jpg", "DATs_Out/DATs_Out2/Documentation/img6.jpg",
