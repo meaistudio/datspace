@@ -8,6 +8,14 @@
 
 }
 
+::-webkit-scrollbar {
+    display: none;
+}
+
+html, body {
+    scrollbar-width: none;
+}
+
 canvas {
     position: fixed;
     top: 0;
