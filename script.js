@@ -2,17 +2,16 @@
 /* 1. DATA MASTER CONFIGURATION (EVENTS & ARCHIVES)         */
 /* ======================================================== */
 const EVENT_DATA = {
-    title: "DATs_Out3 The Voyager AV performance",
-    flyerImage: "web-picture/Event/dats_out3.png",
-    description: "AV performance By Dats x Balimotion <br><br> Experiments with irregular frequency sound systems and the realization of visual data directly inside the dome. <br> The Voyager A live audio-visual performance featuring synthesizer, DJ set, and visual art. Part of FOTO Bali Festival Programme. <br><br> *Ticket is include Nuanu Entrance Fee and also FOTO Bali Festival",
+    title: "COMING SOON",
+    flyerImage: "dats.png",
+    description: "DATSPACE <br><br> Experiments with irregular frequency sound systems and the realization of visual data ",
     details: [
-        "// at Nuanu Creative City, Tabanan",
-        "// June 13, 2026",
-        "// Rp. 50K"
+        "// SOON",
+        "// SOON",
+        "// SOON"
     ],
     footerNote: "DAT SPACE operates in irregular frequencies.",
-    registrationLink: "https://tally.so/r/vGz180",
-    ticketLink: "https://www.nuanu.com/events/the-voyager-dats-out3"
+    registrationLink: "https://tally.so/r/vGz180"
 };
 
 const ARCHIVE_PROJECTS = [
@@ -395,41 +394,31 @@ function updateContent() {
         `;
     }
 
-if (currentTab === "EVENT") {
-    showTitle = false;
-    content.classList.add("content-event");
+    if (currentTab === "EVENT") {
+        showTitle = false;
+        content.classList.add("content-event");
 
-    const detailsHTML = EVENT_DATA.details.join("<br>");
+        const detailsHTML = EVENT_DATA.details.join("<br>");
 
-    content.innerHTML = `
-    <div class="event-wrap">
-
-        <div class="event-left">
+        content.innerHTML = `
+        <div class="event-wrap">
             <img class="event-flyer" src="${EVENT_DATA.flyerImage}" alt="Event Flyer">
-
-            <div class="event-description">
+            <div class="event-info">
+                <div class="event-title">${EVENT_DATA.title}</div>
                 ${EVENT_DATA.description}
-            </div>
-        </div>
-
-        <div class="event-info">
-            <div class="event-title">${EVENT_DATA.title}</div>
-            ${detailsHTML}
-            <br><br>
-            ${EVENT_DATA.footerNote}
-            <div style="margin-top:30px;">
-                <a href="${EVENT_DATA.ticketLink}" target="_blank" class="clickable" style="font-weight:bold;">
-                    // TICKET HERE
-                </a>
-                <br>
-                <a href="${EVENT_DATA.registrationLink}" target="_blank" class="clickable" style="font-weight:bold;">
+                <br><br>
+                ${detailsHTML}
+                <br><br>
+                ${EVENT_DATA.footerNote}
+                <div style="margin-top:30px;">
+                    <a href="${EVENT_DATA.registrationLink}" target="_blank" class="clickable" style="font-weight:bold;">
                     // REGISTER HERE
-                </a>
+                    </a>
+                </div>
             </div>
         </div>
-    </div>
-    `;
-}
+        `;
+    }
 
     if (currentTab === "LOCATION") {
         showTitle = true;
