@@ -85,6 +85,17 @@ canvas{
     text-shadow:0 0 10px white;
 }
 
+#espToggle{
+    width:100%;
+    font-size:12px;
+    padding:5px 8px;
+    margin:0 0 6px 0;
+}
+
+#espPanel.collapsed #espContent{
+    display:none;
+}
+
 button,input,select{
     background:black;
     color:#0f0;
@@ -273,6 +284,11 @@ select{
         padding:8px;
     }
 
+    #espToggle{
+        font-size:10px;
+        padding:4px 6px;
+    }
+
     .gridWrap{
         bottom:0;
     }
@@ -361,16 +377,20 @@ select{
 </div>
 
 <div id="espPanel">
-    <div id="espStatus">ESP: DISCONNECTED</div>
-    <div id="espInfo">
-        LINK: -<br>
-        MODE: -<br>
-        CONTROL: -<br>
-        PICKUP: -<br>
-        POT A: 0<br>
-        POT B: 0<br>
-        KEY: -<br>
-        FREEZE: -
+    <button id="espToggle">ESP INFO</button>
+
+    <div id="espContent">
+        <div id="espStatus">ESP: DISCONNECTED</div>
+        <div id="espInfo">
+            LINK: -<br>
+            MODE: -<br>
+            CONTROL: -<br>
+            PICKUP: -<br>
+            POT A: 0<br>
+            POT B: 0<br>
+            KEY: -<br>
+            FREEZE: -
+        </div>
     </div>
 </div>
 
@@ -574,6 +594,7 @@ async function loadSelectedSamples(){
     }catch(e){
         console.error(e);
         status.innerText = "SAMPLES: ERROR";
+ 
     }
 }
 
@@ -974,10 +995,12 @@ let pickupTarget = 0;
 
 let lastSamplePotB = null;
 let sampleStepAccumulator = 0;
+let sampleLocked = true;
+let sampleLockStartPot = 0;
 
 const PICKUP_THRESHOLD = 0.055;
-const SAMPLE_DEADZONE = 190;
-const SAMPLE_STEP_SIZE = 360;
+const SAMPLE_UNLOCK_DISTANCE = 220;
+const SAMPLE_STEP_SIZE = 140;
 
 const keyToStep = {
     "1":0,
@@ -1060,9 +1083,12 @@ function getCurrentTargetNormalized(id){
 function armPickup(){
     pickupTarget = getCurrentTargetNormalized(espControl);
 
-    // Sample selector tidak pakai pickup agar tidak terasa macet.
+    // Sample selector pakai soft lock.
+    // Saat pindah ke sample mode, sample tidak langsung berubah.
     if(espControl >= 1 && espControl <= 3){
         pickupReady = true;
+        sampleLocked = true;
+        sampleLockStartPot = espPotB;
         lastSamplePotB = espPotB;
         sampleStepAccumulator = 0;
         return;
@@ -1122,11 +1148,20 @@ function updateESPSelectionHover(){
 }
 
 function updateEspInfo(){
-    const pickupText = pickupReady
-        ? "READY"
-        : "MOVE POT B TO VALUE " + Math.round(pickupTarget * 100) + "%";
+    let pickupText;
 
-    const pickupClass = pickupReady ? "" : "pickupWait";
+    if(espControl >= 1 && espControl <= 3 && sampleLocked){
+        pickupText = "SAMPLE LOCKED / MOVE POT B";
+    }else{
+        pickupText = pickupReady
+            ? "READY"
+            : "MOVE POT B TO VALUE " + Math.round(pickupTarget * 100) + "%";
+    }
+
+    const pickupClass =
+        (espControl >= 1 && espControl <= 3 && sampleLocked) || !pickupReady
+            ? "pickupWait"
+            : "";
 
     document.getElementById("espInfo").innerHTML = `
         LINK: ${espLinked ? "WEB LINKED" : "STANDALONE"}<br>
@@ -1165,17 +1200,28 @@ function changeSampleRelative(type, direction){
 function handleSamplePot(type){
     if(lastSamplePotB === null){
         lastSamplePotB = espPotB;
+        sampleLockStartPot = espPotB;
+        sampleLocked = true;
+        return;
+    }
+
+    if(sampleLocked){
+        const unlockMove = espPotB - sampleLockStartPot;
+
+        if(Math.abs(unlockMove) < SAMPLE_UNLOCK_DISTANCE){
+            return;
+        }
+
+        sampleLocked = false;
+        lastSamplePotB = espPotB;
+        sampleStepAccumulator = 0;
         return;
     }
 
     const delta = espPotB - lastSamplePotB;
-
-    if(Math.abs(delta) < SAMPLE_DEADZONE){
-        return;
-    }
+    lastSamplePotB = espPotB;
 
     sampleStepAccumulator += delta;
-    lastSamplePotB = espPotB;
 
     while(sampleStepAccumulator >= SAMPLE_STEP_SIZE){
         changeSampleRelative(type, 1);
@@ -1449,6 +1495,10 @@ document.getElementById("returnUI").onclick = async ()=>{
 
 document.getElementById("uiToggle").onclick = ()=>{
     document.getElementById("mainUI").classList.toggle("collapsed");
+};
+
+document.getElementById("espToggle").onclick = ()=>{
+    document.getElementById("espPanel").classList.toggle("collapsed");
 };
 
 document.addEventListener("keydown", async e=>{
