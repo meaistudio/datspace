@@ -491,6 +491,9 @@ function playPatternStep(playKey) {
   patternStep++;
 }
 
+
+const MELODY_BOOST = 1.5;
+
 function playNote(midi, velocity, wave) {
   const now = audioCtx.currentTime;
   const freq = midiToFreq(midi);
@@ -506,8 +509,10 @@ function playNote(midi, velocity, wave) {
   filterNode.frequency.setValueAtTime(freq * 2.2, now);
   filterNode.Q.value = 9;
 
+  const boostedVelocity = Math.min(velocity * MELODY_BOOST, 0.75);
+
   gain.gain.setValueAtTime(0.0001, now);
-  gain.gain.exponentialRampToValueAtTime(velocity, now + 0.015);
+  gain.gain.exponentialRampToValueAtTime(boostedVelocity, now + 0.015);
   gain.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
 
   osc.connect(filterNode);
@@ -519,11 +524,6 @@ function playNote(midi, velocity, wave) {
   osc.start(now);
   osc.stop(now + 0.25);
 }
-
-function midiToFreq(midi) {
-  return 440 * Math.pow(2, (midi - 69) / 12);
-}
-
 // ================= PARTICLES =================
 
 let particles = [];
