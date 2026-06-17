@@ -608,14 +608,14 @@ function datsBootVisual() {
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
 
-  ctx.font = "bold 90px Courier New";
+  ctx.font = "bold 90px Monospace";
   ctx.fillText(
     "DATs",
     W / 2 + Math.sin(t * 0.04) * wave * 0.2,
     H / 2 - 35 + Math.cos(t * 0.03) * 10
   );
 
-  ctx.font = "16px Courier New";
+  ctx.font = "16px Monospace";
   ctx.fillText("DATSPACE.CLUB", W / 2, H / 2 + 52);
 
   for (let i = 0; i < glitch; i++) {
@@ -706,7 +706,7 @@ function asciiLandscape() {
   const scale = map(potA, 0, 4095, 0.006, 0.065);
   const amp = map(potB, 0, 4095, 4, 18);
 
-  ctx.font = "13px Courier New";
+  ctx.font = "13px Monospace";
   ctx.fillStyle = "white";
   ctx.textAlign = "left";
 
@@ -854,7 +854,7 @@ function glitchScanner() {
   const scanY = (t * scanSpeed) % H;
   ctx.fillRect(0, scanY, W, 1);
 
-  ctx.font = "13px Courier New";
+  ctx.font = "13px Monospace";
 
   for (let i = 0; i < 45; i++) {
     const c = String.fromCharCode(33 + Math.floor(Math.random() * 90));
@@ -893,7 +893,7 @@ function digitalRain() {
   const density = map(potB, 0, 4095, 8, 42);
 
   ctx.fillStyle = "white";
-  ctx.font = "14px Courier New";
+  ctx.font = "14px Monospace";
   ctx.textAlign = "left";
 
   for (let x = 0; x < W; x += 14) {
