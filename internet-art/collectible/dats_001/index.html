@@ -93,15 +93,6 @@ let H = innerHeight;
 canvas.width = W;
 canvas.height = H;
 
-addEventListener("resize", () => {
-  W = innerWidth;
-  H = innerHeight;
-  canvas.width = W;
-  canvas.height = H;
-  resetParticles();
-  initCells();
-});
-
 let potA = 0;
 let potB = 0;
 let key = "-";
@@ -122,6 +113,15 @@ const info = document.getElementById("info");
 const connectBtn = document.getElementById("connect");
 
 connectBtn.onclick = connectSerial;
+
+addEventListener("resize", () => {
+  W = innerWidth;
+  H = innerHeight;
+  canvas.width = W;
+  canvas.height = H;
+  resetParticles();
+  initCells();
+});
 
 async function connectSerial() {
   await initAudio();
@@ -189,10 +189,12 @@ function parseSerial(line) {
       seed = Math.random() * 9999;
       resetParticles();
       initCells();
+      burstVisual();
       triggerHit();
     }
 
     if (key !== "-") {
+      burstVisual();
       triggerHit();
     }
 
@@ -349,7 +351,6 @@ function updateAudio() {
 
   const root = map(potA, 0, 4095, 42, 72);
   const movement = map(potB, 0, 4095, 0.02, 0.22);
-
   const now = audioCtx.currentTime;
 
   drone1.frequency.setTargetAtTime(root, now, 0.2);
@@ -373,33 +374,71 @@ function updateAudio() {
 }
 
 function triggerHit() {
-  if (!audioReady) return;
+  if (!audioReady || key === "-") return;
 
   const now = audioCtx.currentTime;
 
-  const hitOsc = audioCtx.createOscillator();
-  const hitGain = audioCtx.createGain();
-  const hitFilter = audioCtx.createBiquadFilter();
+  const melodies = {
+    "1": [36, 37, 48, 60],
+    "2": [40, 47, 52, 63],
+    "3": [31, 43, 55, 67],
 
-  hitOsc.type = "sine";
-  hitOsc.frequency.value = 90 + mode * 33;
+    "4": [60, 59, 48, 36],
+    "5": [72, 67, 60, 55],
+    "6": [43, 50, 57, 64],
 
-  hitFilter.type = "bandpass";
-  hitFilter.frequency.value = 400 + mode * 120;
-  hitFilter.Q.value = 12;
+    "7": [35, 47, 59, 71],
+    "8": [36, 48, 61, 73],
+    "9": [30, 42, 54, 66],
 
-  hitGain.gain.setValueAtTime(0.11, now);
-  hitGain.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
+    "0": [36, 43, 55, 60],
 
-  hitOsc.connect(hitFilter);
-  hitFilter.connect(hitGain);
-  hitGain.connect(delay);
+    "A": [72, 67, 64, 60],
+    "B": [64, 57, 52, 45],
+    "C": [60, 48, 36, 24],
+    "D": [24, 36, 48, 60],
 
-  hitOsc.start(now);
-  hitOsc.stop(now + 0.46);
+    "*": [48, 47, 46, 45],
+    "#": [36, 48, 60, 72]
+  };
+
+  const selected = melodies[key] || [36, 48, 60, 72];
+
+  selected.forEach((midi, i) => {
+    const freq = midiToFreq(midi);
+    const start = now + i * 0.13;
+
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    const filterNode = audioCtx.createBiquadFilter();
+
+    const waveforms = ["sine", "triangle", "sawtooth", "square"];
+    osc.type = waveforms[mode % 4];
+
+    osc.frequency.setValueAtTime(freq, start);
+
+    filterNode.type = "bandpass";
+    filterNode.frequency.setValueAtTime(freq * 2, start);
+    filterNode.Q.value = 8;
+
+    gain.gain.setValueAtTime(0.0001, start);
+    gain.gain.exponentialRampToValueAtTime(0.12, start + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.001, start + 0.38);
+
+    osc.connect(filterNode);
+    filterNode.connect(gain);
+    gain.connect(delay);
+
+    osc.start(start);
+    osc.stop(start + 0.42);
+  });
 }
 
-// PARTICLES
+function midiToFreq(midi) {
+  return 440 * Math.pow(2, (midi - 69) / 12);
+}
+
+// ================= PARTICLES =================
 
 let particles = [];
 
@@ -416,16 +455,33 @@ function resetParticles() {
   }
 }
 
+function burstVisual() {
+  for (let i = 0; i < 120; i++) {
+    particles.push({
+      x: W / 2 + Math.random() * 80 - 40,
+      y: H / 2 + Math.random() * 80 - 40,
+      vx: Math.random() * 8 - 4,
+      vy: Math.random() * 8 - 4
+    });
+  }
+
+  if (particles.length > 1600) {
+    particles.splice(0, particles.length - 1600);
+  }
+}
+
 resetParticles();
 
-// CELLULAR
+// ================= CELLULAR =================
 
 let cells = [];
 
 function initCells() {
   cells = [];
+
   for (let x = 0; x < 80; x++) {
     cells[x] = [];
+
     for (let y = 0; y < 45; y++) {
       cells[x][y] = Math.random() > 0.65;
     }
@@ -434,7 +490,7 @@ function initCells() {
 
 initCells();
 
-// VISUAL LOOP
+// ================= VISUAL LOOP =================
 
 function animate() {
   requestAnimationFrame(animate);
@@ -661,6 +717,7 @@ function cellularAutomataVisual() {
 
     for (let x = 0; x < 80; x++) {
       next[x] = [];
+
       for (let y = 0; y < 45; y++) {
         let n = 0;
 
@@ -721,6 +778,7 @@ function glitchScanner() {
   ctx.fillRect(0, scanY, W, 1);
 
   ctx.font = "13px Courier New";
+
   for (let i = 0; i < 45; i++) {
     const c = String.fromCharCode(33 + Math.floor(Math.random() * 90));
     ctx.fillText(c, Math.random() * W, Math.random() * H);
