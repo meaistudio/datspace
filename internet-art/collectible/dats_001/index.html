@@ -12,7 +12,7 @@ html, body {
   overflow: hidden;
   background: #000;
   color: white;
-  font-family: "Courier New", monospace;
+  font-family: monospace;
 }
 
 canvas {
@@ -37,7 +37,7 @@ button {
   color: white;
   border: 1px solid white;
   padding: 8px 14px;
-  font-family: "Courier New", monospace;
+  font-family: monospace;
   cursor: pointer;
 }
 
@@ -226,7 +226,7 @@ function fade(a) {
   ctx.fillRect(0, 0, W, H);
 }
 
-// ================= AUDIO: DARK AMBIENT GENERATIVE =================
+// ================= AUDIO =================
 
 let audioCtx;
 let master;
@@ -243,13 +243,17 @@ let pulseOsc;
 let pulseGain;
 let audioReady = false;
 
+let activePatternTimer = null;
+let activePatternKey = "-";
+let patternStep = 0;
+
 async function initAudio() {
   if (audioReady) return;
 
   audioCtx = new AudioContext();
 
   master = audioCtx.createGain();
-  master.gain.value = 0.22;
+  master.gain.value = 0.34;
   master.connect(audioCtx.destination);
 
   filter = audioCtx.createBiquadFilter();
@@ -370,68 +374,150 @@ function updateAudio() {
   pulseOsc.frequency.setTargetAtTime(map(potA, 0, 4095, 0.4, 3.2), now, 0.2);
   pulseGain.gain.setTargetAtTime(map(potB, 0, 4095, 0.004, 0.04), now, 0.2);
 
-  master.gain.setTargetAtTime(freeze ? 0.04 : 0.22, now, 0.08);
+  master.gain.setTargetAtTime(freeze ? 0.08 : 0.34, now, 0.08);
 }
 
 function triggerHit() {
   if (!audioReady || key === "-") return;
 
-  const now = audioCtx.currentTime;
+  activePatternKey = key;
+  patternStep = 0;
 
-  const melodies = {
-    "1": [36, 37, 48, 60],
-    "2": [40, 47, 52, 63],
-    "3": [31, 43, 55, 67],
+  if (activePatternTimer) {
+    clearInterval(activePatternTimer);
+    activePatternTimer = null;
+  }
 
-    "4": [60, 59, 48, 36],
-    "5": [72, 67, 60, 55],
-    "6": [43, 50, 57, 64],
+  activePatternTimer = setInterval(() => {
+    playPatternStep(activePatternKey);
+  }, 145);
 
-    "7": [35, 47, 59, 71],
-    "8": [36, 48, 61, 73],
-    "9": [30, 42, 54, 66],
+  playPatternStep(activePatternKey);
+}
 
-    "0": [36, 43, 55, 60],
-
-    "A": [72, 67, 64, 60],
-    "B": [64, 57, 52, 45],
-    "C": [60, 48, 36, 24],
-    "D": [24, 36, 48, 60],
-
-    "*": [48, 47, 46, 45],
-    "#": [36, 48, 60, 72]
+function playPatternStep(playKey) {
+  const patterns = {
+    "1": {
+      notes: [36, null, 48, 37, null, 60, 48, null],
+      velocity: [0.42, 0, 0.22, 0.18, 0, 0.32, 0.18, 0],
+      wave: "sine"
+    },
+    "2": {
+      notes: [40, 47, null, 52, 63, null, 52, 47],
+      velocity: [0.25, 0.18, 0, 0.22, 0.34, 0, 0.18, 0.16],
+      wave: "triangle"
+    },
+    "3": {
+      notes: [31, null, 43, null, 55, 67, null, 55],
+      velocity: [0.38, 0, 0.18, 0, 0.24, 0.34, 0, 0.18],
+      wave: "sawtooth"
+    },
+    "4": {
+      notes: [60, 59, null, 48, 36, null, 48, 59],
+      velocity: [0.25, 0.18, 0, 0.22, 0.36, 0, 0.18, 0.14],
+      wave: "sine"
+    },
+    "5": {
+      notes: [72, null, 67, 60, null, 55, 60, 67],
+      velocity: [0.28, 0, 0.22, 0.2, 0, 0.28, 0.18, 0.22],
+      wave: "triangle"
+    },
+    "6": {
+      notes: [43, 50, 57, null, 64, null, 57, 50],
+      velocity: [0.28, 0.18, 0.2, 0, 0.34, 0, 0.16, 0.14],
+      wave: "square"
+    },
+    "7": {
+      notes: [35, null, null, 47, 59, null, 71, null],
+      velocity: [0.44, 0, 0, 0.22, 0.18, 0, 0.34, 0],
+      wave: "sine"
+    },
+    "8": {
+      notes: [36, 48, null, 61, 73, 61, null, 48],
+      velocity: [0.36, 0.2, 0, 0.26, 0.38, 0.18, 0, 0.18],
+      wave: "sawtooth"
+    },
+    "9": {
+      notes: [30, 42, 54, 66, null, 54, null, 42],
+      velocity: [0.34, 0.2, 0.2, 0.34, 0, 0.18, 0, 0.18],
+      wave: "square"
+    },
+    "0": {
+      notes: [36, null, 43, 55, 60, null, 55, 43],
+      velocity: [0.4, 0, 0.18, 0.22, 0.32, 0, 0.18, 0.16],
+      wave: "triangle"
+    },
+    "A": {
+      notes: [72, 67, 64, null, 60, null, 64, 67],
+      velocity: [0.36, 0.22, 0.18, 0, 0.28, 0, 0.16, 0.18],
+      wave: "sine"
+    },
+    "B": {
+      notes: [64, null, 57, 52, null, 45, 52, null],
+      velocity: [0.32, 0, 0.18, 0.22, 0, 0.35, 0.18, 0],
+      wave: "triangle"
+    },
+    "C": {
+      notes: [60, null, 48, null, 36, 24, null, 36],
+      velocity: [0.28, 0, 0.22, 0, 0.34, 0.42, 0, 0.2],
+      wave: "sawtooth"
+    },
+    "D": {
+      notes: [24, 36, null, 48, 60, 48, 36, null],
+      velocity: [0.42, 0.24, 0, 0.2, 0.32, 0.18, 0.18, 0],
+      wave: "square"
+    },
+    "*": {
+      notes: [48, 47, 46, 45, null, 45, 46, 47],
+      velocity: [0.22, 0.2, 0.18, 0.28, 0, 0.18, 0.16, 0.14],
+      wave: "sine"
+    },
+    "#": {
+      notes: [36, 48, 60, 72, 60, 48, 36, null],
+      velocity: [0.42, 0.25, 0.28, 0.45, 0.22, 0.18, 0.28, 0],
+      wave: "square"
+    }
   };
 
-  const selected = melodies[key] || [36, 48, 60, 72];
+  const pat = patterns[playKey] || patterns["0"];
+  const step = patternStep % pat.notes.length;
+  const midi = pat.notes[step];
+  const vel = pat.velocity[step];
 
-  selected.forEach((midi, i) => {
-    const freq = midiToFreq(midi);
-    const start = now + i * 0.13;
+  if (midi !== null && vel > 0) {
+    playNote(midi, vel, pat.wave);
+  }
 
-    const osc = audioCtx.createOscillator();
-    const gain = audioCtx.createGain();
-    const filterNode = audioCtx.createBiquadFilter();
+  patternStep++;
+}
 
-    const waveforms = ["sine", "triangle", "sawtooth", "square"];
-    osc.type = waveforms[mode % 4];
+function playNote(midi, velocity, wave) {
+  const now = audioCtx.currentTime;
+  const freq = midiToFreq(midi);
 
-    osc.frequency.setValueAtTime(freq, start);
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  const filterNode = audioCtx.createBiquadFilter();
 
-    filterNode.type = "bandpass";
-    filterNode.frequency.setValueAtTime(freq * 2, start);
-    filterNode.Q.value = 8;
+  osc.type = wave;
+  osc.frequency.setValueAtTime(freq, now);
 
-    gain.gain.setValueAtTime(0.0001, start);
-    gain.gain.exponentialRampToValueAtTime(0.12, start + 0.02);
-    gain.gain.exponentialRampToValueAtTime(0.001, start + 0.38);
+  filterNode.type = "bandpass";
+  filterNode.frequency.setValueAtTime(freq * 2.2, now);
+  filterNode.Q.value = 9;
 
-    osc.connect(filterNode);
-    filterNode.connect(gain);
-    gain.connect(delay);
+  gain.gain.setValueAtTime(0.0001, now);
+  gain.gain.exponentialRampToValueAtTime(velocity, now + 0.015);
+  gain.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
 
-    osc.start(start);
-    osc.stop(start + 0.42);
-  });
+  osc.connect(filterNode);
+  filterNode.connect(gain);
+
+  gain.connect(delay);
+  gain.connect(master);
+
+  osc.start(now);
+  osc.stop(now + 0.25);
 }
 
 function midiToFreq(midi) {
@@ -539,15 +625,6 @@ function datsBootVisual() {
       Math.random() * 160,
       Math.random() > 0.85 ? 5 : 1
     );
-  }
-
-  const r = 120 + Math.sin(t * 0.025) * 50;
-
-  for (let a = 0; a < Math.PI * 2; a += 0.18) {
-    const x = W / 2 + Math.cos(a + t * 0.006) * r;
-    const y = H / 2 + Math.sin(a + t * 0.006) * r;
-
-    if (Math.random() > 0.5) ctx.fillRect(x, y, 2, 2);
   }
 }
 
