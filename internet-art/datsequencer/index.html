@@ -26,6 +26,8 @@ canvas{
     width:100%;
     background:rgba(0,0,0,0.78);
     z-index:20;
+    user-select:none;
+    -webkit-user-select:none;
 }
 
 .row{
@@ -37,18 +39,12 @@ canvas{
     aspect-ratio:1;
     border:1px solid #0f0;
     cursor:pointer;
-}
-
-.cell:hover{
-    background:white;
+    user-select:none;
+    -webkit-user-select:none;
 }
 
 .cell.active{
     background:#0f0;
-}
-
-.cell.active:hover{
-    background:white;
 }
 
 .playing{
@@ -64,6 +60,10 @@ canvas{
     background:rgba(0,0,0,0.65);
     padding:10px;
     max-width:300px;
+}
+
+#uiToggle{
+    display:none;
 }
 
 #espPanel{
@@ -210,6 +210,90 @@ select{
 .hideInterface #returnUI{
     display:block;
 }
+
+/* ================= MOBILE COMPACT ================= */
+@media (max-width: 768px){
+    .ui{
+        top:8px;
+        left:8px;
+        max-width:210px;
+        max-height:72vh;
+        overflow:auto;
+        padding:8px;
+        font-size:12px;
+    }
+
+    .ui.collapsed .uiContent{
+        display:none;
+    }
+
+    #uiToggle{
+        display:block;
+        width:100%;
+        font-size:14px;
+        padding:6px 8px;
+        margin-bottom:5px;
+    }
+
+    button{
+        font-size:13px;
+        padding:5px 8px;
+    }
+
+    label{
+        font-size:11px;
+        margin-top:6px;
+    }
+
+    input[type="range"]{
+        width:190px;
+    }
+
+    select{
+        width:190px;
+        font-size:11px;
+        padding:4px;
+    }
+
+    #bpmValue{
+        font-size:26px;
+    }
+
+    .valueText,.status{
+        font-size:11px;
+    }
+
+    #espPanel{
+        top:8px;
+        right:8px;
+        min-width:150px;
+        max-width:165px;
+        font-size:10px;
+        line-height:1.35;
+        padding:8px;
+    }
+
+    .gridWrap{
+        bottom:0;
+    }
+
+    .cell{
+        border:1px solid #0f0;
+    }
+
+    .noticeBox{
+        width:calc(100vw - 36px);
+        padding:16px;
+    }
+
+    .noticeBox h2{
+        font-size:19px;
+    }
+
+    .noticeBox p{
+        font-size:13px;
+    }
+}
 </style>
 </head>
 
@@ -238,38 +322,42 @@ select{
     </div>
 </div>
 
-<div class="ui">
-    <button id="connectDATs">CONNECT DATs COLLECTIBLE</button>
-    <button id="start">START</button>
-    <button id="stop">STOP</button>
-    <button id="visualOnly">FULLSCREEN VISUAL</button>
+<div class="ui" id="mainUI">
+    <button id="uiToggle">DATs SEQUENCER UI</button>
 
-    <label>BPM</label>
-    <input type="range" min="80" max="160" value="120" id="bpm">
-    <div id="bpmValue">120</div>
+    <div class="uiContent">
+        <button id="connectDATs">CONNECT DATs COLLECTIBLE</button>
+        <button id="start">START</button>
+        <button id="stop">STOP</button>
+        <button id="visualOnly">FULLSCREEN VISUAL</button>
 
-    <label>BASS / KICK</label>
-    <select id="kickSample"></select>
+        <label>BPM</label>
+        <input type="range" min="80" max="160" value="120" id="bpm">
+        <div id="bpmValue">120</div>
 
-    <label>SNARE</label>
-    <select id="snareSample"></select>
+        <label>BASS / KICK</label>
+        <select id="kickSample"></select>
 
-    <label>DRUM / HAT</label>
-    <select id="hatSample"></select>
+        <label>SNARE</label>
+        <select id="snareSample"></select>
 
-    <label>REVERB AMOUNT</label>
-    <input type="range" min="0" max="100" value="35" id="reverbAmount">
-    <div class="valueText" id="reverbAmountValue">35%</div>
+        <label>DRUM / HAT</label>
+        <select id="hatSample"></select>
 
-    <label>REVERB TIME</label>
-    <input type="range" min="1" max="10" value="5" id="reverbTime">
-    <div class="valueText" id="reverbTimeValue">5s</div>
+        <label>REVERB AMOUNT</label>
+        <input type="range" min="0" max="100" value="35" id="reverbAmount">
+        <div class="valueText" id="reverbAmountValue">35%</div>
 
-    <label>REVERB DECAY</label>
-    <input type="range" min="1" max="8" value="4" id="reverbDecay">
-    <div class="valueText" id="reverbDecayValue">4</div>
+        <label>REVERB TIME</label>
+        <input type="range" min="1" max="10" value="5" id="reverbTime">
+        <div class="valueText" id="reverbTimeValue">5s</div>
 
-    <div class="status" id="sampleStatus">SAMPLES: NOT LOADED</div>
+        <label>REVERB DECAY</label>
+        <input type="range" min="1" max="8" value="4" id="reverbDecay">
+        <div class="valueText" id="reverbDecayValue">4</div>
+
+        <div class="status" id="sampleStatus">SAMPLES: NOT LOADED</div>
+    </div>
 </div>
 
 <div id="espPanel">
@@ -577,7 +665,7 @@ document.getElementById("hatSample").onchange = ()=>{
     loadSample("hat", document.getElementById("hatSample").value).catch(()=>{});
 };
 
-// ================= GRID =================
+// ================= GRID + MOUSE / TOUCH DRAG =================
 const rows = ["kick","snare","hat"];
 const steps = 16;
 
@@ -587,20 +675,86 @@ const data = {
     hat:Array(steps).fill(0)
 };
 
+let isDragging = false;
+let dragValue = 1;
+
+function setCellState(rowName, stepIndex, value){
+    data[rowName][stepIndex] = value;
+
+    const cells = document.querySelectorAll("." + rowName + " .cell");
+    if(cells[stepIndex]){
+        cells[stepIndex].classList.toggle("active", value === 1);
+    }
+}
+
+function getCellFromPoint(x,y){
+    const el = document.elementFromPoint(x,y);
+    if(!el || !el.classList.contains("cell")) return null;
+
+    return {
+        row: el.dataset.row,
+        step: Number(el.dataset.step)
+    };
+}
+
 rows.forEach(r=>{
     const el = document.querySelector("." + r);
 
     for(let i=0; i<steps; i++){
         const cell = document.createElement("div");
         cell.classList.add("cell");
+        cell.dataset.row = r;
+        cell.dataset.step = i;
 
-        cell.onclick = ()=>{
-            data[r][i] ^= 1;
-            cell.classList.toggle("active", data[r][i] === 1);
+        cell.onmousedown = e=>{
+            e.preventDefault();
+
+            isDragging = true;
+            dragValue = data[r][i] ? 0 : 1;
+
+            setCellState(r, i, dragValue);
+        };
+
+        cell.onmouseenter = ()=>{
+            if(isDragging){
+                setCellState(r, i, dragValue);
+            }
+        };
+
+        cell.ontouchstart = e=>{
+            e.preventDefault();
+
+            isDragging = true;
+            dragValue = data[r][i] ? 0 : 1;
+
+            setCellState(r, i, dragValue);
+        };
+
+        cell.ontouchmove = e=>{
+            e.preventDefault();
+
+            const touch = e.touches[0];
+            const hit = getCellFromPoint(touch.clientX, touch.clientY);
+
+            if(hit){
+                setCellState(hit.row, hit.step, dragValue);
+            }
+        };
+
+        cell.onclick = e=>{
+            e.preventDefault();
         };
 
         el.appendChild(cell);
     }
+});
+
+document.addEventListener("mouseup", ()=>{
+    isDragging = false;
+});
+
+document.addEventListener("touchend", ()=>{
+    isDragging = false;
 });
 
 // ================= BPM =================
@@ -818,7 +972,12 @@ let lastHandledKey = "-";
 let pickupReady = false;
 let pickupTarget = 0;
 
+let lastSamplePotB = null;
+let sampleStepAccumulator = 0;
+
 const PICKUP_THRESHOLD = 0.055;
+const SAMPLE_DEADZONE = 190;
+const SAMPLE_STEP_SIZE = 360;
 
 const keyToStep = {
     "1":0,
@@ -899,11 +1058,25 @@ function getCurrentTargetNormalized(id){
 }
 
 function armPickup(){
-    pickupReady = false;
     pickupTarget = getCurrentTargetNormalized(espControl);
+
+    // Sample selector tidak pakai pickup agar tidak terasa macet.
+    if(espControl >= 1 && espControl <= 3){
+        pickupReady = true;
+        lastSamplePotB = espPotB;
+        sampleStepAccumulator = 0;
+        return;
+    }
+
+    pickupReady = false;
 }
 
 function checkPickup(){
+    if(espControl >= 1 && espControl <= 3){
+        pickupReady = true;
+        return true;
+    }
+
     if(Math.abs(norm(espPotB) - pickupTarget) <= PICKUP_THRESHOLD){
         pickupReady = true;
     }
@@ -969,6 +1142,52 @@ function updateEspInfo(){
     updateESPSelectionHover();
 }
 
+function changeSampleRelative(type, direction){
+    const selectId =
+        type === "kick" ? "kickSample" :
+        type === "snare" ? "snareSample" :
+        "hatSample";
+
+    const list =
+        type === "kick" ? sampleLists.kick :
+        type === "snare" ? sampleLists.snare :
+        sampleLists.hat;
+
+    const sel = document.getElementById(selectId);
+    const nextIndex = clamp(sel.selectedIndex + direction, 0, list.length - 1);
+
+    if(nextIndex !== sel.selectedIndex){
+        sel.selectedIndex = nextIndex;
+        loadSample(type, sel.value).catch(()=>{});
+    }
+}
+
+function handleSamplePot(type){
+    if(lastSamplePotB === null){
+        lastSamplePotB = espPotB;
+        return;
+    }
+
+    const delta = espPotB - lastSamplePotB;
+
+    if(Math.abs(delta) < SAMPLE_DEADZONE){
+        return;
+    }
+
+    sampleStepAccumulator += delta;
+    lastSamplePotB = espPotB;
+
+    while(sampleStepAccumulator >= SAMPLE_STEP_SIZE){
+        changeSampleRelative(type, 1);
+        sampleStepAccumulator -= SAMPLE_STEP_SIZE;
+    }
+
+    while(sampleStepAccumulator <= -SAMPLE_STEP_SIZE){
+        changeSampleRelative(type, -1);
+        sampleStepAccumulator += SAMPLE_STEP_SIZE;
+    }
+}
+
 function handlePotsFromDATs(){
     espControl = clamp(mapValue(espPotA, 0, 4095, 0, 7), 0, 6);
 
@@ -990,33 +1209,15 @@ function handlePotsFromDATs(){
     }
 
     if(espControl === 1){
-        const index = clamp(mapValue(espPotB, 0, 4095, 0, sampleLists.kick.length), 0, sampleLists.kick.length - 1);
-
-        if(index !== lastSampleIndex){
-            lastSampleIndex = index;
-            document.getElementById("kickSample").selectedIndex = index;
-            loadSample("kick", document.getElementById("kickSample").value).catch(()=>{});
-        }
+        handleSamplePot("kick");
     }
 
     if(espControl === 2){
-        const index = clamp(mapValue(espPotB, 0, 4095, 0, sampleLists.snare.length), 0, sampleLists.snare.length - 1);
-
-        if(index !== lastSampleIndex){
-            lastSampleIndex = index;
-            document.getElementById("snareSample").selectedIndex = index;
-            loadSample("snare", document.getElementById("snareSample").value).catch(()=>{});
-        }
+        handleSamplePot("snare");
     }
 
     if(espControl === 3){
-        const index = clamp(mapValue(espPotB, 0, 4095, 0, sampleLists.hat.length), 0, sampleLists.hat.length - 1);
-
-        if(index !== lastSampleIndex){
-            lastSampleIndex = index;
-            document.getElementById("hatSample").selectedIndex = index;
-            loadSample("hat", document.getElementById("hatSample").value).catch(()=>{});
-        }
+        handleSamplePot("hat");
     }
 
     if(espControl === 4){
@@ -1046,7 +1247,6 @@ function handleKeyFromDATs(k){
 
     lastHandledKey = k;
 
-    // Karena BPM sekarang mode 0, row sequencer mulai dari mode 1 sampai 3.
     if(espControl < 1 || espControl > 3) return;
 
     const stepIndex = keyToStep[k];
@@ -1245,6 +1445,10 @@ document.getElementById("returnUI").onclick = async ()=>{
     if(document.fullscreenElement){
         await document.exitFullscreen();
     }
+};
+
+document.getElementById("uiToggle").onclick = ()=>{
+    document.getElementById("mainUI").classList.toggle("collapsed");
 };
 
 document.addEventListener("keydown", async e=>{
