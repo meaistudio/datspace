@@ -224,16 +224,21 @@ function fade(a) {
   ctx.fillRect(0, 0, W, H);
 }
 
-// AUDIO
+// ================= AUDIO: DARK AMBIENT GENERATIVE =================
 
 let audioCtx;
 let master;
-let osc1;
-let osc2;
-let lfo;
-let lfoGain;
+let drone1, drone2, drone3;
+let gain1, gain2, gain3;
+let filter;
+let delay;
+let feedback;
 let noiseNode;
 let noiseGain;
+let lfo;
+let lfoGain;
+let pulseOsc;
+let pulseGain;
 let audioReady = false;
 
 async function initAudio() {
@@ -242,44 +247,71 @@ async function initAudio() {
   audioCtx = new AudioContext();
 
   master = audioCtx.createGain();
-  master.gain.value = 0.16;
+  master.gain.value = 0.22;
   master.connect(audioCtx.destination);
 
-  osc1 = audioCtx.createOscillator();
-  osc1.type = "sine";
-  osc1.frequency.value = 80;
+  filter = audioCtx.createBiquadFilter();
+  filter.type = "lowpass";
+  filter.frequency.value = 900;
+  filter.Q.value = 8;
 
-  osc2 = audioCtx.createOscillator();
-  osc2.type = "triangle";
-  osc2.frequency.value = 120;
+  delay = audioCtx.createDelay();
+  delay.delayTime.value = 0.42;
+
+  feedback = audioCtx.createGain();
+  feedback.gain.value = 0.38;
+
+  delay.connect(feedback);
+  feedback.connect(delay);
+
+  filter.connect(delay);
+  delay.connect(master);
+  filter.connect(master);
+
+  drone1 = audioCtx.createOscillator();
+  drone2 = audioCtx.createOscillator();
+  drone3 = audioCtx.createOscillator();
+
+  drone1.type = "sine";
+  drone2.type = "triangle";
+  drone3.type = "sawtooth";
+
+  drone1.frequency.value = 55;
+  drone2.frequency.value = 82.5;
+  drone3.frequency.value = 110;
+
+  gain1 = audioCtx.createGain();
+  gain2 = audioCtx.createGain();
+  gain3 = audioCtx.createGain();
+
+  gain1.gain.value = 0.22;
+  gain2.gain.value = 0.12;
+  gain3.gain.value = 0.035;
+
+  drone1.connect(gain1);
+  drone2.connect(gain2);
+  drone3.connect(gain3);
+
+  gain1.connect(filter);
+  gain2.connect(filter);
+  gain3.connect(filter);
 
   lfo = audioCtx.createOscillator();
   lfo.type = "sine";
-  lfo.frequency.value = 4;
+  lfo.frequency.value = 0.08;
 
   lfoGain = audioCtx.createGain();
-  lfoGain.gain.value = 40;
+  lfoGain.gain.value = 280;
 
   lfo.connect(lfoGain);
-  lfoGain.connect(osc1.frequency);
+  lfoGain.connect(filter.frequency);
 
-  const gain1 = audioCtx.createGain();
-  gain1.gain.value = 0.35;
-
-  const gain2 = audioCtx.createGain();
-  gain2.gain.value = 0.18;
-
-  osc1.connect(gain1);
-  osc2.connect(gain2);
-  gain1.connect(master);
-  gain2.connect(master);
-
-  const bufferSize = audioCtx.sampleRate * 2;
+  const bufferSize = audioCtx.sampleRate * 4;
   const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
   const data = buffer.getChannelData(0);
 
   for (let i = 0; i < bufferSize; i++) {
-    data[i] = Math.random() * 2 - 1;
+    data[i] = (Math.random() * 2 - 1) * 0.55;
   }
 
   noiseNode = audioCtx.createBufferSource();
@@ -287,15 +319,27 @@ async function initAudio() {
   noiseNode.loop = true;
 
   noiseGain = audioCtx.createGain();
-  noiseGain.gain.value = 0.018;
+  noiseGain.gain.value = 0.025;
 
   noiseNode.connect(noiseGain);
-  noiseGain.connect(master);
+  noiseGain.connect(filter);
 
-  osc1.start();
-  osc2.start();
+  pulseOsc = audioCtx.createOscillator();
+  pulseOsc.type = "square";
+  pulseOsc.frequency.value = 1.2;
+
+  pulseGain = audioCtx.createGain();
+  pulseGain.gain.value = 0.018;
+
+  pulseOsc.connect(pulseGain);
+  pulseGain.connect(filter);
+
+  drone1.start();
+  drone2.start();
+  drone3.start();
   lfo.start();
   noiseNode.start();
+  pulseOsc.start();
 
   audioReady = true;
 }
@@ -303,36 +347,56 @@ async function initAudio() {
 function updateAudio() {
   if (!audioReady) return;
 
-  const base = map(potA, 0, 4095, 40, 260);
-  const mod = map(potB, 0, 4095, 0.5, 18);
+  const root = map(potA, 0, 4095, 42, 72);
+  const movement = map(potB, 0, 4095, 0.02, 0.22);
 
-  osc1.frequency.setTargetAtTime(base + mode * 12, audioCtx.currentTime, 0.03);
-  osc2.frequency.setTargetAtTime(base * 1.5 + mode * 17, audioCtx.currentTime, 0.04);
+  const now = audioCtx.currentTime;
 
-  lfo.frequency.setTargetAtTime(mod, audioCtx.currentTime, 0.04);
-  lfoGain.gain.setTargetAtTime(map(potB, 0, 4095, 5, 120), audioCtx.currentTime, 0.04);
-  noiseGain.gain.setTargetAtTime(map(potB, 0, 4095, 0.003, 0.07), audioCtx.currentTime, 0.04);
+  drone1.frequency.setTargetAtTime(root, now, 0.2);
+  drone2.frequency.setTargetAtTime(root * 1.5, now, 0.2);
+  drone3.frequency.setTargetAtTime(root * 2.01, now, 0.3);
 
-  master.gain.setTargetAtTime(freeze ? 0.035 : 0.16, audioCtx.currentTime, 0.05);
+  filter.frequency.setTargetAtTime(map(potB, 0, 4095, 180, 1800), now, 0.3);
+  filter.Q.setTargetAtTime(map(potA, 0, 4095, 2, 14), now, 0.2);
+
+  delay.delayTime.setTargetAtTime(map(potA, 0, 4095, 0.22, 0.72), now, 0.2);
+  feedback.gain.setTargetAtTime(map(potB, 0, 4095, 0.24, 0.62), now, 0.2);
+
+  lfo.frequency.setTargetAtTime(movement, now, 0.3);
+  lfoGain.gain.setTargetAtTime(map(potB, 0, 4095, 80, 520), now, 0.3);
+
+  noiseGain.gain.setTargetAtTime(map(potB, 0, 4095, 0.006, 0.055), now, 0.2);
+  pulseOsc.frequency.setTargetAtTime(map(potA, 0, 4095, 0.4, 3.2), now, 0.2);
+  pulseGain.gain.setTargetAtTime(map(potB, 0, 4095, 0.004, 0.04), now, 0.2);
+
+  master.gain.setTargetAtTime(freeze ? 0.04 : 0.22, now, 0.08);
 }
 
 function triggerHit() {
   if (!audioReady) return;
 
-  const g = audioCtx.createGain();
-  const o = audioCtx.createOscillator();
+  const now = audioCtx.currentTime;
 
-  o.type = "square";
-  o.frequency.value = 120 + mode * 60 + Math.random() * 300;
+  const hitOsc = audioCtx.createOscillator();
+  const hitGain = audioCtx.createGain();
+  const hitFilter = audioCtx.createBiquadFilter();
 
-  g.gain.setValueAtTime(0.16, audioCtx.currentTime);
-  g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.12);
+  hitOsc.type = "sine";
+  hitOsc.frequency.value = 90 + mode * 33;
 
-  o.connect(g);
-  g.connect(master);
+  hitFilter.type = "bandpass";
+  hitFilter.frequency.value = 400 + mode * 120;
+  hitFilter.Q.value = 12;
 
-  o.start();
-  o.stop(audioCtx.currentTime + 0.13);
+  hitGain.gain.setValueAtTime(0.11, now);
+  hitGain.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
+
+  hitOsc.connect(hitFilter);
+  hitFilter.connect(hitGain);
+  hitGain.connect(delay);
+
+  hitOsc.start(now);
+  hitOsc.stop(now + 0.46);
 }
 
 // PARTICLES
