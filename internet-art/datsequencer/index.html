@@ -451,6 +451,24 @@ async function loadSample(type, filename){
     return buffer;
 }
 
+async function preloadDefaultSamples(){
+    const status = document.getElementById("sampleStatus");
+    status.innerText = "SAMPLES: CACHING DEFAULT...";
+
+    try{
+        await Promise.all([
+            loadSample("kick", document.getElementById("kickSample").value),
+            loadSample("snare", document.getElementById("snareSample").value),
+            loadSample("hat", document.getElementById("hatSample").value)
+        ]);
+
+        status.innerText = "SAMPLES: DEFAULT CACHED";
+    }catch(e){
+        console.error(e);
+        status.innerText = "SAMPLES: CACHE ERROR";
+    }
+}
+
 async function loadSelectedSamples(){
     const status = document.getElementById("sampleStatus");
     status.innerText = "SAMPLES: LOADING...";
@@ -728,7 +746,7 @@ function draw(){
     }
 }
 
-// ================= SEQUENCER LIKE ORIGINAL =================
+// ================= SEQUENCER =================
 let step = 0;
 let playing = false;
 let loopTimeout = null;
@@ -838,43 +856,43 @@ function norm(v){
 
 function controlName(id){
     return [
+        "BPM",
         "KICK SAMPLE / KICK ROW",
         "SNARE SAMPLE / SNARE ROW",
         "DRUM SAMPLE / DRUM ROW",
         "REVERB AMOUNT",
         "REVERB TIME",
-        "REVERB DECAY",
-        "BPM"
+        "REVERB DECAY"
     ][id] || "-";
 }
 
 function getCurrentTargetNormalized(id){
     if(id === 0){
-        return document.getElementById("kickSample").selectedIndex / Math.max(1, sampleLists.kick.length - 1);
+        return (Number(bpmSlider.value) - 80) / 80;
     }
 
     if(id === 1){
-        return document.getElementById("snareSample").selectedIndex / Math.max(1, sampleLists.snare.length - 1);
+        return document.getElementById("kickSample").selectedIndex / Math.max(1, sampleLists.kick.length - 1);
     }
 
     if(id === 2){
-        return document.getElementById("hatSample").selectedIndex / Math.max(1, sampleLists.hat.length - 1);
+        return document.getElementById("snareSample").selectedIndex / Math.max(1, sampleLists.snare.length - 1);
     }
 
     if(id === 3){
-        return Number(document.getElementById("reverbAmount").value) / 100;
+        return document.getElementById("hatSample").selectedIndex / Math.max(1, sampleLists.hat.length - 1);
     }
 
     if(id === 4){
-        return (Number(document.getElementById("reverbTime").value) - 1) / 9;
+        return Number(document.getElementById("reverbAmount").value) / 100;
     }
 
     if(id === 5){
-        return (Number(document.getElementById("reverbDecay").value) - 1) / 7;
+        return (Number(document.getElementById("reverbTime").value) - 1) / 9;
     }
 
     if(id === 6){
-        return (Number(bpmSlider.value) - 80) / 80;
+        return (Number(document.getElementById("reverbDecay").value) - 1) / 7;
     }
 
     return 0;
@@ -905,13 +923,13 @@ function updateESPSelectionHover(){
     if(!espConnected) return;
 
     const map = {
-        0:["kickSample"],
-        1:["snareSample"],
-        2:["hatSample"],
-        3:["reverbAmount"],
-        4:["reverbTime"],
-        5:["reverbDecay"],
-        6:["bpm"]
+        0:["bpm"],
+        1:["kickSample"],
+        2:["snareSample"],
+        3:["hatSample"],
+        4:["reverbAmount"],
+        5:["reverbTime"],
+        6:["reverbDecay"]
     };
 
     const ids = map[espControl];
@@ -966,11 +984,13 @@ function handlePotsFromDATs(){
     }
 
     if(espControl === 0){
-        const index = clamp(
-            mapValue(espPotB, 0, 4095, 0, sampleLists.kick.length),
-            0,
-            sampleLists.kick.length - 1
-        );
+        const value = clamp(mapValue(espPotB, 0, 4095, 80, 161), 80, 160);
+        bpmSlider.value = value;
+        bpmValue.innerText = value;
+    }
+
+    if(espControl === 1){
+        const index = clamp(mapValue(espPotB, 0, 4095, 0, sampleLists.kick.length), 0, sampleLists.kick.length - 1);
 
         if(index !== lastSampleIndex){
             lastSampleIndex = index;
@@ -979,12 +999,8 @@ function handlePotsFromDATs(){
         }
     }
 
-    if(espControl === 1){
-        const index = clamp(
-            mapValue(espPotB, 0, 4095, 0, sampleLists.snare.length),
-            0,
-            sampleLists.snare.length - 1
-        );
+    if(espControl === 2){
+        const index = clamp(mapValue(espPotB, 0, 4095, 0, sampleLists.snare.length), 0, sampleLists.snare.length - 1);
 
         if(index !== lastSampleIndex){
             lastSampleIndex = index;
@@ -993,12 +1009,8 @@ function handlePotsFromDATs(){
         }
     }
 
-    if(espControl === 2){
-        const index = clamp(
-            mapValue(espPotB, 0, 4095, 0, sampleLists.hat.length),
-            0,
-            sampleLists.hat.length - 1
-        );
+    if(espControl === 3){
+        const index = clamp(mapValue(espPotB, 0, 4095, 0, sampleLists.hat.length), 0, sampleLists.hat.length - 1);
 
         if(index !== lastSampleIndex){
             lastSampleIndex = index;
@@ -1007,28 +1019,22 @@ function handlePotsFromDATs(){
         }
     }
 
-    if(espControl === 3){
+    if(espControl === 4){
         const value = clamp(mapValue(espPotB, 0, 4095, 0, 101), 0, 100);
         document.getElementById("reverbAmount").value = value;
         updateReverb();
     }
 
-    if(espControl === 4){
+    if(espControl === 5){
         const value = clamp(mapValue(espPotB, 0, 4095, 1, 11), 1, 10);
         document.getElementById("reverbTime").value = value;
         updateReverb();
     }
 
-    if(espControl === 5){
+    if(espControl === 6){
         const value = clamp(mapValue(espPotB, 0, 4095, 1, 9), 1, 8);
         document.getElementById("reverbDecay").value = value;
         updateReverb();
-    }
-
-    if(espControl === 6){
-        const value = clamp(mapValue(espPotB, 0, 4095, 80, 161), 80, 160);
-        bpmSlider.value = value;
-        bpmValue.innerText = value;
     }
 
     updateEspInfo();
@@ -1040,10 +1046,11 @@ function handleKeyFromDATs(k){
 
     lastHandledKey = k;
 
-    if(espControl > 2) return;
+    // Karena BPM sekarang mode 0, row sequencer mulai dari mode 1 sampai 3.
+    if(espControl < 1 || espControl > 3) return;
 
     const stepIndex = keyToStep[k];
-    const rowName = rows[espControl];
+    const rowName = rows[espControl - 1];
 
     data[rowName][stepIndex] ^= 1;
 
@@ -1260,6 +1267,7 @@ document.addEventListener("keydown", async e=>{
     }
 });
 
+preloadDefaultSamples();
 generateLayout();
 draw();
 updateEspInfo();
