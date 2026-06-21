@@ -420,7 +420,9 @@ const DOCUMENTATION_ARCHIVE = {
         date: "June 13, 2026",
         location: "Nuanu Creative City, Tabanan",
         manifesto: "AV performance By Dats x Balimotion <br><br> Experiments with irregular frequency sound systems and the realization of visual data directly inside the dome.",
-        media: ["DATs_Out/DATs_Out3/Documentation/img1.gif"]
+        media: ["DATs_Out/DATs_Out3/Documentation/img1.gif",
+                "DATs_Out/DATs_Out3/Documentation/img2.gif"
+            ]
     },
 
     "dats_to001": {
