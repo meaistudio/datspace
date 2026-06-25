@@ -463,6 +463,26 @@ a, a:visited, a:hover, a:active {
     .card { padding: 10px; }
     .card h2 { font-size: 18px; }
 }
+
+/* Tablet Responsive (769px - 1024px) */
+@media (min-width: 769px) and (max-width: 1024px) {
+    .tabs {
+        top: 40px;
+        right: 40px; /* Geser sedikit agar tidak terlalu mepet ke pinggir */
+        font-size: 20px; /* Kecilkan font agar tidak terlalu panjang */
+    }
+
+    .internet-art-tab {
+        top: 40px;
+        left: 40px;
+        font-size: 20px;
+    }
+    
+    .tab {
+        margin-left: 15px; /* Kurangi jarak antar tab */
+    }
+}
+
 /* Lightbox Styles */
 .lightbox {
     display: none;
