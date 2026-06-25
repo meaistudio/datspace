@@ -426,7 +426,21 @@ const DOCUMENTATION_ARCHIVE = {
                 "DATs_Out/DATs_Out3/Documentation/img4.webp",
                 "DATs_Out/DATs_Out3/Documentation/img5.webp",
                 "DATs_Out/DATs_Out3/Documentation/img6.webp",
-                "DATs_Out/DATs_Out3/Documentation/img7.webp"
+                "DATs_Out/DATs_Out3/Documentation/img7.webp",
+                "DATs_Out/DATs_Out3/Documentation/img8.webp",
+                "DATs_Out/DATs_Out3/Documentation/img9.webp",
+                "DATs_Out/DATs_Out3/Documentation/img10.webp",
+                "DATs_Out/DATs_Out3/Documentation/img11.webp",
+                "DATs_Out/DATs_Out3/Documentation/img12.webp",
+                "DATs_Out/DATs_Out3/Documentation/img13.webp",
+                "DATs_Out/DATs_Out3/Documentation/img14.webp",
+                "DATs_Out/DATs_Out3/Documentation/img15.webp",
+                "DATs_Out/DATs_Out3/Documentation/img16.webp",
+                "DATs_Out/DATs_Out3/Documentation/img17.webp",
+                "DATs_Out/DATs_Out3/Documentation/img18.webp",
+                "DATs_Out/DATs_Out3/Documentation/img19.webp",
+                "DATs_Out/DATs_Out3/Documentation/img20.webp",
+                "DATs_Out/DATs_Out3/Documentation/img21.webp"
             ]
     },
 
