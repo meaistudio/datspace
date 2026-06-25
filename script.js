@@ -461,7 +461,21 @@ const DOCUMENTATION_ARCHIVE = {
                 "DATs_Out/DATs_Out3/Documentation/img39.jpg",
                 "DATs_Out/DATs_Out3/Documentation/img40.jpg",
                 "DATs_Out/DATs_Out3/Documentation/img41.jpg",
-                "DATs_Out/DATs_Out3/Documentation/img42.jpg"
+                "DATs_Out/DATs_Out3/Documentation/img42.jpg",
+                "DATs_Out/DATs_Out3/Documentation/img43.jpg",
+                "DATs_Out/DATs_Out3/Documentation/img44.jpg",
+                "DATs_Out/DATs_Out3/Documentation/img45.jpg",
+                "DATs_Out/DATs_Out3/Documentation/img46.jpg",
+                "DATs_Out/DATs_Out3/Documentation/img47.jpg",
+                "DATs_Out/DATs_Out3/Documentation/img48.jpg",
+                "DATs_Out/DATs_Out3/Documentation/img49.jpg",
+                "DATs_Out/DATs_Out3/Documentation/img50.jpg",
+                "DATs_Out/DATs_Out3/Documentation/img51.jpg",
+                "DATs_Out/DATs_Out3/Documentation/img52.jpg",
+                "DATs_Out/DATs_Out3/Documentation/img53.jpg",
+                "DATs_Out/DATs_Out3/Documentation/img54.jpg",
+                "DATs_Out/DATs_Out3/Documentation/img55.jpg",
+                "DATs_Out/DATs_Out3/Documentation/img56.jpg"
             ]
     },
 
