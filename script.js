@@ -32,7 +32,7 @@ let EVENT_DATA = {
         "// SOON",
         "// SOON"
     ],
-    footerNote: "DAT SPACE operates in irregular frequencies.",
+    footerNote: "DAT SPACE operates in <br> irregular frequencies.",
     registrationLink: "https:datspace.club",
     ticketLink: "https:datspace.club"
 };
