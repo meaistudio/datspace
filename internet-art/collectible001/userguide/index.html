@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DATs Collectible 001 - Windows XP Bliss Edition</title>
+    <style>
+        /* WINDOWS XP DESKTOP WITH REAL BLISS WALLPAPER BACKGROUND */
+        body {
+            margin: 0;
+            padding: 20px;
+            padding-bottom: 50px;
+            font-family: "Tahoma", "Segoe UI", sans-serif;
+            background-image: url('Bliss_(Windows_XP).png');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+            min-height: 100vh;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow-x: hidden;
+        }
+
+        h1.desktop-title {
+            color: white;
+            font-size: 26px;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.7);
+            margin: 0 0 20px 0;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-family: "Trebuchet MS", sans-serif;
+        }
+
+        /* GRID DESKTOP MANAGEMENT */
+        .desktop-container {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 25px;
+            max-width: 1200px;
+            width: 100%;
+        }
+
+        @media (min-width: 900px) {
+            .desktop-container {
+                grid-template-columns: 520px 1fr;
+            }
+        }
+
+        /* WINDOWS XP LUNA BLUE THEME WINDOW FRAME */
+        .xp-window {
+            background: #ece9d8;
+            border: 3px solid #0054e3;
+            border-top: none;
+            border-radius: 7px 7px 0 0;
+            box-shadow: 5px 5px 15px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 10px;
+        }
+
+        .xp-titlebar {
+            background: linear-gradient(to bottom, #0058e6 0%, #3a95ff 10%, #0056e2 40%, #114bb3 100%);
+            color: white;
+            padding: 6px 10px;
+            font-weight: bold;
+            font-size: 13px;
+            letter-spacing: 0.5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-radius: 5px 5px 0 0;
+            text-shadow: 1px 1px 1px rgba(0,0,0,0.5);
+            box-shadow: inset 0 1px 1px #fff;
+            user-select: none;
+        }
+
+        .xp-window-controls {
+            display: flex;
+            gap: 3px;
+        }
+
+        .xp-btn-ctrl {
+            width: 16px;
+            height: 16px;
+            font-size: 10px;
+            font-weight: bold;
+            color: white;
+            border: 1px solid #ffffff;
+            border-radius: 3px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: inset 0 1px 1px rgba(255,255,255,0.4);
+        }
+
+        .xp-btn-min { background: linear-gradient(to bottom, #3c7fb1, #1a4d75); }
+        .xp-btn-max { background: linear-gradient(to bottom, #3c7fb1, #1a4d75); }
+        .xp-btn-close { 
+            background: linear-gradient(to bottom, #f37a5a 0%, #e04343 40%, #b81c1c 100%); 
+            border-color: #7c1414;
+        }
+        .xp-btn-close:hover { background: #ff0000; }
+
+        .xp-content {
+            padding: 15px;
+            box-sizing: border-box;
+        }
+
+        /* NOTEPAD COMPONENT STYLE */
+        .notepad-menu {
+            background: #fff;
+            border-bottom: 1px solid #d0d0d0;
+            padding: 3px 10px;
+            font-size: 12px;
+            color: #000;
+            display: flex;
+            gap: 15px;
+            user-select: none;
+        }
+        .notepad-text {
+            background: #ffffff;
+            border: 1px solid #7f9db9;
+            color: #000000;
+            font-family: "Courier New", Courier, monospace;
+            font-size: 13px;
+            padding: 10px;
+            height: 250px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            line-height: 1.5;
+        }
+
+        /* COMMAND PROMPT COMPONENT STYLE */
+        .cmd-text {
+            background: #000000;
+            border: 2px solid #7f9db9;
+            color: #00ff66;
+            font-family: "Consolas", "Lucida Console", monospace;
+            font-size: 13px;
+            padding: 10px;
+            height: 160px;
+            overflow-y: auto;
+            box-sizing: border-box;
+            white-space: pre-wrap;
+        }
+
+        /* OLED CANVAS SCREEN INTERFACES */
+        .oled-container-xp {
+            background: #101010;
+            border: 4px inset #ece9d8;
+            padding: 8px;
+            border-radius: 4px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 15px;
+            box-shadow: inset 0 0 10px #000;
+        }
+
+        #oledCanvas {
+            background-color: #050b14;
+            image-rendering: pixelated;
+            width: 100%;
+            height: 180px;
+        }
+
+        /* TRACKBARS REGION */
+        .xp-sliders-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 15px;
+        }
+
+        .xp-slider-card {
+            background: #f0f0e8;
+            border: 1px dashed #999;
+            padding: 10px;
+            text-align: center;
+            font-size: 11px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .xp-slider-card input[type="range"] {
+            width: 100%;
+            margin-top: 5px;
+        }
+
+        .xp-trackbar-val {
+            font-size: 14px;
+            color: #004dc0;
+            font-family: monospace;
+            margin-top: 3px;
+        }
+
+        /* HARDWARE CLASSIC BEZEL BUTTONS MATRIX */
+        .keypad-grid-xp {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            background: #e0ded0;
+            padding: 10px;
+            border: 2px inset #fff;
+        }
+
+        .xp-btn-key {
+            background: linear-gradient(to bottom, #ffffff 0%, #eaeaea 10%, #d8d4bf 100%);
+            border-top: 1px solid #fff;
+            border-left: 1px solid #fff;
+            border-right: 2px solid #706f64;
+            border-bottom: 2px solid #706f64;
+            border-radius: 3px;
+            color: #000000;
+            padding: 16px 0;
+            font-size: 20px;
+            font-family: "Arial", sans-serif;
+            font-weight: bold;
+            cursor: pointer;
+            user-select: none;
+            text-shadow: 1px 1px 0 #fff;
+        }
+
+        .xp-btn-key:active {
+            border-top: 2px solid #706f64;
+            border-left: 2px solid #706f64;
+            border-right: 1px solid #fff;
+            border-bottom: 1px solid #fff;
+            padding: 17px 0 15px 0;
+            background: #d8d4bf;
+        }
+
+        /* LIVE REAL-TIME FEEDBACK GLOW HIGHLIGHT */
+        .xp-btn-key.active {
+            background: linear-gradient(to bottom, #2efc7e 0%, #00e676 40%, #00a844 100%) !important;
+            color: #000000 !important;
+            border-top: 2px solid #004d1a !important;
+            border-left: 2px solid #004d1a !important;
+            border-right: 1px solid #fff !important;
+            border-bottom: 1px solid #fff !important;
+            text-shadow: none !important;
+            box-shadow: 0 0 10px rgba(0, 230, 118, 0.8);
+        }
+
+        .xp-btn-key.special-col { color: #ba5d00; }
+
+        /* DEVICE CONNECTION TOP BAR PANEL */
+        .action-bar-xp {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #f0f0e8;
+            padding: 8px;
+            border: 2px inset #fff;
+            margin-bottom: 15px;
+            font-size: 11px;
+            color: #333;
+        }
+
+        .btn-xp-system {
+            background: linear-gradient(to bottom, #fff 0%, #ece9d8 100%);
+            border: 1px solid #003c74;
+            border-radius: 3px;
+            padding: 6px 12px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: inset -1px -1px 1px #808080;
+        }
+        .btn-xp-system:hover {
+            background: linear-gradient(to bottom, #fff 0%, #ffeedc 100%);
+            border-color: #ff9900;
+        }
+
+        /* LOWER TASKBAR BLUE RIBBON */
+        .xp-taskbar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 30px;
+            background: linear-gradient(to bottom, #245edb 0%, #3f8cf3 9%, #245edb 18%, #1b4ca3 100%);
+            box-shadow: inset 0 1px 1px rgba(255,255,255,0.5);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 9999;
+            user-select: none;
+        }
+
+        .xp-start-btn {
+            height: 100%;
+            padding: 0 15px;
+            background: linear-gradient(to bottom, #388e3c 0%, #4caf50 10%, #388e3c 40%, #1b5e20 100%);
+            border-right: 2px solid #1b5e20;
+            border-top-right-radius: 8px;
+            border-bottom-right-radius: 8px;
+            color: white;
+            font-weight: bold;
+            font-style: italic;
+            font-size: 15px;
+            display: flex;
+            align-items: center;
+            text-shadow: 1px 1px 2px #000;
+            box-shadow: inset -1px 1px 2px rgba(255,255,255,0.6);
+            cursor: pointer;
+        }
+        .xp-start-btn:hover { background: #4caf50; }
+
+        .xp-system-clock {
+            height: 100%;
+            background: linear-gradient(to bottom, #0c8df2 0%, #0066cc 100%);
+            border-left: 1px solid #104080;
+            padding: 0 12px;
+            color: white;
+            font-size: 11px;
+            display: flex;
+            align-items: center;
+            box-shadow: inset 1px 0 1px rgba(255,255,255,0.3);
+        }
+    </style>
+</head>
+<body>
+
+    <h1 class="desktop-title">DATs Collectible 001 - Control Dashboard</h1>
+
+    <div class="desktop-container">
+        
+        <div class="xp-window">
+            <div class="xp-titlebar">
+                <span>DATs Collectible 001 - Interface Terminal</span>
+                <div class="xp-window-controls">
+                    <div class="xp-btn-ctrl xp-btn-min">_</div>
+                    <div class="xp-btn-ctrl xp-btn-max">□</div>
+                    <div class="xp-btn-ctrl xp-btn-close">X</div>
+                </div>
+            </div>
+            
+            <div class="xp-content">
+                <div class="action-bar-xp">
+                    <button class="btn-xp-system" id="btnConnect">Connect COM Port</button>
+                    <span id="serialStatus" style="color: #701010; font-weight: bold;">Status: Offline (Virtual Mode)</span>
+                </div>
+
+                <div class="oled-container-xp">
+                    <canvas id="oledCanvas" width="128" height="64"></canvas>
+                </div>
+
+                <div class="xp-sliders-group">
+                    <div class="xp-slider-card">
+                        <label>TRACKBAR V1 (ENC 1)</label>
+                        <input type="range" id="enc1" min="0" max="255" value="30">
+                        <div class="xp-trackbar-val" id="enc1Val">30</div>
+                    </div>
+                    <div class="xp-slider-card">
+                        <label>TRACKBAR V2 (ENC 2)</label>
+                        <input type="range" id="enc2" min="0" max="255" value="60">
+                        <div class="xp-trackbar-val" id="enc2Val">60</div>
+                    </div>
+                </div>
+
+                <div class="keypad-grid-xp">
+                    <button class="xp-btn-key" id="key-1" onclick="pressKey('1')">1</button>
+                    <button class="xp-btn-key" id="key-2" onclick="pressKey('2')">2</button>
+                    <button class="xp-btn-key" id="key-3" onclick="pressKey('3')">3</button>
+                    <button class="xp-btn-key special-col" id="key-A" onclick="pressKey('A')">A</button>
+                    
+                    <button class="xp-btn-key" id="key-4" onclick="pressKey('4')">4</button>
+                    <button class="xp-btn-key" id="key-5" onclick="pressKey('5')">5</button>
+                    <button class="xp-btn-key" id="key-6" onclick="pressKey('6')">6</button>
+                    <button class="xp-btn-key special-col" id="key-B" onclick="pressKey('B')">B</button>
+                    
+                    <button class="xp-btn-key" id="key-7" onclick="pressKey('7')">7</button>
+                    <button class="xp-btn-key" id="key-8" onclick="pressKey('8')">8</button>
+                    <button class="xp-btn-key" id="key-9" onclick="pressKey('9')">9</button>
+                    <button class="xp-btn-key special-col" id="key-C" onclick="pressKey('C')">C</button>
+                    
+                    <button class="xp-btn-key special-col" id="key-asterisk" onclick="pressKey('*')">*</button>
+                    <button class="xp-btn-key" id="key-0" onclick="pressKey('0')">0</button>
+                    <button class="xp-btn-key special-col" id="key-hash" onclick="pressKey('#')">#</button>
+                    <button class="xp-btn-key special-col" id="key-D" onclick="pressKey('D')">D</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="right-column" style="display: flex; flex-direction: column; gap: 15px;">
+            
+            <div class="xp-window">
+                <div class="xp-titlebar" style="background: linear-gradient(to bottom, #242424 0%, #444444 100%); border-color:#333;">
+                    <span>Command Prompt - cmd.exe</span>
+                    <div class="xp-window-controls">
+                        <div class="xp-btn-ctrl xp-btn-min">_</div>
+                        <div class="xp-btn-ctrl xp-btn-max">□</div>
+                        <div class="xp-btn-ctrl xp-btn-close">X</div>
+                    </div>
+                </div>
+                <div class="cmd-text" id="serialLog">Microsoft Windows XP [Version 5.1.2600]
+(C) Copyright 1985-2001 Microsoft Corp.
+
+C:\Documents and Settings\Administrator> _</div>
+            </div>
+
+            <div class="xp-window">
+                <div class="xp-titlebar">
+                    <span>README.txt - Notepad</span>
+                    <div class="xp-window-controls">
+                        <div class="xp-btn-ctrl xp-btn-min">_</div>
+                        <div class="xp-btn-ctrl xp-btn-max">□</div>
+                        <div class="xp-btn-ctrl xp-btn-close">X</div>
+                    </div>
+                </div>
+                <div class="notepad-menu">
+                    <span>File</span> <span>Edit</span> <span>Search</span> <span>Help</span>
+                </div>
+                <div class="notepad-text">==================================================
+PANDUAN NAVIGASI ALUR ALAT DATs COLLECTIBLE 001
+==================================================
+
+[1] STRUKTUR MENU INDUK UTAMA (PADA LAYAR STANDBY 'DATs Core')
+--------------------------------------------------
+Untuk melompat masuk ke dalam menu program, tekan tombol sistem berikut:
+* Tombol [ A ] -> Meluncurkan BRANCH 1 (Mode Visual Generatif) [cite: 113-114]
+* Tombol [ B ] -> Meluncurkan BRANCH 2 (Retro 9-Games Engine) [cite: 114-115]
+* Tombol [ C ] -> Membuka Pintu Akses MODE C (Web Serial Controller)
+* Tombol [ D ] -> Membuka Pintu Akses MODE D (TouchDesigner UDP Link) [cite: 111-112]
+
+[2] CARA MEMILIH SUB-MODE VISUAL / GAME (ANGKA 1 S/D 9)
+--------------------------------------------------
+Ketika Anda berada di dalam Mode Visual atau Mode Game, Anda dapat berganti sub-mode isi dengan menekan tombol angka murni di bawah ini [cite: 115-116]:
+* Tekan tombol [ 1 ] -> Membuka Sub-Mode 1
+* Tekan tombol [ 7 ] -> Membuka Sub-Mode 2
+* Tekan tombol [ 4 ] -> Membuka Sub-Mode 3
+* Tekan tombol [ 2 ] -> Membuka Sub-Mode 4
+* Tekan tombol [ 8 ] -> Membuka Sub-Mode 5
+* Tekan tombol [ 5 ] -> Membuka Sub-Mode 6
+* Tekan tombol [ 3 ] -> Membuka Sub-Mode 7
+* Tekan tombol [ 9 ] -> Membuka Sub-Mode 8
+* Tekan tombol [ 6 ] -> Membuka Sub-Mode 9
+
+[3] PROSEDUR KONFIRMASI (KHUSUS MODE C DAN D)
+--------------------------------------------------
+Saat menekan tombol C atau D di menu awal, sistem tidak langsung masuk demi keamanan data. Layar OLED simulator akan berkedip memunculkan pesan "LAUNCH MODE C/D?".
+-> Tekan tombol [ * ] untuk memberikan konfirmasi eksekusi (YES / CONFIRM) [cite: 105-108].
+
+[4] TOMBOL RESET GLOBAL / AMAN
+--------------------------------------------------
+Tekan tombol [ 0 ] kapan saja untuk membatalkan proses, keluar dari game/visual aktif, dan kembali ke halaman utama boot awal.</div>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="xp-taskbar">
+        <div class="xp-start-btn">start</div>
+        <div class="xp-system-clock" id="xpClock">12:00 PM</div>
+    </div>
+
+    <script>
+        let systemBranch = 0;
+        let pendingModeC = false;
+        let encoder1Val = 30;
+        let encoder2Val = 60;
+        let lastKey = '-';
+        let webTxCounter = 0;
+        let isHardwareConnected = false;
+
+        let serialPort = null;
+        let readLoopActive = false;
+        let serialBuffer = "";
+
+        const canvas = document.getElementById('oledCanvas');
+        const ctx = canvas.getContext('2d');
+        const serialLog = document.getElementById('serialLog');
+        const enc1Slider = document.getElementById('enc1');
+        const enc2Slider = document.getElementById('enc2');
+        const enc1ValDisp = document.getElementById('enc1Val');
+        const enc2ValDisp = document.getElementById('enc2Val');
+
+        enc1Slider.addEventListener('input', (e) => {
+            if (!isHardwareConnected) {
+                encoder1Val = parseInt(e.target.value);
+                enc1ValDisp.innerText = encoder1Val;
+            }
+        });
+        enc2Slider.addEventListener('input', (e) => {
+            if (!isHardwareConnected) {
+                encoder2Val = parseInt(e.target.value);
+                enc2ValDisp.innerText = encoder2Val;
+            }
+        });
+
+        function pressKey(key) {
+            logToCmd(`[Web Click] Event Key Dikirim: "${key}"`);
+            triggerWebButtonLight(key);
+
+            if (pendingModeC) {
+                if (key === '*') { systemBranch = 3; webTxCounter = 0; }
+                pendingModeC = false;
+            } else {
+                lastKey = key;
+                if (key === 'C') pendingModeC = true;
+                else if (key === '0') systemBranch = 0;
+            }
+        }
+
+        function logToCmd(msg, isStreamData = false) {
+            if (isStreamData) {
+                if (window.lastStreamSig === msg) return;
+                window.lastStreamSig = msg;
+            }
+            let lines = serialLog.innerHTML.split('\n');
+            if (lines.length > 25) lines.shift();
+            serialLog.innerHTML = lines.join('\n') + `\nC:\\DATs> ${msg}`;
+            serialLog.scrollTop = serialLog.scrollHeight;
+        }
+
+        function triggerWebButtonLight(systemKeyChar) {
+            let targetId = "key-" + systemKeyChar;
+            if (systemKeyChar === '*') targetId = "key-asterisk";
+            if (systemKeyChar === '#') targetId = "key-hash";
+
+            let btn = document.getElementById(targetId);
+            if (btn) {
+                btn.classList.add('active');
+                setTimeout(() => { btn.classList.remove('active'); }, 250);
+            }
+        }
+
+        function parseHardwareSerialLine(line) {
+            line = line.trim();
+            if (!line) return;
+
+            if (line.startsWith("DS_WEB;")) {
+                let parts = line.split(";");
+                if (parts.length >= 4) {
+                    let v1 = parseInt(parts[1]);
+                    let v2 = parseInt(parts[2]);
+                    let keyChar = parts[3].trim();
+
+                    systemBranch = 3;
+                    pendingModeC = false;
+                    webTxCounter++;
+
+                    encoder1Val = v1;
+                    encoder2Val = v2;
+                    enc1Slider.value = v1;
+                    enc1ValDisp.innerText = v1;
+                    enc2Slider.value = v2;
+                    enc2ValDisp.innerText = v2;
+
+                    if (keyChar !== '-' && keyChar !== '') {
+                        logToCmd(`HARDWARE EVENT -> Tombol Masuk Sistem: "${keyChar}"`);
+                        triggerWebButtonLight(keyChar);
+                        lastKey = keyChar;
+                    }
+                }
+            }
+        }
+
+        function renderOLED() {
+            ctx.fillStyle = "#050b14"; ctx.fillRect(0, 0, 128, 64);
+            ctx.fillStyle = "#00a8ff"; ctx.strokeStyle = "#00a8ff";
+
+            if (systemBranch !== 0 || pendingModeC) ctx.fillRect(0, 9, 128, 1);
+
+            if (pendingModeC) {
+                ctx.font = "6px monospace"; ctx.fillText("LAUNCH MODE C?", 18, 24);
+                ctx.fillRect(4, 28, 120, 1);
+                ctx.font = "5px monospace"; ctx.fillText("[*] CONFIRM / YES", 12, 44); ctx.fillText("[ANYTHING] CANCEL", 12, 54);
+                ctx.strokeRect(4, 12, 120, 51);
+            } 
+            else if (systemBranch === 0) {
+                ctx.font = "bold 22px sans-serif"; ctx.fillText("DATs", 12, 33);
+                ctx.font = "6px monospace"; ctx.fillText("Collectible 001", 14, 55);
+                ctx.strokeRect(0, 10, 128, 54);
+                ctx.font = "5px monospace"; ctx.fillText("DATs SYSTEM Core", 2, 7); ctx.fillText("V3.6", 104, 7);
+            } 
+            else if (systemBranch === 3) {
+                ctx.font = "5px monospace"; ctx.fillText("WEB: DATSPACE.CLUB", 2, 7); ctx.fillText("LIVE:OK", 95, 7);
+                ctx.font = "6px monospace"; ctx.fillText("WEB CONTROLLER", 24, 22);
+                ctx.fillRect(4, 26, 120, 1);
+                ctx.font = "5px monospace"; ctx.fillText("TARGET URL : datspace.club", 12, 36); ctx.fillText(`STREAM STATUS : ${webTxCounter} PKTS`, 12, 45);
+                ctx.strokeRect(12, 53, 104, 5);
+                let animBar = Math.floor(Date.now() / 80) % 32;
+                let barX = 14 + (animBar * 3) % 98;
+                if(barX > 108) barX = 108;
+                ctx.fillRect(barX, 54, 6, 3);
+                ctx.strokeRect(4, 12, 120, 51);
+            }
+            requestAnimationFrame(renderOLED);
+        }
+
+        async function startSerialReadLoop() {
+            readLoopActive = true;
+            const decoder = new TextDecoder();
+            while (serialPort && serialPort.readable && readLoopActive) {
+                try {
+                    const reader = serialPort.readable.getReader();
+                    while (true) {
+                        const { value, done } = await reader.read();
+                        if (done) { reader.releaseLock(); break; }
+                        if (value) {
+                            serialBuffer += decoder.decode(value);
+                            let lines = serialBuffer.split("\n");
+                            serialBuffer = lines.pop();
+                            for (let line of lines) parseHardwareSerialLine(line);
+                        }
+                    }
+                } catch (err) { break; }
+            }
+            isHardwareConnected = false;
+            document.getElementById('serialStatus').innerText = "Status: Disconnected";
+            document.getElementById('serialStatus').style.color = "#701010";
+        }
+
+        document.getElementById('btnConnect').addEventListener('click', async () => {
+            if ('serial' in navigator) {
+                try {
+                    serialPort = await navigator.serial.requestPort();
+                    await serialPort.open({ baudRate: 115200 });
+                    isHardwareConnected = true;
+                    document.getElementById('serialStatus').innerText = "Status: Connected (Real-Time)";
+                    document.getElementById('serialStatus').style.color = "#1b5e20";
+                    logToCmd("SISTEM: Sukses menyambungkan port COM hardware!");
+                    startSerialReadLoop();
+                } catch (error) { alert("Koneksi gagal: " + error.message); }
+            } else { alert("Browser tidak mensupport API Serial!"); }
+        });
+
+        function updateClock() {
+            const now = new Date();
+            let hours = now.getHours();
+            let minutes = now.getMinutes();
+            let ampm = hours >= 12 ? 'PM' : 'AM';
+            hours = hours % 12;
+            hours = hours ? hours : 12;
+            minutes = minutes < 10 ? '0'+minutes : minutes;
+            document.getElementById('xpClock').innerText = hours + ':' + minutes + ' ' + ampm;
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        renderOLED();
+    </script>
+</body>
+</html>
