@@ -22,7 +22,6 @@
             justify-content: space-between;
             padding: 10px;
             overflow-y: auto;
-            /* UX: Mencegah seleksi teks/highlight biru yang mengganggu saat drag */
             user-select: none; 
             -webkit-user-select: none;
         }
@@ -41,10 +40,9 @@
             background-color: #1a1a1a;
             border: 1px solid #333;
             transition: all 0.1s cubic-bezier(0.25, 1, 0.5, 1);
-            cursor: cell; /* UX: Mengubah kursor menjadi tanda plus agar pengguna tahu ini bisa 'digambar' */
+            cursor: cell; 
             position: relative;
             overflow: hidden;
-            /* UX Mobile: Mencegah scroll tertahan/macet saat menyentuh kotak */
             touch-action: none; 
         }
 
@@ -54,13 +52,9 @@
             z-index: 2;
         }
 
-        .art-box.wide {
-            grid-column: span 4;
-        }
-
-        .art-box.tall {
-            grid-row: span 4;
-        }
+        .art-box.wide { grid-column: span 4; }
+        .art-box.tall { grid-row: span 4; }
+        .art-box.wide.tall { grid-column: span 4; grid-row: span 4; }
 
         .art-box.accent-red { background-color: #ff0000; border: none; }
         .art-box.accent-blue { background-color: #001aff; border: none; }
@@ -78,14 +72,70 @@
         @media (max-width: 600px) {
             .art-box.wide { grid-column: span 2; }
         }
+
+        /* TOMBOL KONEKSI STEALTH - ICON USB TRANSPARAN */
+        #connectBtn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            width: 45px;
+            height: 45px;
+            background: rgba(26, 26, 26, 0.7);
+            border: 1px solid #fff;
+            border-radius: 50%;
+            cursor: pointer;
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0; /* SEPENUHNYA TRANSPARAN DI AWAL */
+            transition: opacity 0.4s ease, transform 0.2s ease, box-shadow 0.3s ease;
+        }
+
+        /* Memancar pendaran cahaya putih minimalis saat didekati kursor mouse */
+        #connectBtn:hover {
+            opacity: 1;
+            transform: scale(1.05);
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.6);
+        }
+
+        #connectBtn svg {
+            width: 22px;
+            height: 22px;
+            fill: #ffffff;
+        }
+
+        /* HUD NOTIFIKASI STATUS DI BAWAH LAYAR */
+        #hudStatus {
+            margin-top: 15px;
+            padding: 5px;
+            color: rgba(255,255,255,0.3);
+            font-size: 0.75rem;
+            letter-spacing: 1px;
+            text-align: center;
+            pointer-events: none;
+        }
     </style>
 </head>
 <body>
 
     <main class="art-grid" id="grid-container"></main>
+    <div id="hudStatus">DATs CONTROLLER: STANDALONE MODE // FX: MONDRIAN MATRIX</div>
+
+    <button id="connectBtn" title="Hubungkan Alat DATs Collectible 001">
+        <svg viewBox="0 0 24 24">
+            <path d="M19 9h-3V7h1V3h-4v4h1v2h-3v2.59L7.41 12l.71-1.41-1.42-1.42L4 12.5l1.83 3.66 1.42-1.42-1.11-1.11 2.45-1.22V15h-1v4h4v-4h-1v-2.59L19 12.5V9zm-3-4h1v1h-1V5zm-4 0h1v1h-1V5z"/>
+        </svg>
+    </button>
 
     <script>
         const gridContainer = document.getElementById('grid-container');
+        const hud = document.getElementById('hudStatus');
+
+        // Variabel Sinkronisasi Alat DATs (Default)
+        let datsVal1 = 30;         // Encoder A -> Frekuensi & Decay Audio
+        let datsVal2 = 120;        // Encoder B -> Jumlah Kotak Aktif
+        let activeEffect = '1';    // Status tombol Matrix FX (1-9)
 
         // --- SISTEM AUDIO API ---
         const AudioCtx = window.AudioContext || window.webkitAudioContext;
@@ -99,109 +149,252 @@
             const oscillator = audioCtx.createOscillator();
             const gainNode = audioCtx.createGain();
 
-            let frequency = 400;
+            // Faktor pengali frekuensi dasar dari nilai Encoder A
+            let baseFreqFactor = (datsVal1 / 30);
+            let frequency = 400 * baseFreqFactor;
+            
+            // Konfigurasi tipe gelombang dasar
+            oscillator.type = 'sine';
 
-            if (modifier.includes('wide tall')) {
-                frequency = 120;
-                oscillator.type = 'triangle'; 
-            } else if (modifier.includes('wide') || modifier.includes('tall')) {
-                frequency = 220;
-                oscillator.type = 'triangle';
-            } else if (modifier.includes('accent')) {
-                frequency = 580;
-                oscillator.type = 'sine';
-            } else {
-                frequency = 880;
+            // JIKA EFEK CHIPTUNE 8-BIT AKTIF (Tombol 3)
+            if (activeEffect === '3') {
+                oscillator.type = 'square';
+            } 
+            // JIKA EFEK SUB-BASS COLLAPSE AKTIF (Tombol 6)
+            else if (activeEffect === '6') {
+                oscillator.type = 'sawtooth';
+                frequency = (modifier.includes('wide') || modifier.includes('tall')) ? 65 : 110;
+                frequency *= (datsVal1 / 45); // Rentang sub-bass adaptif
+            }
+            // JIKA EFEK ORGANIC PAD AKTIF (Tombol 7)
+            else if (activeEffect === '7') {
                 oscillator.type = 'sine';
             }
+            else {
+                // Skema kalkulasi suara bawaan asli Anda
+                if (modifier.includes('wide tall')) {
+                    frequency = 120 * baseFreqFactor;
+                    oscillator.type = 'triangle'; 
+                } else if (modifier.includes('wide') || modifier.includes('tall')) {
+                    frequency = 220 * baseFreqFactor;
+                    oscillator.type = 'triangle';
+                } else if (modifier.includes('accent')) {
+                    frequency = 580 * baseFreqFactor;
+                    oscillator.type = 'sine';
+                } else {
+                    frequency = 880 * baseFreqFactor;
+                    oscillator.type = 'sine';
+                }
+            }
+
+            // Durasi redam (decay) suara dikendalikan dinamis oleh Encoder A
+            let decayTime = 0.4 * (datsVal1 / 30);
+            if (activeEffect === '7') decayTime = 1.6 * (datsVal1 / 30); // Mode pad dengung panjang
 
             oscillator.frequency.setValueAtTime(frequency, audioCtx.currentTime);
             
             gainNode.gain.setValueAtTime(0.15, audioCtx.currentTime); 
-            gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.4); 
+            gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + decayTime); 
 
             oscillator.connect(gainNode);
             gainNode.connect(audioCtx.destination);
 
             oscillator.start();
-            oscillator.stop(audioCtx.currentTime + 0.4);
+            oscillator.stop(audioCtx.currentTime + decayTime);
         }
 
         // --- GLOBAL DRAG STATE (UX LOGIC) ---
         let isDragging = false;
-
-        // Deteksi klik mouse ditekan/dilepas secara global di window
         window.addEventListener('mousedown', () => isDragging = true);
         window.addEventListener('mouseup', () => isDragging = false);
 
         const modifiers = ['', 'wide', 'tall', '', 'accent-red', 'accent-blue', 'accent-yellow', 'wide tall'];
 
-        // Fungsi utama untuk memicu perubahan kotak & suara
+        // --- FUNGSI UTAMA INTERAKSI KOTAK ---
         function triggerBox(box) {
-            // Mencegah trigger berulang-ulang di kotak yang sama secara instan saat diseret cepat
-            if (box.style.backgroundColor === 'rgb(255, 255, 255)') return;
+            // Pengondisian warna pemicu berdasarkan Efek 9 (Reverse Apocalypse)
+            let triggerColor = (activeEffect === '9') ? '#000000' : '#ffffff';
+            let resetColor = '';
+
+            if (box.style.backgroundColor === triggerColor) return;
 
             playBoxSound(box.className);
 
             box.className = 'art-box';
             let currentModifier = modifiers[Math.floor(Math.random() * modifiers.length)];
+            
+            // Evaluasi Efek Modifikasi Keypad (1-9)
+            if (activeEffect === '2') {
+                // MONOCHROME NOIR: Hilangkan aksen warna primer merah/kuning/biru
+                currentModifier = currentModifier.replace(/accent-.*/g, '');
+            }
+            else if (activeEffect === '4') {
+                // RAINBOW FLASH: Paksa masuk aksen warna acak cepat
+                const rainbowAccents = ['accent-red', 'accent-blue', 'accent-yellow'];
+                currentModifier += " " + rainbowAccents[Math.floor(Math.random() * 3)];
+            }
+
             if (currentModifier) {
-                currentModifier.split(' ').forEach(cls => box.classList.add(cls));
+                currentModifier.split(' ').forEach(cls => {
+                    if(cls.length > 0) box.classList.add(cls);
+                });
             }
             
-            box.style.backgroundColor = '#ffffff';
+            box.style.backgroundColor = triggerColor;
             box.style.transition = 'none';
             
             setTimeout(() => {
-                box.style.backgroundColor = '';
+                box.style.backgroundColor = resetColor;
                 box.style.transition = 'all 0.6s cubic-bezier(0.25, 1, 0.5, 1)';
             }, 1000);
         }
 
-        function createBox(index) {
-            const box = document.createElement('div');
-            box.classList.add('art-box');
-            
-            let currentModifier = modifiers[Math.floor(Math.random() * modifiers.length)];
-            if (currentModifier) {
-                currentModifier.split(' ').forEach(cls => box.classList.add(cls));
-            }
+        // --- REBUILD ENGINE DENSITY (JUMLAH KOTAK DINAMIS VIA ENCODER B) ---
+        function drawGridMosaic() {
+            gridContainer.innerHTML = "";
+            // Nilai total kotak dikontrol penuh dari Encoder B (Maksimal 450 kotak)
+            const targetTotalBoxes = Math.max(20, Math.min(450, Math.floor(datsVal2 * 1.8)));
 
-            box.innerHTML = `<span class="box-number">#${String(index).padStart(3, '0')}</span>`;
-
-            // INTERAKSI DESKTOP: Klik tunggal
-            box.addEventListener('mousedown', (e) => {
-                e.preventDefault();
-                triggerBox(box);
-            });
-
-            // INTERAKSI DESKTOP: Diseret (Drag) melewati kotak lain
-            box.addEventListener('mouseenter', () => {
-                if (isDragging) {
-                    triggerBox(box);
+            for (let i = 1; i <= targetTotalBoxes; i++) {
+                const box = document.createElement('div');
+                box.classList.add('art-box');
+                
+                let currentModifier = modifiers[Math.floor(Math.random() * modifiers.length)];
+                
+                if (activeEffect === '2') {
+                    currentModifier = currentModifier.replace(/accent-.*/g, '');
                 }
-            });
 
-            return box;
+                if (currentModifier) {
+                    currentModifier.split(' ').forEach(cls => {
+                        if(cls.length > 0) box.classList.add(cls);
+                    });
+                }
+
+                box.innerHTML = `<span class="box-number">#${String(i).padStart(3, '0')}</span>`;
+
+                // Event listener klik & geser desktop
+                box.addEventListener('mousedown', (e) => {
+                    e.preventDefault();
+                    triggerBox(box);
+                });
+
+                box.addEventListener('mouseenter', () => {
+                    if (isDragging) triggerBox(box);
+                });
+
+                gridContainer.appendChild(box);
+            }
         }
 
-        // Pembuatan Mosaik Kotak
-        const totalBoxes = 300;
-        for (let i = 1; i <= totalBoxes; i++) {
-            gridContainer.appendChild(createBox(i));
-        }
+        // Jalankan render awal saat halaman dimuat pertama kali
+        drawGridMosaic();
 
         // --- INTERAKSI MOBILE (TOUCH DRAG) ---
-        // Layar sentuh HP membutuhkan logika koordinat karena tidak memiliki event 'mouseenter'
         window.addEventListener('touchmove', (e) => {
             const touch = e.touches[0];
-            // Mencari elemen apa yang sedang berada di bawah koordinat jari pengguna
             const targetElement = document.elementFromPoint(touch.clientX, touch.clientY);
-            
             if (targetElement && targetElement.classList.contains('art-box')) {
                 triggerBox(targetElement);
             }
         }, { passive: true });
+
+        /* ==========================================
+           PROSES KONEKSI WEB SERIAL API (MODE C ALAT)
+           ========================================== */
+        document.getElementById("connectBtn").onclick = async () => {
+            hud.innerText = "MENCOBA LOG IN ALAT PORT...";
+            try {
+                const port = await navigator.serial.requestPort();
+                await port.open({ baudRate: 115200 }); 
+                
+                // Sembunyikan ikon USB setelah sukses terhubung
+                document.getElementById("connectBtn").style.display = "none";
+                hud.innerText = "DATs SYSTEM OK // SERIAL LINKEDED";
+                
+                const textDecoder = new TextDecoderStream();
+                port.readable.pipeTo(textDecoder.writable);
+                const reader = textDecoder.readable.getReader();
+                let buffer = "";
+                
+                while (true) {
+                    const { value, done } = await reader.read();
+                    if (done) break;
+                    
+                    buffer += value;
+                    let lines = buffer.split("\n");
+                    buffer = lines.pop(); 
+                    
+                    for (let line of lines) {
+                        let cleanLine = line.trim();
+                        if (cleanLine.startsWith("DS_WEB;")) {
+                            let parts = cleanLine.split(";");
+                            if (parts.length >= 4) {
+                                // Membaca nilai Encoder A dan B dari alat
+                                datsVal1 = parseInt(parts[1]) || 30; 
+                                let oldVal2 = datsVal2;
+                                datsVal2 = parseInt(parts[2]) || 60; 
+                                
+                                // Jika nilai Encoder B diputar, bangun ulang mozaik grid secara real-time
+                                if(datsVal2 !== oldVal2 && activeEffect !== '8') {
+                                    drawGridMosaic();
+                                }
+
+                                let key = parts[3]; // Membaca tekanan tombol Keypad matrix
+                                if (key !== "-" && key !== "") {
+                                    if (['1','2','3','4','5','6','7','8','9'].includes(key)) {
+                                        activeEffect = key;
+                                        // Pemicu acak bentuk global manual jika menekan tombol 8
+                                        if(activeEffect === '8') generateStructureManual();
+                                        else drawGridMosaic();
+                                    } else {
+                                        // Tombol karakter huruf abjad memaksa grid mengacak formasi (re-seed)
+                                        drawGridMosaic();
+                                    }
+                                }
+                                
+                                // Cetak pembaruan teks parameter di papan HUD bawah
+                                let fxLabel = `MODE_${activeEffect}`;
+                                if(activeEffect==='1') fxLabel = 'PIET MONDRIAN MATRIX';
+                                if(activeEffect==='2') fxLabel = 'MONOCHROME NOIR';
+                                if(activeEffect==='3') fxLabel = '8-BIT GLITCH CHIPTUNE';
+                                if(activeEffect==='4') fxLabel = 'RAINBOW FLASH';
+                                if(activeEffect==='5') fxLabel = 'ECHO CHAIN';
+                                if(activeEffect==='6') fxLabel = 'SUB-BASS COLLAPSE';
+                                if(activeEffect==='7') fxLabel = 'ORGANIC AMBIENT PAD';
+                                if(activeEffect==='8') fxLabel = 'GLOBAL SHAPE SHUFFLE';
+                                if(activeEffect==='9') fxLabel = 'REVERSE APOCALYPSE';
+
+                                let currentTotal = Math.max(20, Math.min(450, Math.floor(datsVal2 * 1.8)));
+                                hud.innerText = `DATs COLLECTIBLE OK // FX: ${fxLabel} // FREQ_A: ${datsVal1} // BOXES_B: ${currentTotal}`;
+                            }
+                        }
+                    }
+                }
+            } catch (err) {
+                hud.innerText = "KONEKSI SERIAL GAGAL.";
+                alert("🚨 PORT SERIAL TERKUNCI:\n\n1. Pastikan Anda sudah MENUTUP jendela Serial Monitor di Arduino IDE.\n2. Pastikan Alat sudah masuk ke Mode C (Tekan C lalu * di keypad alat).");
+            }
+        };
+
+        // Fungsi pembantu khusus pengocok bentuk global tombol 8
+        function generateStructureManual() {
+            gridContainer.innerHTML = "";
+            const currentCount = Math.max(20, Math.min(450, Math.floor(datsVal2 * 1.8)));
+            for (let i = 1; i <= currentCount; i++) {
+                const box = document.createElement('div');
+                box.classList.add('art-box');
+                // Mengambil variasi modifier dimensi bentuk murni secara acak liar
+                let currentModifier = modifiers[Math.floor(Math.random() * modifiers.length)];
+                if (currentModifier) {
+                    currentModifier.split(' ').forEach(cls => { if(cls.length > 0) box.classList.add(cls); });
+                }
+                box.innerHTML = `<span class="box-number">#${String(i).padStart(3, '0')}</span>`;
+                box.addEventListener('mousedown', (e) => { e.preventDefault(); triggerBox(box); });
+                box.addEventListener('mouseenter', () => { if (isDragging) triggerBox(box); });
+                gridContainer.appendChild(box);
+            }
+        }
     </script>
 </body>
 </html>
