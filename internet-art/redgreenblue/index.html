@@ -7,7 +7,10 @@
 <style>
 body{
     margin:0;
-    background:#ccc;
+    background:#ccc; /* Warna latar abu-abu asli bawaan Anda */
+    overflow:hidden;
+    font-family: monospace;
+    user-select: none;
 }
 
 .canvas{
@@ -21,7 +24,7 @@ body{
 .unit{
     position:absolute;
     transform-origin:center;
-    will-change: transform;
+    will-change: transform, opacity, filter;
 }
 
 .block{
@@ -30,6 +33,8 @@ body{
     height:120px;
     background:#ff0000;
     overflow:hidden;
+    border-radius: 4px;
+    transition: background 0.5s ease;
 }
 
 .glow{
@@ -56,8 +61,9 @@ body{
 .line{
     position:absolute;
     background:#ff00ff;
-    opacity:100;
+    opacity:1;
     mix-blend-mode: difference ;
+    pointer-events: none;
 }
 
 .v{ width:100px; height:100%; }
@@ -67,120 +73,137 @@ body{
 .connect{
     position:absolute;
     background:#9eeb34;
-    opacity:100;
+    opacity:1;
     mix-blend-mode: difference ;
+    pointer-events: none;
+}
+
+/* TOMBOL KONEKSI STEALTH - ICON USB TRANSPARAN */
+#connectBtn {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    width: 50px;
+    height: 50px;
+    background: rgba(200, 200, 200, 0.4);
+    border: 2px solid #ff00ff;
+    border-radius: 50%;
+    cursor: pointer;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0; /* Tersembunyi rapi di awal */
+    mix-blend-mode: difference;
+    transition: opacity 0.4s ease, transform 0.2s ease, box-shadow 0.3s ease;
+}
+
+/* Memancar ungu-hijau cerah saat kursor mouse mendekat */
+#connectBtn:hover {
+    opacity: 1;
+    transform: scale(1.05);
+    box-shadow: 0 0 15px #9eeb34;
+}
+
+#connectBtn svg {
+    width: 26px;
+    height: 26px;
+    fill: #ff00ff;
+}
+
+/* HUD NOTIFIKASI STATUS */
+#hudStatus {
+    position: fixed;
+    bottom: 15px;
+    left: 20px;
+    color: #ff00ff;
+    font-size: 11px;
+    mix-blend-mode: difference;
+    letter-spacing: 1px;
+    pointer-events: none;
+    z-index: 999;
 }
 </style>
 </head>
 
 <body>
 
+<button id="connectBtn" title="Hubungkan Alat DATs">
+    <svg viewBox="0 0 24 24">
+        <path d="M19 9h-3V7h1V3h-4v4h1v2h-3v2.59L7.41 12l.71-1.41-1.42-1.42L4 12.5l1.83 3.66 1.42-1.42-1.11-1.11 2.45-1.22V15h-1v4h4v-4h-1v-2.59L19 12.5V9zm-3-4h1v1h-1V5zm-4 0h1v1h-1V5z"/>
+    </svg>
+</button>
+
+<div id="hudStatus">DATs RUNNING // STANDALONE MODE</div>
 <div class="canvas" id="canvas"></div>
 
 <script>
 const canvas = document.getElementById("canvas");
+const hud = document.getElementById("hudStatus");
 
-let blocks = [];
-let units = [];
+// Parameter Default Sinkronisasi Alat DATs
+let datsVal1 = 30;         // Encoder A -> Speed Control
+let datsVal2 = 60;         // Encoder B -> Jumlah Balok Aktif
+let activeEffect = '1';    // Default Efek Normal (1-9)
 
-/* =========================
-   GENERATE SYSTEM
-========================= */
-function generate(){
+const MAX_POOL = 95;       // Pool kapasitas maksimum objek di memori
+let blockData = [];
+let unitElements = [];
+let hLineElements = [];
+let vLineElements = [];
+let purpleLines = [];
 
-    // clear canvas
+let globalTime = 0;        // Waktu linear konstan bebas (Efek 1, 2, 3, 6, 8)
+let fxTime = 0;            // Waktu yang dikunci maks speed 30 (Efek 4, 5, 7, 9)
+let frameCount = 0;
+
+/* ==========================================
+   INITIAL GENERATION POOL (LANGSUNG LOADING)
+   ========================================== */
+function generateStructure(){
     canvas.innerHTML = "";
-    blocks = [];
-    units = [];
+    blockData = [];
+    unitElements = [];
+    hLineElements = [];
+    vLineElements = [];
+    purpleLines = [];
 
-    const TOTAL = 60;
-
-    /* =========================
-       RED BLOCKS
-    ========================= */
-    for(let i=0; i<TOTAL; i++){
-
+    // 1. Membuat Pool Unit Balok Merah
+    for(let i=0; i<MAX_POOL; i++){
         const unit = document.createElement("div");
         unit.className = "unit";
-
-        let x = Math.random() * window.innerWidth;
-        let y = Math.random() * window.innerHeight;
-
-        let baseScale = 0.1 + Math.random()*0.6;
-
-        unit.innerHTML = `
-            <div class="block">
-                <div class="glow"></div>
-            </div>
-        `;
-
+        unit.innerHTML = `<div class="block"><div class="glow"></div></div>`;
         canvas.appendChild(unit);
+        unitElements.push(unit);
 
-        blocks.push({
-            x: x + 60,
-            y: y + 60
+        blockData.push({
+            x: Math.random() * window.innerWidth,
+            y: Math.random() * window.innerHeight,
+            baseScale: 0.1 + Math.random() * 0.6,
+            tOffset: Math.random() * 100,
+            driftY: rand(-0.4, -0.1),
+            driftX: rand(-0.2, 0.2),
+            rotOffset: Math.random() * 360
         });
-
-        // animasi
-        let t = Math.random() * 100;
-
-        function animate(){
-            t += 0.02;
-
-            let offsetX = Math.sin(t + i) * 2;
-            let offsetY = Math.cos(t + i) * 2;
-
-            let scale = baseScale + Math.sin(t*2) * 1;
-
-            unit.style.transform = `
-                translate(${x + offsetX}px, ${y + offsetY}px)
-                scale(${scale})
-            `;
-
-            requestAnimationFrame(animate);
-        }
-
-        animate();
     }
 
-    /* =========================
-       CONNECTION LINES
-    ========================= */
-    for(let i=0; i<blocks.length-1; i++){
-
-        const a = blocks[i];
-        const b = blocks[i+1];
-
+    // 2. Membuat Pool Garis Hijau Koneksi
+    for(let i=0; i<MAX_POOL - 1; i++){
         const hLine = document.createElement("div");
         hLine.className = "connect";
-
-        hLine.style.left = Math.min(a.x, b.x) + "px";
-        hLine.style.top = a.y + "px";
-        hLine.style.width = Math.abs(a.x - b.x) + "px";
-        hLine.style.height = "3px";
-
         canvas.appendChild(hLine);
+        hLineElements.push(hLine);
 
         const vLine = document.createElement("div");
         vLine.className = "connect";
-
-        vLine.style.left = b.x + "px";
-        vLine.style.top = Math.min(a.y, b.y) + "px";
-        vLine.style.width = "3px";
-        vLine.style.height = Math.abs(a.y - b.y) + "px";
-
         canvas.appendChild(vLine);
+        vLineElements.push(vLine);
     }
 
-    /* =========================
-       PURPLE LINES
-    ========================= */
+    // 3. Membuat 8 Garis Ungu Statis Bawaan Anda
     const TOTAL_LINES = 8;
-
     for(let i=0; i<TOTAL_LINES; i++){
-
         const isVertical = Math.random() > 0.5;
-
         const line = document.createElement("div");
         line.className = "line " + (isVertical ? "v" : "h");
 
@@ -191,25 +214,239 @@ function generate(){
             line.style.top = Math.random()*window.innerHeight + "px";
             line.style.left = "0px";
         }
-
         canvas.appendChild(line);
+        purpleLines.push(line);
     }
 }
 
-/* =========================
-   INITIAL LOAD
-========================= */
-generate();
+function rand(min,max){ return Math.random()*(max-min)+min; }
+function randInt(min,max){ return Math.floor(Math.random()*(max-min+1))+min; }
 
-/* =========================
-   INTERACTION
-========================= */
+/* ==========================================
+   AMBIENT MAIN ANIMATION LOOP (FLUID SYSTEM)
+   ========================================== */
+function animationEngine(){
+    frameCount++;
+    
+    // Kecepatan normal global dari Encoder A
+    const speedMultiplier = (datsVal1 / 30);
+    globalTime += speedMultiplier * 0.015;
 
-// klik desktop
-window.addEventListener("click", generate);
+    // Batasi Kecepatan Maksimal = 30 Khusen Efek 4, 5, 7, 9
+    const isCappedFX = ['4', '5', '7', '9'].includes(activeEffect);
+    const currentSpeed = isCappedFX ? Math.min(1.0, speedMultiplier) : speedMultiplier;
+    fxTime += currentSpeed * 0.015;
 
-// touch hp
-window.addEventListener("touchstart", generate);
+    // Batas jumlah tampilan balok diatur dinamis via Encoder B
+    const maxActiveBlocks = Math.max(5, Math.min(MAX_POOL, Math.floor(datsVal2)));
+    let activeCoordinates = [];
+
+    const centerX = window.innerWidth / 2;
+    const centerY = window.innerHeight / 2;
+
+    // PROSES ANIMASI BALOK
+    for(let i=0; i<MAX_POOL; i++){
+        const unit = unitElements[i];
+        const data = blockData[i];
+
+        if(i >= maxActiveBlocks) {
+            unit.style.display = "none";
+            continue;
+        }
+        unit.style.display = "block";
+
+        let cx = data.x;
+        let cy = data.y;
+        let scale = data.baseScale;
+        let rotation = 0;
+        
+        let localT = data.tOffset + (isCappedFX ? fxTime : globalTime);
+
+        // Reset style properties standar di setiap perputaran frame
+        unit.style.opacity = "1";
+        unit.style.filter = "none";
+        unit.querySelector('.block').style.background = "#ff0000";
+        unit.querySelector('.glow').style.transform = "scale(1)";
+
+        // --- FILTER ENGINE MATRIX FX KEYPAD ALAT (1-9) ---
+        if (activeEffect === '2') {
+            data.y += data.driftY * currentSpeed;
+            if(data.y < -120) data.y = window.innerHeight + 20;
+            cx += Math.sin(localT) * 3;
+        } 
+        else if (activeEffect === '3') {
+            let pulse = Math.sin(localT * 2) * 0.25;
+            scale += pulse;
+        }
+        else if (activeEffect === '4') {
+            // TRUE FEEDBACK TRAIL + BLUR
+            unit.style.opacity = "0.35";
+            unit.style.filter = "blur(2px)";
+            cx += Math.sin(localT * 2.5) * 45 * currentSpeed;
+            cy += Math.cos(localT * 2.5) * 45 * currentSpeed;
+        }
+        else if (activeEffect === '5') {
+            // ROTATING MATRIX
+            rotation = fxTime * 90 * currentSpeed + data.rotOffset; 
+            unit.querySelector('.block').style.background = `hsl(${(fxTime * 40) % 360}, 100%, 45%)`;
+            cx += Math.sin(localT) * 3;
+            cy += Math.cos(localT) * 3;
+        }
+        else if (activeEffect === '7') {
+            // BLOOMING FEEDBACK EFFECT (Maks Speed 30)
+            let bloomFactor = (Math.sin(localT * 3.5) + 1) * 0.5; 
+            scale += bloomFactor * 1.5 * currentSpeed; 
+            unit.style.filter = `brightness(${1 + bloomFactor * 2.5}) blur(${bloomFactor * 1.2}px)`;
+            unit.querySelector('.glow').style.transform = `scale(${1 + bloomFactor * 2.5})`; 
+            cx += Math.sin(localT) * 15 * bloomFactor * currentSpeed;
+            cy += Math.cos(localT) * 15 * bloomFactor * currentSpeed;
+        }
+        else if (activeEffect === '8') {
+            // 🔥 UPGRADED: UNLIMITED INWARD ZOOM BERGILIRAN (STAGGERED TUNNEL)
+            // Rumus asli dikembalikan, namun zoomProgress tiap balok digeser bertahap menggunakan indeks (i)
+            let zoomProgress = (globalTime * 0.2 + (i / maxActiveBlocks) * 1.5) % 1.5;
+            scale = data.baseScale * (0.2 + zoomProgress * 3);
+            
+            // Efek fading di ujung luar agar transisinya halus tidak patah saat mengulang kecil
+            if (zoomProgress > 1.2) {
+                unit.style.opacity = 1.0 - ((zoomProgress - 1.2) / 0.3);
+            }
+            cx += Math.sin(localT) * 1;
+        }
+        else if (activeEffect === '9') {
+            // SOLID ORBITAL VORTEX (100% Solid pekat berputar, Maks Speed 30)
+            let dx = data.x - centerX;
+            let dy = data.y - centerY;
+            let currentDist = Math.sqrt(dx * dx + dy * dy);
+            let currentAngle = Math.atan2(dy, dx) + (fxTime * 0.3 * currentSpeed);
+            
+            cx = centerX + Math.cos(currentAngle) * currentDist - 60;
+            cy = centerY + Math.sin(currentAngle) * currentDist - 60;
+            
+            unit.style.opacity = "1"; 
+            rotation = currentAngle * (180 / Math.PI);
+        }
+        else {
+            // EFEK 1 & 6 (NORMAL MODE)
+            cx += Math.sin(localT) * 2;
+            cy += Math.cos(localT) * 2;
+        }
+
+        activeCoordinates.push({ x: cx + 60, y: cy + 60 });
+
+        // Eksekusi pemindahan koordinat CSS
+        unit.style.transform = `translate(${cx}px, ${cy}px) scale(${scale}) rotate(${rotation}deg)`;
+    }
+
+    // PROSES UPDATE LINK GARIS KONEKSI RASI HIJAU
+    for(let i=0; i<maxActiveBlocks - 1; i++){
+        const hLine = hLineElements[i];
+        const vLine = vLineElements[i];
+
+        if(i >= maxActiveBlocks - 1 || !activeCoordinates[i+1]) {
+            if(hLine) hLine.style.display = "none";
+            if(vLine) vLine.style.display = "none";
+            continue;
+        }
+
+        hLine.style.display = "block";
+        vLine.style.display = "block";
+
+        const a = activeCoordinates[i];
+        const b = activeCoordinates[i+1];
+
+        hLine.style.opacity = (activeEffect === '6') ? "0.15" : "1";
+        vLine.style.opacity = (activeEffect === '6') ? "0.15" : "1";
+
+        hLine.style.left = Math.min(a.x, b.x) + "px";
+        hLine.style.top = a.y + "px";
+        hLine.style.width = Math.abs(a.x - b.x) + "px";
+        hLine.style.height = "3px";
+
+        vLine.style.left = b.x + "px";
+        vLine.style.top = Math.min(a.y, b.y) + "px";
+        vLine.style.width = "3px";
+        vLine.style.height = Math.abs(a.y - b.y) + "px";
+    }
+
+    for(let i = maxActiveBlocks - 1; i < MAX_POOL - 1; i++){
+        if(hLineElements[i]) hLineElements[i].style.display = "none";
+        if(vLineElements[i]) vLineElements[i].style.display = "none";
+    }
+
+    requestAnimationFrame(animationEngine);
+}
+
+generateStructure();
+requestAnimationFrame(animationEngine);
+
+window.addEventListener("click", (e) => {
+    if(e.target.id !== "connectBtn" && !document.getElementById("connectBtn").contains(e.target)){
+        generateStructure();
+    }
+});
+
+/* ==========================================
+   PROSES KONEKSI WEB SERIAL API
+   ========================================== */
+document.getElementById("connectBtn").onclick = async () => {
+    hud.innerText = "MENCOBA MENGHUBUNGKAN ALAT...";
+    try {
+        const port = await navigator.serial.requestPort();
+        await port.open({ baudRate: 115200 }); 
+        
+        document.getElementById("connectBtn").style.display = "none";
+        hud.innerText = "DATs COLLECTIBLE LINK OK // MODE ACTIVE";
+        
+        const textDecoder = new TextDecoderStream();
+        port.readable.pipeTo(textDecoder.writable);
+        const reader = textDecoder.readable.getReader();
+        let buffer = "";
+        
+        while (true) {
+            const { value, done } = await reader.read();
+            if (done) break;
+            
+            buffer += value;
+            let lines = buffer.split("\n");
+            buffer = lines.pop(); 
+            
+            for (let line of lines) {
+                let cleanLine = line.trim();
+                if (cleanLine.startsWith("DS_WEB;")) {
+                    let parts = cleanLine.split(";");
+                    if (parts.length >= 4) {
+                        datsVal1 = parseInt(parts[1]) || 30; 
+                        datsVal2 = parseInt(parts[2]) || 60; 
+                        
+                        let key = parts[3]; 
+                        if (key !== "-" && key !== "") {
+                            if (['1','2','3','4','5','6','7','8','9'].includes(key)) {
+                                activeEffect = key;
+                            } else {
+                                generateStructure();
+                            }
+                        }
+                        
+                        let currentAct = Math.max(5, Math.min(MAX_POOL, Math.floor(datsVal2)));
+                        let displaySpeed = ['4','5','7','9'].includes(activeEffect) ? Math.min(30, datsVal1) : datsVal1;
+                        
+                        // Sinkronisasi info teks HUD di layar bawah
+                        let fxNameDisplay = 'MODE_' + activeEffect;
+                        if (activeEffect === '7') fxNameDisplay = 'BLOOM FEEDBACK';
+                        if (activeEffect === '8') fxNameDisplay = 'STAGGERED INWARD TUNNEL';
+                        if (activeEffect === '9') fxNameDisplay = 'SOLID VORTEX';
+                        
+                        hud.innerText = `DATs ALAT OK // FX: ${fxNameDisplay} // SPEED_A: ${displaySpeed} ${datsVal1 > 30 && ['4','5','7','9'].includes(activeEffect) ? '(LOCKED AT 30)' : ''} // BLOCKS_B: ${currentAct}`;
+                    }
+                }
+            }
+        }
+    } catch (err) {
+        hud.innerText = "KONEKSI GAGAL! PERIKSA SERIAL MONITOR.";
+        alert("🚨 ERROR KONEKSI SERIAL:\n\n1. Pastikan SERIAL MONITOR di Arduino IDE sudah Anda TUTUP.\n2. Pastikan Alat sudah masuk ke cabang Mode C (Tekan C lalu * di keypad).\n3. Pastikan kabel data USB tertancap kuat.");
+    }
+};
 </script>
 
 </body>
