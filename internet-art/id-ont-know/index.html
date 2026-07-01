@@ -2,18 +2,57 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>ID????</title>
+<title>DATs Collectible 001 - Blueprint Matrix</title>
 <style>
 html,body{
     margin:0;
     padding:0;
     background:#05070a;
     overflow:hidden;
+    font-family: monospace;
 }
 canvas{ display:block; }
+
+/* Tombol Ikon USB Transparan - Hanya Muncul Saat Diarahakan Kursor (Hover) */
+#connectBtn {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    width: 55px;
+    height: 55px;
+    background: rgba(5, 7, 10, 0.6);
+    border: 2px solid #00ffff;
+    border-radius: 50%;
+    cursor: pointer;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0; /* Sepenuhnya transparan di awal */
+    transition: opacity 0.4s ease, box-shadow 0.3s ease, transform 0.2s ease;
+}
+
+/* Memunculkan ikon secara halus saat kursor mendekat */
+#connectBtn:hover {
+    opacity: 1; 
+    box-shadow: 0 0 20px #00ffff, inset 0 0 10px #00ffff;
+    transform: scale(1.05);
+}
+
+#connectBtn svg {
+    width: 30px;
+    height: 30px;
+    fill: #00ffff;
+}
 </style>
 </head>
 <body>
+
+<button id="connectBtn" title="Connect DATs Collectible 001">
+    <svg viewBox="0 0 24 24">
+        <path d="M19 9h-3V7h1V3h-4v4h1v2h-3v2.59L7.41 12l.71-1.41-1.42-1.42L4 12.5l1.83 3.66 1.42-1.42-1.11-1.11 2.45-1.22V15h-1v4h4v-4h-1v-2.59L19 12.5V9zm-3-4h1v1h-1V5zm-4 0h1v1h-1V5z"/>
+    </svg>
+</button>
 
 <canvas id="c"></canvas>
 
@@ -21,7 +60,16 @@ canvas{ display:block; }
 const canvas = document.getElementById("c");
 const ctx = canvas.getContext("2d");
 
-let baseLayer;
+// Variabel Sinkronisasi Alat
+let datsVal1 = 30;  // Encoder A -> Speed Kontrol
+let datsVal2 = 60;  // Encoder B -> Jumlah Tulisan (Default awal setara 60 textboxes)
+let activeEffect = 'normal'; 
+
+let persistentPipes = [];
+let persistentBoxes = [];
+let persistentNodes = [];
+let scanY = 0;
+let frameCount = 0;
 
 function resize(){
     canvas.width = window.innerWidth;
@@ -33,237 +81,290 @@ window.onresize = resize;
 function rand(min,max){ return Math.random()*(max-min)+min; }
 function randInt(min,max){ return Math.floor(Math.random()*(max-min+1))+min; }
 
-const colors = [
-    "rgb(255,0,0)",       // red
-    "rgb(0,255,0)",       // green
-    "rgb(0,0,255)",       // blue
-    "rgb(255,255,255)",   // white
-    "rgb(255,120,0)",     // orange
-    "rgb(0,255,255)",     // cyan
-    "rgb(255,0,255)",     // magenta
-    "rgb(255,255,0)"      // yellow
-];
+const colors = ["rgb(255,0,0)","rgb(0,255,0)","rgb(0,0,Blue)","rgb(255,255,255)","rgb(255,120,0)","rgb(0,255,255)","rgb(255,0,255)","rgb(255,255,0)"];
 
-window.addEventListener("load", () => {
-    generate();
-});
+// Generator Objek (Kuantitas Sesuai Format Tampilan Awal Anda)
+function generateSeedData() {
+    persistentPipes = [];
+    persistentBoxes = [];
+    persistentNodes = [];
 
-/* ========= GRID ========= */
+    // 50 Pipes bawaan
+    for(let i=0; i<50; i++) {
+        let segs = [];
+        let sx = rand(0, window.innerWidth);
+        let sy = rand(0, window.innerHeight);
+        let segmentsCount = randInt(4, 9);
+        for(let j=0; j<segmentsCount; j++) {
+            if(Math.random() > 0.5) sx += rand(-250, 250);
+            else sy += rand(-250, 250);
+            segs.push({x: sx, y: sy});
+        }
+        persistentPipes.push({
+            x: rand(0, window.innerWidth), y: rand(0, window.innerHeight),
+            color: colors[randInt(0, colors.length-1)], width: rand(1, 5), segments: segs
+        });
+    }
 
+    // Pool maksimum 120 Text Boxes (Akan di-slice dinamis berdasarkan Encoder B)
+    for(let i=0; i<120; i++) {
+        persistentBoxes.push({
+            x: rand(0, window.innerWidth-200), y: rand(0, window.innerHeight-80),
+            w: rand(100, 200), h: rand(40, 80),
+            color: colors[randInt(0, colors.length-1)],
+            id: randInt(40, 200), ft: randInt(1, 99), lines: randInt(1, 2),
+            vx: rand(-1, 1), vy: rand(-1, 1)
+        });
+    }
+
+    // 120 Nodes bawaan
+    for(let i=0; i<120; i++) {
+        persistentNodes.push({
+            x: rand(0, window.innerWidth), y: rand(0, window.innerHeight),
+            r: rand(2, 5), color: colors[randInt(0, colors.length-1)],
+            speedX: rand(-1, 1), speedY: rand(-1, 1)
+        });
+    }
+}
+
+/* ========= GRID BASELINE ========= */
 function drawGrid(){
     ctx.strokeStyle="rgba(0,100,200,0.3)";
     ctx.lineWidth=2;
-    ctx.setLineDash([]);
     const step=40;
-
-    for(let x=0;x<canvas.width;x+=step){
-        ctx.beginPath();
-        ctx.moveTo(x,0);
-        ctx.lineTo(x,canvas.height);
-        ctx.stroke();
+    for(let x=0; x<canvas.width; x+=step){
+        ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,canvas.height); ctx.stroke();
     }
-    for(let y=0;y<canvas.height;y+=step){
-        ctx.beginPath();
-        ctx.moveTo(0,y);
-        ctx.lineTo(canvas.width,y);
-        ctx.stroke();
+    for(let y=0; y<canvas.height; y+=step){
+        ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(canvas.width,y); ctx.stroke();
     }
 
-    // fine secondary grid
     ctx.strokeStyle="rgba(0,100,200,0.1)";
     const fine=10;
-    for(let x=0;x<canvas.width;x+=fine){
-        ctx.beginPath();
-        ctx.moveTo(x,0);
-        ctx.lineTo(x,canvas.height);
-        ctx.stroke();
+    for(let x=0; x<canvas.width; x+=fine){
+        ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,canvas.height); ctx.stroke();
     }
-    for(let y=0;y<canvas.height;y+=fine){
-        ctx.beginPath();
-        ctx.moveTo(0,y);
-        ctx.lineTo(canvas.width,y);
-        ctx.stroke();
+    for(let y=0; y<canvas.height; y+=fine){
+        ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(canvas.width,y); ctx.stroke();
     }
 }
-
-/* ========= EXTRA SHAPES ========= */
 
 function drawConstructionShapes(){
-
-    // circles
-    ctx.strokeStyle="rgba(0,255,0,1)";
-    ctx.lineWidth=1.5;
-    ctx.setLineDash([4,6]);
-
+    ctx.strokeStyle="rgba(0,255,0,1)"; ctx.lineWidth=1.5; ctx.setLineDash([4,6]);
     for(let i=0;i<8;i++){
-        ctx.beginPath();
-        ctx.arc(
-            rand(0,canvas.width),
-            rand(0,canvas.height),
-            rand(40,200),
-            0,
-            Math.PI*2
-        );
-        ctx.stroke();
+        ctx.beginPath(); ctx.arc(rand(0,canvas.width), rand(0,canvas.height), rand(40,200), 0, Math.PI*2); ctx.stroke();
     }
-
-    // rectangles
     ctx.setLineDash([]);
     ctx.strokeStyle="rgba(255,0,255,1)";
-    ctx.lineWidth=1.5;
-
-    for(let i=0;i<12;i++){
-        ctx.strokeRect(
-            rand(0,canvas.width-200),
-            rand(0,canvas.height-200),
-            rand(60,250),
-            rand(60,250)
-        );
-    }
-  
-    // rectangles
-    ctx.setLineDash([]);
+    for(let i=0;i<12;i++) ctx.strokeRect(rand(0,canvas.width-200), rand(0,canvas.height-200), rand(60,250), rand(60,250));
     ctx.strokeStyle="rgba(255,255,0,1)";
-    ctx.lineWidth=1.5;
-
-    for(let i=0;i<12;i++){
-        ctx.strokeRect(
-            rand(0,canvas.width-200),
-            rand(0,canvas.height-200),
-            rand(60,250),
-            rand(60,250)
-        );
-    }
+    for(let i=0;i<12;i++) ctx.strokeRect(rand(0,canvas.width-200), rand(0,canvas.height-200), rand(60,250), rand(60,250));
 }
 
-/* ========= EXISTING ELEMENTS ========= */
-
-function drawPipe(){
-    ctx.strokeStyle = colors[randInt(0,colors.length-1)];
-    ctx.lineWidth = rand(1,5);
-    ctx.setLineDash([8,6]);
-
-    let x = rand(0,canvas.width);
-    let y = rand(0,canvas.height);
-
-    ctx.beginPath();
-    ctx.moveTo(x,y);
-
-    let segments = randInt(4,9);
-
-    for(let i=0;i<segments;i++){
-        if(Math.random()>0.5){ x += rand(-250,250); }
-        else{ y += rand(-250,250); }
-        ctx.lineTo(x,y);
-    }
-    ctx.stroke();
-    ctx.setLineDash([]);
-}
-
-function drawTextBox(){
-    let x = rand(0,canvas.width-200);
-    let y = rand(0,canvas.height-80);
-    let w = rand(100,200);
-    let h = rand(40,80);
-
-    let color = colors[randInt(0,colors.length-1)];
-
-    ctx.strokeStyle=color;
-    ctx.lineWidth=100;
-    ctx.setLineDash([1,4]);
-    ctx.strokeRect(x,y,w,h);
+/* ========= RENDER CORE SCENE MATRIKS ========= */
+function drawSceneElements(speedMultiplier, activeTextCount, isShuffle) {
+    // DRAW PIPES
+    persistentPipes.forEach(p => {
+        ctx.strokeStyle = isShuffle ? colors[randInt(0,7)] : p.color;
+        ctx.lineWidth = p.width;
+        ctx.setLineDash([8,6]);
+        ctx.beginPath();
+        let drift = (activeEffect === 'zoom') ? 0 : Math.sin(frameCount * 0.01 * speedMultiplier) * 10;
+        ctx.moveTo(p.segments[0].x + drift, p.segments[0].y + drift);
+        p.segments.forEach(seg => {
+            ctx.lineTo(seg.x + drift, seg.y + drift);
+        });
+        ctx.stroke();
+    });
     ctx.setLineDash([]);
 
-    ctx.fillStyle=color;
-    ctx.font="90px monospace";
-
-    let lines=randInt(1,2);
-    for(let i=0;i<lines;i++){
-        ctx.fillText(
-            "ID Ø"+randInt(40,200)+" Ft "+randInt(1,99),
-            x+8,
-            y+18+(i*14)
-        );
-    }
-}
-
-function drawNodes(){
-    let x=rand(0,canvas.width);
-    let y=rand(0,canvas.height);
-
-    ctx.fillStyle=colors[randInt(0,colors.length-1)];
-    ctx.beginPath();
-    ctx.arc(x,y,rand(2,5),0,Math.PI*2);
-    ctx.fill();
-}
-
-/* ========= GENERATE ========= */
-
-function generate(){
-    ctx.fillStyle="#05070a";
-    ctx.fillRect(0,0,canvas.width,canvas.height);
-
-    drawGrid();
-    drawConstructionShapes();
-
-    for(let i=0;i<50;i++) drawPipe();
-    for(let i=0;i<60;i++) drawTextBox();
-    for(let i=0;i<120;i++) drawNodes();
-
-    baseLayer = ctx.getImageData(0,0,canvas.width,canvas.height);
-}
-
-/* ========= NEGATIVE SCAN ========= */
-
-let scanning=false;
-
-function scanAnimation(){
-    if(scanning) return;
-    scanning=true;
-
-    let scanY = 0;
-    const speed = 10;
-    const height = 1000;
-
-    function step(){
-        if(scanY > canvas.height){
-            scanning=false;
-            return;
+    // DRAW TEXT BOXES (Jumlah dikontrol Encoder B)
+    for(let i = 0; i < activeTextCount; i++) {
+        let b = persistentBoxes[i];
+        if (activeEffect !== 'zoom') {
+            b.x += b.vx * 0.5 * speedMultiplier;
+            b.y += b.vy * 0.5 * speedMultiplier;
+            if(b.x < 0 || b.x > canvas.width - b.w) b.vx *= -1;
+            if(b.y < 0 || b.y > canvas.height - b.h) b.vy *= -1;
         }
 
-        ctx.putImageData(baseLayer,0,0);
+        let color = isShuffle ? colors[randInt(0,7)] : b.color;
+        if (activeEffect === 'rgbShift' && frameCount % 5 === 0) color = colors[randInt(0,7)];
 
-        // ambil area scan
-        let region = ctx.getImageData(
-            0,
-            Math.max(0,scanY),
-            canvas.width,
-            height
-        );
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 100; // Tebbal bawaan gaya orisinal
+        ctx.setLineDash([1,4]);
+        ctx.strokeRect(b.x, b.y, b.w, b.h);
+        ctx.setLineDash([]);
 
-        // invert color
-        let data = region.data;
-        for(let i=0;i<data.length;i+=4){
-            data[i]   = 255 - data[i];     // R
-            data[i+1] = 255 - data[i+1];   // G
-            data[i+2] = 255 - data[i+2];   // B
+        ctx.fillStyle = color;
+        ctx.font = "90px monospace"; // Font ukuran raksasa bawaan
+        for(let j=0; j<b.lines; j++){
+            let idVal = isShuffle ? randInt(10,999) : b.id;
+            ctx.fillText(`ID Ø${idVal} Ft ${b.ft}`, b.x + 8, b.y + 18 + (j * 14));
         }
-
-        ctx.putImageData(region,0,scanY);
-
-        scanY += speed;
-        requestAnimationFrame(step);
     }
 
-    step();
+    // DRAW NODES
+    persistentNodes.forEach(n => {
+        if (activeEffect !== 'zoom') {
+            n.x += n.speedX * speedMultiplier;
+            n.y += n.speedY * speedMultiplier;
+            if(n.x < 0 || n.x > canvas.width) n.speedX *= -1;
+            if(n.y < 0 || n.y > canvas.height) n.speedY *= -1;
+        }
+        ctx.fillStyle = isShuffle ? colors[randInt(0,7)] : n.color;
+        ctx.beginPath(); ctx.arc(n.x, n.y, n.r, 0, Math.PI*2); ctx.fill();
+    });
 }
 
-canvas.onclick = () => {
-    generate();
-    scanAnimation();
+/* ========= LOOP ENGINE ========= */
+function updateAndRender() {
+    frameCount++;
+    
+    const speedMultiplier = (datsVal1 / 30); // Encoder A -> Speed
+    const activeTextCount = Math.max(1, Math.min(persistentBoxes.length, Math.floor(datsVal2))); // Encoder B -> Qty Text
+
+    // Efek Delay/Ghost Trail
+    if (activeEffect === 'delay') {
+        ctx.fillStyle = "rgba(5, 7, 10, 0.08)";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+    } else {
+        ctx.fillStyle = "#05070a";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
+
+    const isShuffle = (activeEffect === 'shuffle');
+
+    // JIKA EFEK ZOOM AKTIF: JALANKAN UNLIMITED RECURSIVE TUNNEL
+    if (activeEffect === 'zoom') {
+        drawGrid();
+        drawConstructionShapes();
+        
+        let progress = (frameCount * 0.005 * speedMultiplier) % 1;
+        ctx.save();
+        ctx.translate(canvas.width / 2, canvas.height / 2);
+
+        // Render 3 kedalaman layar secara simultan untuk ilusi zoom tak terbatas
+        for (let layer = -1; layer <= 1; layer++) {
+            ctx.save();
+            let currentScale = Math.pow(4, progress + layer);
+            ctx.scale(currentScale, currentScale);
+            ctx.translate(-canvas.width / 2, -canvas.height / 2);
+            
+            // Atur opacity transisi antar layer biar mulus
+            ctx.globalAlpha = layer === -1 ? progress : (layer === 1 ? 1 - progress : 1);
+            
+            drawSceneElements(speedMultiplier, activeTextCount, isShuffle);
+            ctx.restore();
+        }
+        ctx.restore();
+    } else {
+        // RENDERING NORMAL
+        drawGrid();
+        drawConstructionShapes();
+        drawSceneElements(speedMultiplier, activeTextCount, isShuffle);
+    }
+
+    // LASER SCAN BAR ANIMATION
+    scanY += 4 * speedMultiplier;
+    if (scanY > canvas.height) scanY = 0;
+    ctx.fillStyle = "rgba(0, 255, 255, 0.4)";
+    ctx.fillRect(0, scanY, canvas.width, 4);
+
+    // POST PROCESSING EFFECTS MATRIX
+    // 1. STROBE EFFECT (WHITE AND NEGATE FLIP)
+    if (activeEffect === 'strobe' && frameCount % 6 < 3) {
+        let imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        let data = imgData.data;
+        for (let i = 0; i < data.length; i += 4) {
+            data[i] = 255 - data[i];     
+            data[i+1] = 255 - data[i+1]; 
+            data[i+2] = 255 - data[i+2]; 
+        }
+        ctx.putImageData(imgData, 0, 0);
+        ctx.fillStyle = "rgba(255, 255, 255, 0.45)"; // Flash Putih Murni
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
+
+    // 2. INVERT MATRIX MODE
+    if (activeEffect === 'invert') {
+        let imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        let data = imgData.data;
+        for (let i = 0; i < data.length; i += 4) {
+            data[i] = 255 - data[i]; data[i+1] = 255 - data[i+1]; data[i+2] = 255 - data[i+2]; 
+        }
+        ctx.putImageData(imgData, 0, 0);
+    }
+
+    // 3. GLITCH SLICER
+    if (activeEffect === 'glitch' && frameCount % 3 === 0) {
+        for (let i = 0; i < 5; i++) {
+            let srcY = rand(0, canvas.height);
+            let sliceH = rand(10, 80);
+            let dispX = rand(-40, 40) * speedMultiplier;
+            ctx.drawImage(canvas, 0, srcY, canvas.width, sliceH, dispX, srcY, canvas.width, sliceH);
+        }
+    }
+
+    // HUD STATUS
+    ctx.fillStyle = "#00ffff"; ctx.font = "14px monospace";
+    ctx.fillText(`DATs LINK OK // FX: ${activeEffect.toUpperCase()} // SPEED(ENC_A): ${datsVal1} // TXT_QTY(ENC_B): ${activeTextCount}`, canvas.width - 560, 25);
+
+    requestAnimationFrame(updateAndRender);
+}
+
+generateSeedData();
+requestAnimationFrame(updateAndRender);
+
+/* ========= WEB SERIAL RECEIVER ========= */
+document.getElementById("connectBtn").onclick = async () => {
+    try {
+        const port = await navigator.serial.requestPort();
+        await port.open({ baudRate: 115200 });
+        document.getElementById("connectBtn").style.display = "none";
+        
+        const textDecoder = new TextDecoderStream();
+        port.readable.pipeTo(textDecoder.writable);
+        const reader = textDecoder.readable.getReader();
+        let buffer = "";
+        
+        while (true) {
+            const { value, done } = await reader.read();
+            if (done) break;
+            buffer += value;
+            let lines = buffer.split("\n");
+            buffer = lines.pop(); 
+            
+            for (let line of lines) {
+                let cleanLine = line.trim();
+                if (cleanLine.startsWith("DS_WEB;")) {
+                    let parts = cleanLine.split(";");
+                    if (parts.length >= 4) {
+                        datsVal1 = parseInt(parts[1]) || 30; // Speed Modulator
+                        datsVal2 = parseInt(parts[2]) || 60; // Text Qty Modulator
+                        let key = parts[3];
+                        
+                        if (key !== "-" && key !== "") {
+                            if (key === '1') activeEffect = 'normal';
+                            else if (key === '2') activeEffect = 'strobe';
+                            else if (key === '3') activeEffect = 'shuffle';
+                            else if (key === '4') activeEffect = 'delay';
+                            else if (key === '5') activeEffect = 'glitch';
+                            else if (key === '6') activeEffect = 'invert';
+                            else if (key === '7') activeEffect = 'mirror';
+                            else if (key === '8') activeEffect = 'zoom';
+                            else if (key === '9') activeEffect = 'rgbShift';
+                            else generateSeedData(); // Tombol lain acak struktur data map
+                        }
+                    }
+                }
+            }
+        }
+    } catch (err) {
+        alert("Koneksi gagal: " + err);
+    }
 };
-
-//generate();
 </script>
 </body>
 </html>
