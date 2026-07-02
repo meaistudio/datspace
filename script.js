@@ -419,7 +419,7 @@ const DOCUMENTATION_ARCHIVE = {
         title: "DATs_Out3 — The Voyager AV performance <br>130626",  
         date: "June 13, 2026",
         location: "Nuanu Creative City, Tabanan",
-        manifesto: "AV performance By Dats x Balimotion <br><br> Experiments with irregular frequency sound systems and the realization of visual data directly inside the dome.",
+        manifesto: "AV performance By Dats x Balimotion <br><br> HUE <br> GRAUNG <br> LIEV <br> LOUIS M X METHCLASS <br> BADSOJU <br> Experiments with irregular frequency sound systems and the realization of visual data directly inside the dome.",
         media: ["DATs_Out/DATs_Out3/Documentation/img1.jpg",
                 "DATs_Out/DATs_Out3/Documentation/img2.jpg",
                 "DATs_Out/DATs_Out3/Documentation/img3.jpg",
