@@ -381,7 +381,7 @@ const DOCUMENTATION_ARCHIVE = {
         title: "DATs_Out2 — TU'TUR'ANG'RING'<br>060626",  
         date: "June 06, 2026",
         location: "KROMA 1984 Madahuis, Denpasar",
-        manifesto: "Dats x Goof.house <br><br> HUE <br> GRAUNG <br> BADSOJU <br> BAZOOKA <br> FUNTIME <br> DISCOTIT <br> ALLAM <br><br> Experiments with irregular frequency sound systems and the realization of visual data directly in physical locations.",
+        manifesto: "Dats x Goof.house <br><br> HUE <br> GRAUNG <br> BADSOJU <br> BAZOOKA <br> FUNTIME <br> DISCOTIT <br> ALLAM <br><br> Experiments with irregular frequency sound systems and the realization of visual data directly in physical locations. <br><br> Lighting and projection mapping by MEAI STUDIO",
         media: [
             "DATs_Out/DATs_Out2/Documentation/img1.jpg",
             "DATs_Out/DATs_Out2/Documentation/img2.jpg",
