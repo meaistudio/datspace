@@ -381,7 +381,7 @@ const DOCUMENTATION_ARCHIVE = {
         title: "DATs_Out2 — TU'TUR'ANG'RING'<br>060626",  
         date: "June 06, 2026",
         location: "KROMA 1984 Madahuis, Denpasar",
-        manifesto: "Dats x Goof.house <br><br> HUE <br> GRAUNG <br> BADSOJU <br> BAZOOKA <br> FUNTIME <br> DISCOTIT <br> ALLAM <br> Experiments with irregular frequency sound systems and the realization of visual data directly in physical locations.",
+        manifesto: "Dats x Goof.house <br><br> HUE <br> GRAUNG <br> BADSOJU <br> BAZOOKA <br> FUNTIME <br> DISCOTIT <br> ALLAM <br><br> Experiments with irregular frequency sound systems and the realization of visual data directly in physical locations.",
         media: [
             "DATs_Out/DATs_Out2/Documentation/img1.jpg",
             "DATs_Out/DATs_Out2/Documentation/img2.jpg",
@@ -419,7 +419,7 @@ const DOCUMENTATION_ARCHIVE = {
         title: "DATs_Out3 — The Voyager AV performance <br>130626",  
         date: "June 13, 2026",
         location: "Nuanu Creative City, Tabanan",
-        manifesto: "AV performance By Dats x Balimotion <br><br> HUE <br> GRAUNG <br> LIEV <br> LOUIS M X METHCLASS <br> BADSOJU <br> Experiments with irregular frequency sound systems and the realization of visual data directly inside the dome.",
+        manifesto: "AV performance By Dats x Balimotion <br><br> HUE <br> GRAUNG <br> LIEV <br> LOUIS M X METHCLASS <br> BADSOJU <br><br> Experiments with irregular frequency sound systems and the realization of visual data directly inside the dome.",
         media: ["DATs_Out/DATs_Out3/Documentation/img1.jpg",
                 "DATs_Out/DATs_Out3/Documentation/img2.jpg",
                 "DATs_Out/DATs_Out3/Documentation/img3.jpg",
