@@ -1,581 +1,591 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DATS 3X - Windows XP Large Dialogue Edition</title>
-    <style>
-        /* --- Windows XP Luna Blue & Y2K Fusion Aesthetics --- */
-        * {
-            box-sizing: border-box;
-            font-family: 'Tahoma', 'Segoe UI', sans-serif;
-            font-weight: bold;
-        }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>IMADJI - Kopi Es Data</title>
 
-        body {
-            margin: 0;
-            padding: 0;
-            background: #0b001a;
-            color: #00ff00;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            overflow: hidden;
-            position: relative;
-        }
+  <style>
+    html, body {
+      margin: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #000;
+      color: #fff;
+      font-family: "Courier New", monospace;
+      user-select: none;
+    }
 
-        @media (max-width: 900px) {
-            body::before, body::after {
-                display: none;
-            }
-        }
+    canvas {
+      position: fixed;
+      inset: 0;
+      width: 100vw;
+      height: 100vh;
+    }
 
-        /* --- Layout 16:9 Vertical Terpusat --- */
-        .viewport-16-9 {
-            position: relative;
-            width: 100vw;
-            height: calc(100vw * 16 / 9);
-            max-width: 430px;
-            max-height: 765px;
-            background: #110022;
-            border: 4px solid #0053e2;
-            border-radius: 8px 8px 0 0;
-            box-shadow: 0 0 25px rgba(0, 83, 226, 0.5);
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            padding: 12px;
-            transition: background 0.1s ease;
-            z-index: 2; 
-        }
+    .screen, .hud {
+      position: fixed;
+      z-index: 2;
+    }
 
-        /* --- Windows XP Title Bar Style --- */
-        .xp-header {
-            background: linear-gradient(to bottom, #0058f5 0%, #0076f7 12%, #0053e2 25%, #0046d5 70%, #003bcb 100%);
-            color: white;
-            padding: 6px 10px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 12px;
-            border-radius: 7px 7px 0 0;
-            box-shadow: inset 0 1px 1px #80b2ff;
-            text-shadow: 1px 1px 1px rgba(0,0,0,0.7);
-            margin: -12px -12px 0 -12px;
-        }
+    .screen {
+      inset: 0;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+      box-sizing: border-box;
+      text-align: center;
+    }
 
-        .xp-controls {
-            display: flex;
-            gap: 4px;
-        }
+    .screen[hidden], .hud[hidden] {
+      display: none;
+    }
 
-        .xp-btn-ctrl {
-            width: 16px;
-            height: 16px;
-            border: 1px solid #fff;
-            border-radius: 3px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 9px;
-            color: white;
-            box-shadow: inset 0 1px 2px rgba(255,255,255,0.5);
-        }
+    .panel {
+      display: grid;
+      justify-items: center;
+      gap: 18px;
+      width: min(780px, 100%);
+      text-shadow: 2px 2px 0 #000;
+    }
 
-        .xp-min { background: linear-gradient(to bottom, #3c82ff, #0a46b9); }
-        .xp-close { 
-            background: linear-gradient(to bottom, #e7633c, #b61d00); 
-            border-color: #fff;
-            font-size: 10px;
-        }
+    .kicker, .signal {
+      margin: 0;
+      font-size: 14px;
+      letter-spacing: 2px;
+    }
 
-        /* --- Info Bar --- */
-        .slot-header {
-            display: flex;
-            justify-content: space-between;
-            background: #f1efe2; 
-            padding: 8px;
-            border: 1px solid #aca899;
-            color: #000;
-            font-size: 11px;
-            margin-top: 10px;
-            box-shadow: inset 1px 1px 2px #fff;
-        }
+    .home-title-img {
+      width: min(720px, 88vw);
+      height: auto;
+      display: block;
+      image-rendering: auto;
+    }
 
-        /* --- ENGINE SLOT --- */
-        .slot-window-outer {
-            background: #7ca5ff;
-            padding: 12px;
-            border: 2px solid #0053e2;
-            border-radius: 4px;
-            box-shadow: 2px 2px 5px rgba(0,0,0,0.3);
-            position: relative;
-            margin: auto 0;
-        }
+    p {
+      max-width: 560px;
+      margin: 0;
+      font-size: clamp(15px, 2vw, 22px);
+      line-height: 1.45;
+    }
 
-        .slot-container-centered {
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-            background: #000;
-            padding: 10px;
-            height: 120px;
-            overflow: hidden;
-            position: relative;
-            border: 2px inset #003bcb;
-        }
+    button {
+      font: inherit;
+      cursor: pointer;
+      touch-action: manipulation;
+    }
 
-        .reel-viewport {
-            width: 90px;
-            height: 100%;
-            background: #111;
-            border: 2px solid #7ca5ff;
-            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.8);
-            position: relative;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
+    .start-img-button {
+      padding: 0;
+      border: none;
+      background: transparent;
+      box-shadow: none;
+      transition: transform 140ms ease, filter 140ms ease;
+    }
 
-        .slot-tile {
-            height: 100%;
-            width: 100%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 35px;
-        }
+    .start-img-button:hover {
+      transform: scale(1.04);
+      filter: invert(1);
+    }
 
-        .dats-plain-white {
-            font-size: 20px;
-            color: #ffffff;
-            font-family: 'Arial Black', sans-serif;
-            letter-spacing: 1px;
-            text-shadow: none;
-        }
+    .start-img-button img {
+      width: min(220px, 44vw);
+      height: auto;
+      display: block;
+      image-rendering: auto;
+    }
 
-        /* --- Animasi Flash XP Style --- */
-        .jackpot-flash {
-            animation: hyperFlash 0.15s linear infinite;
-        }
+    .hud {
+      inset: 18px 18px auto 18px;
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      pointer-events: none;
+    }
 
-        @keyframes hyperFlash {
-            0%, 100% { background-color: #110022; border-color: #ff00ff; }
-            50% { background-color: #0053e2; border-color: #ffff00; }
-        }
+    .hud-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
 
-        /* --- XP Reboot Loading Overlay --- */
-        .boot-overlay {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: #000;
-            color: #fff;
-            display: none;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            z-index: 10;
-            font-size: 13px;
-        }
+    .hud span {
+      display: inline-block;
+      padding: 6px 10px;
+      color: #fff;
+      background: #000;
+      border: 2px solid #fff;
+      font-size: clamp(14px, 2vw, 22px);
+      text-shadow: 2px 2px 0 #000;
+    }
 
-        .loading-bar-container {
-            width: 70%;
-            height: 12px;
-            border: 2px solid #999;
-            background: #111;
-            margin-top: 15px;
-            border-radius: 3px;
-            overflow: hidden;
-            position: relative;
-        }
+    .mini-button {
+      min-width: 76px;
+      min-height: 38px;
+      padding: 8px 12px;
+      color: #fff;
+      background: #000;
+      border: 2px solid #fff;
+      font-size: 15px;
+      pointer-events: auto;
+      box-shadow: 4px 4px 0 #fff;
+      transition: transform 120ms ease, box-shadow 120ms ease, color 120ms ease, background 120ms ease;
+    }
 
-        .loading-bar-progress {
-            width: 0%;
-            height: 100%;
-            background: linear-gradient(to right, #39a639, #227a22);
-        }
+    .mini-button:hover {
+      color: #000;
+      background: #fff;
+      transform: translate(2px, 2px);
+      box-shadow: 2px 2px 0 #fff;
+    }
 
-        /* --- Footer Controls & FIXED REWARD PANEL --- */
-        .controls-area {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 6px;
-            background: #f1efe2;
-            padding: 8px;
-            border: 1px solid #aca899;
-            box-shadow: inset 1px 1px 2px #fff;
-        }
+    @media (max-width: 720px) {
+      .screen {
+        padding: 18px;
+      }
 
-        .btn {
-            padding: 10px;
-            font-size: 12px;
-            cursor: pointer;
-            border: 1px solid #003bcb;
-            border-radius: 3px;
-            text-shadow: 1px 1px 0px rgba(255,255,255,0.4);
-            box-shadow: inset 0 1px 0 rgba(255,255,255,0.5), 1px 1px 2px rgba(0,0,0,0.2);
-        }
+      .kicker, .signal {
+        font-size: 11px;
+      }
 
-        .btn-spin { 
-            background: linear-gradient(to bottom, #4bf14b 0%, #32c832 15%, #229622 85%, #156415 100%); 
-            color: #fff;
-            border-color: #156415;
-            text-shadow: 1px 1px 2px #000;
-        }
-        .btn-stop { 
-            background: linear-gradient(to bottom, #f14b4b 0%, #c83232 15%, #962222 85%, #641515 100%); 
-            color: #fff;
-            border-color: #641515;
-            text-shadow: 1px 1px 2px #000;
-        }
-        .btn-reset { 
-            background: linear-gradient(to bottom, #4b96f1 0%, #327ec8 15%, #225996 85%, #153a64 100%); 
-            color: #fff;
-            border-color: #153a64;
-            text-shadow: 1px 1px 2px #000;
-        }
-        
-        .btn-link {
-            grid-column: span 2;
-            background: linear-gradient(to bottom, #ffffff 0%, #ece9d8 100%);
-            color: #003bcb;
-            border-color: #0053e2;
-            padding: 8px;
-            font-size: 11px;
-            text-transform: uppercase;
-        }
-        .btn-link:active {
-            background: #ece9d8;
-            box-shadow: inset 1px 1px 2px rgba(0,0,0,0.2);
-        }
+      .home-title-img {
+        width: min(520px, 92vw);
+      }
 
-        .btn:disabled { 
-            background: #dcd9d1 !important; 
-            color: #aca899 !important; 
-            border-color: #aca899 !important; 
-            cursor: not-allowed;
-            text-shadow: none !important;
-            box-shadow: none !important;
-        }
+      .start-img-button img {
+        width: min(190px, 48vw);
+      }
 
-        .reward-banner {
-            grid-column: span 2;
-            background: linear-gradient(to bottom, #ffffff 0%, #dedcd3 100%);
-            border: 1px solid #716f64;
-            height: 70px; 
-            text-align: center;
-            font-size: 15px;
-            color: #b61d00; 
-            font-family: 'Arial Black', sans-serif;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            box-shadow: inset 1px 1px 3px rgba(0,0,0,0.2);
-            overflow: hidden; 
-        }
+      .hud {
+        inset: 12px 12px auto 12px;
+      }
 
-        .unique-code-text {
-            font-size: 11px;
-            color: #0053e2;
-            font-family: 'Courier New', monospace;
-            letter-spacing: 1px;
-            margin-top: 2px;
-            height: 14px; 
-        }
+      .hud-group {
+        max-width: calc(100vw - 94px);
+        gap: 6px;
+      }
 
-        /* --- Cyber Assistant Interface (XP Dialog Style) --- */
-        .assistant-panel {
-            background: #f1efe2;
-            border: 1px solid #aca899;
-            padding: 8px;
-            display: flex;
-            gap: 8px;
-            align-items: center;
-            box-shadow: inset 1px 1px 2px #fff;
-        }
+      .hud span {
+        padding: 4px 7px;
+      }
 
-        .avatar-frame-text {
-            width: 55px;
-            height: 50px;
-            border: 1px solid #716f64;
-            background: #000;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            overflow: hidden;
-            flex-shrink: 0;
-            box-shadow: inset 0 0 5px rgba(0, 255, 0, 0.5);
-        }
-
-        .animated-dats-logo {
-            font-size: 13px;
-            color: #00ff00;
-            font-family: 'Courier New', monospace;
-            letter-spacing: 1px;
-            animation: datsBlink 0.8s steps(2, start) infinite;
-        }
-
-        @keyframes datsBlink {
-            0%, 100% { transform: scale(1); color: #00ff00; opacity: 1; }
-            50% { transform: scale(0.95); color: #ff00ff; opacity: 0.4; }
-        }
-
-        .dialog-bubble {
-            flex: 1;
-            background: #fff;
-            color: #333;
-            padding: 8px;
-            font-size: 11px;
-            height: 100px; 
-            overflow-y: auto;
-            border: 1px solid #716f64;
-            line-height: 1.4;
-        }
-    </style>
+      .mini-button {
+        min-width: 62px;
+        font-size: 13px;
+      }
+    }
+  </style>
 </head>
+
 <body>
+  <canvas id="canvas"></canvas>
 
-<div class="viewport-16-9" id="main-viewport">
-    <div class="xp-header">
-        <span>🎰 DATS_XP_MATRIX.exe</span>
-        <div class="xp-controls">
-            <div class="xp-btn-ctrl xp-min">_</div>
-            <div class="xp-btn-ctrl xp-close">X</div>
-        </div>
+  <main id="screen" class="screen">
+    <section class="panel">
+      <p class="kicker">IMADJI / INTERNET ART GAME</p>
+
+      <img class="home-title-img" src="asset/home.webp" alt="Kopi Es Data">
+
+      <p>Tangkap es batu dan biji kopi sebanyak mungkin. Cup mengikuti mouse, sentuhan, atau tombol kiri-kanan.</p>
+
+      <button id="startBtn" class="start-img-button" type="button" aria-label="Start">
+        <img src="asset/start.webp" alt="Start">
+      </button>
+
+      <p class="signal">1-BIT BREW PROTOCOL</p>
+    </section>
+  </main>
+
+  <div id="hud" class="hud" hidden>
+    <div class="hud-group">
+      <span id="scoreText">SCORE 0</span>
+      <span id="bestText">BEST 0</span>
+      <span id="lifeText">LIFE 3</span>
     </div>
 
-    <div class="slot-header">
-        <div>SYSTEM: <span id="engine-status" style="color:#0053e2;">XP_ACTIVE</span></div>
-        <div>QUOTA: <span id="chances-num" style="color:#b61d00;">3</span> / 3</div>
-    </div>
+    <button id="exitBtn" class="mini-button" type="button">EXIT</button>
+  </div>
 
-    <div class="slot-window-outer">
-        <div class="slot-container-centered">
-            
-            <div class="boot-overlay" id="reboot-screen">
-                <div id="boot-text">DATS IS REBOOTING...</div>
-                <div class="loading-bar-container">
-                    <div class="loading-bar-progress" id="load-progress"></div>
-                </div>
-            </div>
-            
-            <div class="reel-viewport">
-                <div class="slot-tile" id="box1">🍺</div>
-            </div>
+  <script>
+    const canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
 
-            <div class="reel-viewport">
-                <div class="slot-tile" id="box2">📦</div>
-            </div>
+    const screen = document.getElementById("screen");
+    const hud = document.getElementById("hud");
+    const startBtn = document.getElementById("startBtn");
+    const exitBtn = document.getElementById("exitBtn");
+    const scoreText = document.getElementById("scoreText");
+    const bestText = document.getElementById("bestText");
+    const lifeText = document.getElementById("lifeText");
 
-            <div class="reel-viewport">
-                <div class="slot-tile" id="box3"><span class="dats-plain-white">DATS</span></div>
-            </div>
+    const asset = {
+      extBg: "asset/imadji_yos_ext.webp",
+      inBg: "asset/imadji_yos_in.webp",
+      cup: "asset/cup.webp",
+      ice: "asset/ice.webp",
+      bean: "asset/bean.webp"
+    };
 
-        </div>
-    </div>
+    const img = {};
 
-    <div class="controls-area">
-        <button class="btn btn-spin" id="action-btn" onclick="handleAction()">SPIN</button>
-        <button class="btn btn-reset" id="reset-btn" onclick="systemReboot()" disabled>REBOOT</button>
-        
-        <div class="reward-banner">
-            <div id="reward-output">REWARD: NONE</div>
-            <div id="code-output" class="unique-code-text"></div>
-        </div>
+    Object.keys(asset).forEach((key) => {
+      img[key] = new Image();
+      img[key].src = asset[key];
+    });
 
-        <button class="btn btn-link" onclick="window.open('https://datspace.club', '_blank')">🌐 Kunjungi Datspace.club</button>
-    </div>
+    const game = {
+      mode: "start",
+      score: 0,
+      best: Number(localStorage.getItem("imadjiCoffeeBest") || 0),
+      lives: 3,
 
-    <div class="assistant-panel">
-        <div class="avatar-frame-text">
-            <div class="animated-dats-logo">&lt;DATS&gt;</div>
-        </div>
-        <div class="dialog-bubble" id="msg-box">
-            <b>CARA BERMAIN:</b> Tekan SPIN untuk memutar silinder matriks, lalu klik tombol STOP pada setiap kotak secara manual satu per satu. Sejajarkan 3 gambar kembar untuk memenangkan hadiah!<br><br>
-            <b>DAFTAR HADIAH JACKPOT:</b><br>
-            • 3x Sinyal 🍺 = Klaim Gratis 1 BOTOL BEER<br>
-            • 3x Sinyal 📦 = Klaim FREE PRODUCT<br>
-            • 3x Sinyal DATS = Klaim EXCLUSIVE STICKER PACK
-        </div>
-    </div>
-</div>
+      cupX: 0,
+      cupY: 0,
+      cupW: 250,
 
-<script>
-    const itemData = [
-        { code: 'BEER', html: '🍺' },
-        { code: 'PACKAGE', html: '📦' },
-        { code: 'DATS', html: '<span class="dats-plain-white">DATS</span>' }
-    ];
+      beanSize: 92,
+      iceSize: 86,
 
-    let chancesLeft = 3;
-    let gameState = "IDLE"; 
-    
-    let interval1, interval2, interval3;
-    let currentIdx1 = 0; let currentIdx2 = 1; let currentIdx3 = 2;
+      items: [],
+      lastSpawn: 0,
+      lastTime: 0,
+      spawnRate: 780,
+      glitch: 0,
 
-    function handleAction() {
-        const btn = document.getElementById('action-btn');
-        const rebootBtn = document.getElementById('reset-btn');
+      keys: {
+        left: false,
+        right: false
+      }
+    };
 
-        if (gameState === "IDLE") {
-            if (chancesLeft <= 0) return;
+    function resize() {
+      const dpr = window.devicePixelRatio || 1;
 
-            chancesLeft--;
-            document.getElementById('chances-num').innerText = chancesLeft;
-            document.getElementById('reward-output').innerText = "ROLLING...";
-            document.getElementById('code-output').innerText = "";
-            document.getElementById('msg-box').innerHTML = "<b>STATUS:</b> Prosedur sinkronisasi berjalan... Tekan tombol merah untuk menghentikan KOTAK 1!";
-            
-            rebootBtn.disabled = true;
+      canvas.width = innerWidth * dpr;
+      canvas.height = innerHeight * dpr;
+      canvas.style.width = innerWidth + "px";
+      canvas.style.height = innerHeight + "px";
 
-            interval1 = setInterval(() => { currentIdx1 = (currentIdx1 + 1) % itemData.length; document.getElementById('box1').innerHTML = itemData[currentIdx1].html; }, 60);
-            interval2 = setInterval(() => { currentIdx2 = (currentIdx2 + 1) % itemData.length; document.getElementById('box2').innerHTML = itemData[currentIdx2].html; }, 70);
-            interval3 = setInterval(() => { currentIdx3 = (currentIdx3 + 1) % itemData.length; document.getElementById('box3').innerHTML = itemData[currentIdx3].html; }, 80);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-            btn.className = "btn btn-stop";
-            btn.innerText = "STOP 1";
-            gameState = "ROLLING";
+      game.cupX ||= innerWidth / 2;
+      game.cupY = innerHeight - Math.max(104, innerHeight * 0.13);
+    }
 
-        } else if (gameState === "ROLLING") {
-            clearInterval(interval1);
-            btn.innerText = "STOP 2";
-            gameState = "STOPPED_1";
-            document.getElementById('msg-box').innerHTML = "<b>STATUS:</b> Jalur 1 terkunci! Silakan tekan tombol merah untuk menghentikan KOTAK 2.";
+    function imageHeightByWidth(image, width) {
+      if (!image || !image.naturalWidth || !image.naturalHeight) return width;
+      return width / (image.naturalWidth / image.naturalHeight);
+    }
 
-        } else if (gameState === "STOPPED_1") {
-            clearInterval(interval2);
-            btn.innerText = "STOP 3";
-            gameState = "STOPPED_2";
-            document.getElementById('msg-box').innerHTML = "<b>STATUS:</b> Jalur 2 terkunci! Tekan tombol merah sekali lagi untuk mengunci KOTAK TERAKHIR.";
+    function updateHud() {
+      scoreText.textContent = "SCORE " + game.score;
+      bestText.textContent = "BEST " + game.best;
+      lifeText.textContent = "LIFE " + game.lives;
+    }
 
-        } else if (gameState === "STOPPED_2") {
-            clearInterval(interval3);
-            
-            btn.className = "btn btn-spin";
-            btn.innerText = "SPIN";
-            btn.disabled = true; 
-            gameState = "IDLE";
+    function startGame() {
+      game.mode = "play";
+      game.score = 0;
+      game.lives = 3;
+      game.items = [];
+      game.spawnRate = 780;
+      game.lastSpawn = performance.now();
+      game.lastTime = performance.now();
+      game.cupX = innerWidth / 2;
+      game.glitch = 12;
 
-            evaluateMatrix(itemData[currentIdx1].code, itemData[currentIdx2].code, itemData[currentIdx3].code);
+      screen.hidden = true;
+      hud.hidden = false;
+
+      updateHud();
+    }
+
+    function showStart() {
+      game.mode = "start";
+      game.items = [];
+      hud.hidden = true;
+      screen.hidden = false;
+
+      screen.innerHTML = `
+        <section class="panel">
+          <p class="kicker">IMADJI / INTERNET ART GAME</p>
+
+          <img class="home-title-img" src="asset/home.webp" alt="Kopi Es Data">
+
+          <p>Tangkap es batu dan biji kopi sebanyak mungkin. Cup mengikuti mouse, sentuhan, atau tombol kiri-kanan.</p>
+
+          <button id="newStartBtn" class="start-img-button" type="button" aria-label="Start">
+            <img src="asset/start.webp" alt="Start">
+          </button>
+
+          <p class="signal">1-BIT BREW PROTOCOL</p>
+        </section>
+      `;
+
+      document.getElementById("newStartBtn").onclick = startGame;
+    }
+
+    function gameOver() {
+      game.mode = "over";
+      hud.hidden = true;
+      screen.hidden = false;
+
+      screen.innerHTML = `
+        <section class="panel">
+          <p class="kicker">SIGNAL LOST</p>
+          <img class="home-title-img" src="asset/home.webp" alt="Kopi Es Data">
+          <p>SCORE ${game.score} / BEST ${game.best}</p>
+          <button id="restartBtn" class="start-img-button" type="button" aria-label="Restart">
+            <img src="asset/start.webp" alt="Restart">
+          </button>
+        </section>
+      `;
+
+      document.getElementById("restartBtn").onclick = startGame;
+    }
+
+    function drawBg(image, label, darken = 0.34) {
+      ctx.save();
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = "high";
+
+      if (image.complete && image.naturalWidth > 0) {
+        const scale = Math.max(innerWidth / image.naturalWidth, innerHeight / image.naturalHeight);
+        const w = image.naturalWidth * scale;
+        const h = image.naturalHeight * scale;
+
+        ctx.drawImage(image, (innerWidth - w) / 2, (innerHeight - h) / 2, w, h);
+      } else {
+        ctx.fillStyle = "#000";
+        ctx.fillRect(0, 0, innerWidth, innerHeight);
+
+        ctx.fillStyle = "#fff";
+        ctx.font = "12px monospace";
+
+        for (let y = 14; y < innerHeight; y += 26) {
+          for (let x = y % 52; x < innerWidth; x += 52) {
+            ctx.fillText(label, x, y);
+          }
         }
+      }
+
+      ctx.fillStyle = `rgba(0,0,0,${darken})`;
+      ctx.fillRect(0, 0, innerWidth, innerHeight);
+
+      ctx.strokeStyle = "rgba(255,255,255,0.18)";
+
+      for (let y = 0; y < innerHeight; y += 6) {
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(innerWidth, y);
+        ctx.stroke();
+      }
+
+      ctx.restore();
     }
 
-    function generateUniqueCode(prefix) {
-        const chars = '0123456789ABCDEF';
-        let randomPart = '';
-        for (let i = 0; i < 4; i++) {
-            randomPart += chars[Math.floor(Math.random() * chars.length)];
+    function spawn(now) {
+      if (now - game.lastSpawn < game.spawnRate) return;
+
+      game.lastSpawn = now;
+      game.spawnRate = Math.max(330, 780 - game.score * 7);
+
+      const type = Math.random() > 0.58 ? "bean" : "ice";
+      const size = type === "bean" ? game.beanSize : game.iceSize;
+
+      game.items.push({
+        type,
+        x: 40 + Math.random() * Math.max(1, innerWidth - 80),
+        y: -size,
+        size,
+        speed: 145 + Math.random() * 120 + game.score * 1.3,
+        drift: (Math.random() - 0.5) * 46,
+        spin: Math.random() * Math.PI
+      });
+    }
+
+    function update(now) {
+      const dt = Math.min(0.034, (now - game.lastTime) / 1000 || 0.016);
+
+      game.lastTime = now;
+
+      if (game.keys.left) game.cupX -= 540 * dt;
+      if (game.keys.right) game.cupX += 540 * dt;
+
+      const cupHeight = imageHeightByWidth(img.cup, game.cupW);
+      const cupLeftLimit = game.cupW / 2;
+      const cupRightLimit = innerWidth - game.cupW / 2;
+
+      game.cupX = Math.max(cupLeftLimit, Math.min(cupRightLimit, game.cupX));
+      game.cupY = innerHeight - Math.max(cupHeight * 0.55, innerHeight * 0.13);
+
+      spawn(now);
+
+      const cupLeft = game.cupX - game.cupW / 2;
+      const cupRight = game.cupX + game.cupW / 2;
+      const cupTop = game.cupY - cupHeight / 2;
+
+      for (let i = game.items.length - 1; i >= 0; i--) {
+        const item = game.items[i];
+
+        const itemImage = img[item.type];
+        const itemHeight = imageHeightByWidth(itemImage, item.size);
+
+        item.y += item.speed * dt;
+        item.x += Math.sin(now * 0.002 + item.spin) * item.drift * dt;
+        item.spin += dt * 5;
+
+        const caught =
+          item.y + itemHeight / 2 > cupTop &&
+          item.y < game.cupY + cupHeight * 0.38 &&
+          item.x > cupLeft &&
+          item.x < cupRight;
+
+        if (caught) {
+          game.score += item.type === "bean" ? 2 : 1;
+          game.best = Math.max(game.best, game.score);
+
+          localStorage.setItem("imadjiCoffeeBest", String(game.best));
+
+          game.items.splice(i, 1);
+          game.glitch = 2;
+
+          updateHud();
+          continue;
         }
-        const timestamp = new Date().getMilliseconds(); 
-        return `${prefix}-${randomPart}-${timestamp}`;
-    }
 
-    function evaluateMatrix(c1, c2, c3) {
-        const rewardText = document.getElementById('reward-output');
-        const codeText = document.getElementById('code-output');
-        const msgBox = document.getElementById('msg-box');
-        const btn = document.getElementById('action-btn');
-        const rebootBtn = document.getElementById('reset-btn');
-        const viewport = document.getElementById('main-viewport');
+        if (item.y > innerHeight + itemHeight) {
+          game.items.splice(i, 1);
+          game.lives -= 1;
+          game.glitch = 8;
 
-        // PERBAIKAN: Deteksi string c1, c2, c3 sekarang disinkronkan secara presisi dengan itemData.code
-        if (c1 === c2 && c2 === c3) {
-            if (c1 === 'BEER') {
-                rewardText.innerText = "GRATIS 1 BEER!";
-                const uniqueCode = generateUniqueCode('BEER');
-                codeText.innerText = `VERIFY_ID: ${uniqueCode}`;
-                msgBox.innerHTML = "🎉 <b>SELAMAT!</b> Anda sukses menyejajarkan matriks 3 BEER. Berhak mendapatkan <b>Gratis 1 Botol Beer</b>! Tunjukkan VERIFY_ID unik di atas kepada petugas bar.";
-            } else if (c1 === 'PACKAGE') { // Perbaikan: Menyesuaikan string pengecekan dari 'FREE PRODUCT' ke 'PACKAGE'
-                rewardText.innerText = "FREE PRODUCT!";
-                const uniqueCode = generateUniqueCode('PAKET');
-                codeText.innerText = `VERIFY_ID: ${uniqueCode}`;
-                msgBox.innerHTML = "🎉 <b>SELAMAT!</b> Anda sukses menyejajarkan matriks 3 PAKET. Berhak memenangkan <b>Voucher Free Product</b>! Ambil tangkapan layar bersama VERIFY_ID unik di atas.";
-            } else if (c1 === 'DATS') {
-                rewardText.innerText = "STICKER PACK!";
-                const uniqueCode = generateUniqueCode('DATS');
-                codeText.innerText = `VERIFY_ID: ${uniqueCode}`;
-                msgBox.innerHTML = "🎉 <b>SELAMAT!</b> Anda sukses menyejajarkan matriks 3 DATS Logo. Berhak memenangkan merchandise eksklusif <b>DATs Sticker Pack</b>! Simpan screenshot VERIFY_ID di atas.";
-            }
-            
-            viewport.classList.add('jackpot-flash'); 
-            btn.disabled = true;
-            rebootBtn.disabled = false; 
-        } else {
-            if (chancesLeft > 0) {
-                rewardText.innerText = "REWARD: NONE";
-                codeText.innerText = "";
-                msgBox.innerHTML = `❌ <b>BELUM BERUNTUNG!</b> Kombinasi penguncian manual (${c1}-${c2}-${c3}) tidak sejajar. Sisa kuota kesempatan putaran Anda: <b>${chancesLeft} kali lagi</b>. Atur waktu putaran Anda dan coba kembali!`;
-                btn.disabled = false;
-                rebootBtn.disabled = true; 
-            } else {
-                rewardText.innerText = "GAME OVER";
-                codeText.innerText = "ACCESS_DENIED";
-                msgBox.innerHTML = "⚠️ <b>ALOKASI KESEMPATAN HABIS!</b> 3 kali percobaan Anda telah digunakan tanpa hasil kembar. Tombol REBOOT di atas sekarang terbuka, silakan klik untuk memulihkan kuota sirkuit.";
-                btn.disabled = true;
-                rebootBtn.disabled = false; 
-            }
+          updateHud();
+
+          if (game.lives <= 0) gameOver();
         }
+      }
     }
 
-    function systemReboot() {
-        document.getElementById('action-btn').disabled = true;
-        document.getElementById('reset-btn').disabled = true;
-        document.getElementById('engine-status').innerText = "LOADING...";
-        document.getElementById('engine-status').style.color = "#ff3300";
-        
-        document.getElementById('main-viewport').classList.remove('jackpot-flash');
+    function drawItem(item) {
+      ctx.save();
+      ctx.translate(item.x, item.y);
+      ctx.rotate(item.spin);
 
-        const rebootScreen = document.getElementById('reboot-screen');
-        const progressBar = document.getElementById('load-progress');
-        const bootText = document.getElementById('boot-text');
-        
-        rebootScreen.style.display = "flex";
-        progressBar.style.width = "0%";
-        bootText.innerText = "SAVING XP_SETTING CONFIGURATION...";
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = "high";
 
-        let progressWidth = 0;
-        const loadingInterval = setInterval(() => {
-            if (progressWidth >= 100) {
-                clearInterval(loadingInterval);
-                setTimeout(() => {
-                    rebootScreen.style.display = "none";
-                    completeResetLogic();
-                }, 200);
-            } else {
-                progressWidth += 5; 
-                progressBar.style.width = progressWidth + "%";
-                if(progressWidth === 35) bootText.innerText = "RELOADING DESKTOP ASSETS...";
-                if(progressWidth === 70) bootText.innerText = "RE-INDEXING SECURE REWARD MATRIX...";
-            }
-        }, 40);
+      const image = img[item.type];
+
+      if (image.complete && image.naturalWidth > 0) {
+        const width = item.size;
+        const height = imageHeightByWidth(image, width);
+
+        ctx.drawImage(image, -width / 2, -height / 2, width, height);
+      } else if (item.type === "bean") {
+        ctx.fillStyle = "#fff";
+        ctx.fillRect(-18, -28, 36, 56);
+        ctx.fillStyle = "#000";
+        ctx.fillRect(-3, -22, 6, 44);
+      } else {
+        ctx.fillStyle = "#fff";
+        ctx.fillRect(-25, -25, 50, 50);
+        ctx.strokeStyle = "#000";
+        ctx.strokeRect(-14, -14, 28, 28);
+      }
+
+      ctx.restore();
     }
 
-    function completeResetLogic() {
-        chancesLeft = 3;
-        gameState = "IDLE";
-        currentIdx1 = 0; currentIdx2 = 1; currentIdx3 = 2;
-        
-        const btn = document.getElementById('action-btn');
-        btn.className = "btn btn-spin";
-        btn.innerText = "SPIN";
-        btn.disabled = false;
+    function drawCup() {
+      const x = game.cupX;
+      const y = game.cupY;
+      const image = img.cup;
 
-        document.getElementById('reset-btn').disabled = true;
-        
-        document.getElementById('chances-num').innerText = chancesLeft;
-        document.getElementById('reward-output').innerText = "REWARD: NONE";
-        document.getElementById('code-output').innerText = "";
-        document.getElementById('engine-status').innerText = "XP_ACTIVE";
-        document.getElementById('engine-status').style.color = "#0053e2";
-        document.getElementById('msg-box').innerHTML = "<b>CARA BERMAIN:</b> Tekan SPIN untuk memutar silinder matriks, lalu klik tombol STOP pada setiap kotak secara manual satu per satu. Sejajarkan 3 gambar kembar untuk memenangkan hadiah!<br><br><b>DAFTAR HADIAH JACKPOT:</b><br>• 3x Sinyal 🍺 = Klaim Gratis 1 BOTOL BEER<br>• 3x Sinyal 📦 = Klaim FREE PRODUCT<br>• 3x Sinyal DATS = Klaim EXCLUSIVE STICKER PACK";
+      ctx.save();
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = "high";
 
-        document.getElementById('box1').innerHTML = itemData[0].html;
-        document.getElementById('box2').innerHTML = itemData[1].html;
-        document.getElementById('box3').innerHTML = itemData[2].html;
+      if (image.complete && image.naturalWidth > 0) {
+        const width = game.cupW;
+        const height = imageHeightByWidth(image, width);
+
+        ctx.drawImage(image, x - width / 2, y - height / 2, width, height);
+      } else {
+        ctx.fillStyle = "#fff";
+        ctx.fillRect(x - 78, y - 38, 140, 78);
+        ctx.fillRect(x - 94, y - 52, 170, 22);
+        ctx.clearRect(x - 62, y - 22, 110, 47);
+        ctx.strokeStyle = "#fff";
+        ctx.lineWidth = 8;
+        ctx.strokeRect(x + 62, y - 17, 43, 39);
+      }
+
+      ctx.restore();
     }
-</script>
+
+    function drawGlitch() {
+      if (game.glitch <= 0) return;
+
+      for (let i = 0; i < 60; i++) {
+        ctx.fillStyle = Math.random() > 0.5 ? "#fff" : "#000";
+        ctx.fillRect(
+          Math.random() * innerWidth,
+          Math.random() * innerHeight,
+          Math.random() * 180,
+          Math.random() * 24
+        );
+      }
+
+      game.glitch -= 1;
+    }
+
+    function loop(now) {
+      drawBg(
+        game.mode === "play" ? img.inBg : img.extBg,
+        game.mode === "play" ? "IN" : "EXT",
+        game.mode === "play" ? 0.62 : 0.34
+      );
+
+      if (game.mode === "play") {
+        update(now);
+        game.items.forEach(drawItem);
+        drawCup();
+      }
+
+      drawGlitch();
+      requestAnimationFrame(loop);
+    }
+
+    function moveCup(x) {
+      if (game.mode === "play") game.cupX = x;
+    }
+
+    window.addEventListener("resize", resize);
+
+    window.addEventListener("pointermove", e => moveCup(e.clientX), { passive: true });
+    window.addEventListener("pointerdown", e => moveCup(e.clientX), { passive: true });
+
+    window.addEventListener("keydown", e => {
+      if (e.key === "ArrowLeft" || e.key.toLowerCase() === "a") game.keys.left = true;
+      if (e.key === "ArrowRight" || e.key.toLowerCase() === "d") game.keys.right = true;
+    });
+
+    window.addEventListener("keyup", e => {
+      if (e.key === "ArrowLeft" || e.key.toLowerCase() === "a") game.keys.left = false;
+      if (e.key === "ArrowRight" || e.key.toLowerCase() === "d") game.keys.right = false;
+    });
+
+    document.addEventListener("touchstart", e => {
+      if (e.touches.length > 1) e.preventDefault();
+    }, { passive: false });
+
+    startBtn.onclick = startGame;
+    exitBtn.onclick = showStart;
+
+    resize();
+    updateHud();
+    requestAnimationFrame(loop);
+  </script>
 </body>
 </html>
