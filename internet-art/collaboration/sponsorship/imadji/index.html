@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>IMADJI - Kopi Es Data</title>
+  <title>IMADJI - CUP COLLECTOR</title>
 
   <style>
     html, body {
@@ -13,8 +13,13 @@
       overflow: hidden;
       background: #000;
       color: #fff;
-      font-family: "Courier New", monospace;
+      font-family: monospace;
       user-select: none;
+      touch-action: none;
+    }
+
+    input, button {
+      font-family: monospace;
     }
 
     canvas {
@@ -22,9 +27,13 @@
       inset: 0;
       width: 100vw;
       height: 100vh;
+      touch-action: none;
     }
 
-    .screen, .hud {
+    .screen,
+    .hud,
+    .logo-row,
+    .visit-fixed {
       position: fixed;
       z-index: 2;
     }
@@ -38,7 +47,10 @@
       text-align: center;
     }
 
-    .screen[hidden], .hud[hidden] {
+    .screen[hidden],
+    .hud[hidden],
+    .visit-fixed[hidden],
+    .logo-row[hidden] {
       display: none;
     }
 
@@ -46,34 +58,83 @@
       display: grid;
       justify-items: center;
       gap: 18px;
-      width: min(780px, 100%);
+      width: min(820px, 100%);
       text-shadow: 2px 2px 0 #000;
     }
 
-    .kicker, .signal {
+    .logo-row {
+      top: 22px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      pointer-events: none;
+    }
+
+    .logo-row img {
+      height: clamp(28px, 4vw, 52px);
+      width: auto;
+      display: block;
+    }
+
+    .logo-x {
+      font-size: clamp(18px, 3vw, 34px);
+      line-height: 1;
+      color: #fff;
+      text-shadow: 2px 2px 0 #000;
+    }
+
+    .visit-fixed {
+      left: 50%;
+      bottom: 18px;
+      transform: translateX(-50%);
+      z-index: 5;
+      font-size: clamp(13px, 1.8vw, 18px);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      white-space: nowrap;
+      pointer-events: auto;
+    }
+
+    .visit-fixed a {
+      display: inline-block;
+      padding: 8px 12px;
+      color: #fff;
+      background: #000;
+      border: 2px solid #fff;
+      text-decoration: none;
+      transition: color 120ms ease, background 120ms ease;
+      touch-action: manipulation;
+    }
+
+    .visit-fixed a:hover {
+      color: #000;
+      background: #fff;
+    }
+
+    .kicker {
       margin: 0;
-      font-size: 14px;
+      font-size: clamp(12px, 1.8vw, 18px);
       letter-spacing: 2px;
+      text-transform: uppercase;
     }
 
     .home-title-img {
       width: min(720px, 88vw);
       height: auto;
       display: block;
-      image-rendering: auto;
-    }
-
-    p {
-      max-width: 560px;
-      margin: 0;
-      font-size: clamp(15px, 2vw, 22px);
-      line-height: 1.45;
     }
 
     button {
-      font: inherit;
       cursor: pointer;
       touch-action: manipulation;
+    }
+
+    @keyframes blinkStart {
+      0%, 45% { opacity: 1; filter: none; }
+      46%, 55% { opacity: 0.2; filter: invert(1); }
+      56%, 100% { opacity: 1; filter: none; }
     }
 
     .start-img-button {
@@ -81,71 +142,151 @@
       border: none;
       background: transparent;
       box-shadow: none;
-      transition: transform 140ms ease, filter 140ms ease;
+      margin-top: 18px;
+      transition: transform 140ms ease;
     }
 
     .start-img-button:hover {
       transform: scale(1.04);
-      filter: invert(1);
     }
 
     .start-img-button img {
       width: min(220px, 44vw);
       height: auto;
       display: block;
-      image-rendering: auto;
+      animation: blinkStart 1.1s steps(1) infinite;
     }
 
     .hud {
       inset: 18px 18px auto 18px;
       display: flex;
-      justify-content: space-between;
-      gap: 12px;
+      justify-content: flex-start;
       pointer-events: none;
+      z-index: 3;
     }
 
     .hud-group {
       display: flex;
       flex-wrap: wrap;
-      gap: 8px;
+      gap: 10px;
+      align-items: flex-start;
     }
 
-    .hud span {
-      display: inline-block;
-      padding: 6px 10px;
-      color: #fff;
+    .hud-item,
+    .score-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 18px;
+      padding: 6px 12px;
       background: #000;
       border: 2px solid #fff;
+    }
+
+    .hud-label-img,
+    .score-pill-label {
+      height: clamp(18px, 2.2vw, 28px);
+      width: auto;
+      display: block;
+    }
+
+    .number-img-row {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      margin-left: 10px;
+      min-height: clamp(18px, 2.2vw, 28px);
+    }
+
+    .number-img-row img {
+      height: clamp(18px, 2.2vw, 28px);
+      width: auto;
+      display: block;
+    }
+
+    .number-fallback {
+      color: #fff;
       font-size: clamp(14px, 2vw, 22px);
-      text-shadow: 2px 2px 0 #000;
+      line-height: 1;
     }
 
-    .mini-button {
-      min-width: 76px;
-      min-height: 38px;
-      padding: 8px 12px;
+    .top-score-title {
+      width: min(360px, 74vw);
+      height: auto;
+      display: block;
+    }
+
+    .score-summary {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 12px;
+    }
+
+    .top-score-list {
+      display: grid;
+      gap: 6px;
+      width: min(420px, 86vw);
+    }
+
+    .top-score-row {
+      display: grid;
+      grid-template-columns: 40px 1fr auto;
+      align-items: center;
+      gap: 12px;
+      padding: 7px 10px;
+      background: #000;
+      border: 2px solid #fff;
+      font-size: clamp(14px, 2vw, 20px);
+      text-align: left;
+    }
+
+    .top-score-row span:first-child {
+      opacity: 0.7;
+    }
+
+    .top-score-row .number-img-row {
+      justify-content: flex-end;
+      margin-left: 0;
+    }
+
+    .submit-score {
+      display: grid;
+      gap: 10px;
+      justify-items: center;
+    }
+
+    .submit-score input {
+      width: min(280px, 76vw);
+      padding: 10px;
       color: #fff;
       background: #000;
       border: 2px solid #fff;
-      font-size: 15px;
-      pointer-events: auto;
-      box-shadow: 4px 4px 0 #fff;
-      transition: transform 120ms ease, box-shadow 120ms ease, color 120ms ease, background 120ms ease;
+      font: inherit;
+      text-align: center;
+      text-transform: uppercase;
+      box-sizing: border-box;
     }
 
-    .mini-button:hover {
-      color: #000;
-      background: #fff;
-      transform: translate(2px, 2px);
-      box-shadow: 2px 2px 0 #fff;
+    .submit-score input::placeholder {
+      color: rgba(255, 255, 255, 0.68);
     }
 
-    @media (max-width: 720px) {
-      .screen {
-        padding: 18px;
+    @media (max-width: 1024px) {
+      .logo-row {
+        top: 12px;
+        gap: 8px;
       }
 
-      .kicker, .signal {
+      .logo-row img {
+        height: 24px;
+      }
+
+      .logo-x {
+        font-size: 18px;
+      }
+
+      .visit-fixed {
+        bottom: 12px;
         font-size: 11px;
       }
 
@@ -154,25 +295,44 @@
       }
 
       .start-img-button img {
-        width: min(190px, 48vw);
+        width: min(170px, 42vw);
       }
 
       .hud {
-        inset: 12px 12px auto 12px;
+        inset: 50px 10px auto 10px;
       }
 
       .hud-group {
-        max-width: calc(100vw - 94px);
-        gap: 6px;
+        gap: 5px;
       }
 
-      .hud span {
-        padding: 4px 7px;
+      .hud-item {
+        gap: 5px;
+        padding: 3px 5px;
+        border-width: 1px;
       }
 
-      .mini-button {
-        min-width: 62px;
-        font-size: 13px;
+      .hud-label-img,
+      .score-pill-label {
+        height: 13px;
+      }
+
+      .number-img-row {
+        gap: 1px;
+        margin-left: 2px;
+        min-height: 13px;
+      }
+
+      .number-img-row img {
+        height: 13px;
+      }
+
+      .number-fallback {
+        font-size: 12px;
+      }
+
+      .top-score-row {
+        grid-template-columns: 30px 1fr auto;
       }
     }
   </style>
@@ -181,40 +341,59 @@
 <body>
   <canvas id="canvas"></canvas>
 
+  <div class="logo-row">
+    <img src="asset/imadji.webp" alt="Imadji">
+    <span class="logo-x">X</span>
+    <img src="asset/dats.webp" alt="DATs">
+  </div>
+
+  <div id="visitLink" class="visit-fixed">
+    <a href="https://datspace.club" target="_blank" rel="noopener noreferrer">KUNJUNGI datspace.club</a>
+  </div>
+
   <main id="screen" class="screen">
     <section class="panel">
-      <p class="kicker">IMADJI / INTERNET ART GAME</p>
+      <p class="kicker">INTERACTIVE GAME BY DATs</p>
 
       <img class="home-title-img" src="asset/home.webp" alt="Kopi Es Data">
-
-      <p>Tangkap es batu dan biji kopi sebanyak mungkin. Cup mengikuti mouse, sentuhan, atau tombol kiri-kanan.</p>
 
       <button id="startBtn" class="start-img-button" type="button" aria-label="Start">
         <img src="asset/start.webp" alt="Start">
       </button>
-
-      <p class="signal">1-BIT BREW PROTOCOL</p>
     </section>
   </main>
 
   <div id="hud" class="hud" hidden>
     <div class="hud-group">
-      <span id="scoreText">SCORE 0</span>
-      <span id="bestText">BEST 0</span>
-      <span id="lifeText">LIFE 3</span>
-    </div>
+      <div class="hud-item">
+        <img class="hud-label-img" src="asset/score.webp" alt="Score">
+        <span id="scoreText" class="number-img-row"></span>
+      </div>
 
-    <button id="exitBtn" class="mini-button" type="button">EXIT</button>
+      <div class="hud-item">
+        <img class="hud-label-img" src="asset/best.webp" alt="Best">
+        <span id="bestText" class="number-img-row"></span>
+      </div>
+
+      <div class="hud-item">
+        <img class="hud-label-img" src="asset/life.webp" alt="Life">
+        <span id="lifeText" class="number-img-row"></span>
+      </div>
+    </div>
   </div>
 
   <script>
+    const SHEET_ENDPOINT = "";
+    const TOP_SCORE_KEY = "imadjiTopScores";
+
     const canvas = document.getElementById("canvas");
     const ctx = canvas.getContext("2d");
 
     const screen = document.getElementById("screen");
     const hud = document.getElementById("hud");
+    const visitLink = document.getElementById("visitLink");
+    const logoRow = document.querySelector(".logo-row");
     const startBtn = document.getElementById("startBtn");
-    const exitBtn = document.getElementById("exitBtn");
     const scoreText = document.getElementById("scoreText");
     const bestText = document.getElementById("bestText");
     const lifeText = document.getElementById("lifeText");
@@ -228,16 +407,22 @@
     };
 
     const img = {};
-
     Object.keys(asset).forEach((key) => {
       img[key] = new Image();
       img[key].src = asset[key];
     });
 
+    const digitImg = {};
+    for (let i = 0; i <= 9; i++) {
+      digitImg[i] = new Image();
+      digitImg[i].src = `asset/${i}.webp`;
+    }
+
     const game = {
       mode: "start",
       score: 0,
       best: Number(localStorage.getItem("imadjiCoffeeBest") || 0),
+      bestBeforeRun: 0,
       lives: 3,
 
       cupX: 0,
@@ -251,13 +436,30 @@
       lastSpawn: 0,
       lastTime: 0,
       spawnRate: 780,
-      glitch: 0,
+
+      dragging: false,
 
       keys: {
         left: false,
         right: false
       }
     };
+
+    function isCompactScreen() {
+      return window.innerWidth <= 1024;
+    }
+
+    function currentCupWidth() {
+      return isCompactScreen() ? game.cupW * 0.5 : game.cupW;
+    }
+
+    function currentBeanSize() {
+      return isCompactScreen() ? game.beanSize * 0.5 : game.beanSize;
+    }
+
+    function currentIceSize() {
+      return isCompactScreen() ? game.iceSize * 0.5 : game.iceSize;
+    }
 
     function resize() {
       const dpr = window.devicePixelRatio || 1;
@@ -278,10 +480,89 @@
       return width / (image.naturalWidth / image.naturalHeight);
     }
 
+    function getTopScores() {
+      return JSON.parse(localStorage.getItem(TOP_SCORE_KEY) || "[]");
+    }
+
+    function saveTopScore(entry) {
+      const scores = getTopScores();
+      scores.push(entry);
+      scores.sort((a, b) => b.score - a.score);
+      localStorage.setItem(TOP_SCORE_KEY, JSON.stringify(scores.slice(0, 10)));
+    }
+
+    async function submitToSheet(entry) {
+      if (!SHEET_ENDPOINT) return;
+
+      await fetch(SHEET_ENDPOINT, {
+        method: "POST",
+        mode: "no-cors",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          initials: entry.initials,
+          instagram: entry.instagram,
+          score: entry.score
+        })
+      });
+    }
+
+    function renderNumber(target, value) {
+      const text = String(Math.max(0, value));
+      target.innerHTML = "";
+
+      for (const digit of text) {
+        const image = digitImg[digit];
+
+        if (image && image.complete && image.naturalWidth > 0) {
+          const numberImage = document.createElement("img");
+          numberImage.src = `asset/${digit}.webp`;
+          numberImage.alt = digit;
+          target.appendChild(numberImage);
+        } else {
+          const fallback = document.createElement("span");
+          fallback.className = "number-fallback";
+          fallback.textContent = digit;
+          target.appendChild(fallback);
+        }
+      }
+    }
+
+    function numberMarkup(value) {
+      const text = String(Math.max(0, value));
+
+      return `
+        <span class="number-img-row">
+          ${text.split("").map((digit) => `
+            <img src="asset/${digit}.webp" alt="${digit}" onerror="this.outerHTML='<span class=&quot;number-fallback&quot;>${digit}</span>'">
+          `).join("")}
+        </span>
+      `;
+    }
+
     function updateHud() {
-      scoreText.textContent = "SCORE " + game.score;
-      bestText.textContent = "BEST " + game.best;
-      lifeText.textContent = "LIFE " + game.lives;
+      renderNumber(scoreText, game.score);
+      renderNumber(bestText, game.best);
+      renderNumber(lifeText, game.lives);
+    }
+
+    function renderTopScores() {
+      const scores = getTopScores();
+
+      if (!scores.length) {
+        return `<p>NO TOP SCORE</p>`;
+      }
+
+      return `
+        <div class="top-score-list">
+          ${scores.map((item, index) => `
+            <div class="top-score-row">
+              <span>${index + 1}</span>
+              <span>${item.initials}</span>
+              ${numberMarkup(item.score)}
+            </div>
+          `).join("")}
+        </div>
+      `;
     }
 
     function startGame() {
@@ -292,11 +573,13 @@
       game.spawnRate = 780;
       game.lastSpawn = performance.now();
       game.lastTime = performance.now();
+      game.bestBeforeRun = game.best;
       game.cupX = innerWidth / 2;
-      game.glitch = 12;
 
       screen.hidden = true;
       hud.hidden = false;
+      visitLink.hidden = true;
+      logoRow.hidden = true;
 
       updateHud();
     }
@@ -306,20 +589,18 @@
       game.items = [];
       hud.hidden = true;
       screen.hidden = false;
+      visitLink.hidden = false;
+      logoRow.hidden = false;
 
       screen.innerHTML = `
         <section class="panel">
-          <p class="kicker">IMADJI / INTERNET ART GAME</p>
+          <p class="kicker">INTERACTIVE GAME BY DATs</p>
 
           <img class="home-title-img" src="asset/home.webp" alt="Kopi Es Data">
-
-          <p>Tangkap es batu dan biji kopi sebanyak mungkin. Cup mengikuti mouse, sentuhan, atau tombol kiri-kanan.</p>
 
           <button id="newStartBtn" class="start-img-button" type="button" aria-label="Start">
             <img src="asset/start.webp" alt="Start">
           </button>
-
-          <p class="signal">1-BIT BREW PROTOCOL</p>
         </section>
       `;
 
@@ -330,19 +611,72 @@
       game.mode = "over";
       hud.hidden = true;
       screen.hidden = false;
+      visitLink.hidden = false;
+      logoRow.hidden = false;
+
+      const isNewBest = game.score > game.bestBeforeRun;
+
+      if (!isNewBest) {
+        game.best = Math.max(game.best, game.score);
+        localStorage.setItem("imadjiCoffeeBest", String(game.best));
+      }
 
       screen.innerHTML = `
         <section class="panel">
-          <p class="kicker">SIGNAL LOST</p>
-          <img class="home-title-img" src="asset/home.webp" alt="Kopi Es Data">
-          <p>SCORE ${game.score} / BEST ${game.best}</p>
-          <button id="restartBtn" class="start-img-button" type="button" aria-label="Restart">
-            <img src="asset/start.webp" alt="Restart">
-          </button>
+          <div class="score-summary">
+            <div class="score-pill">
+              <img class="score-pill-label" src="asset/score.webp" alt="Score">
+              ${numberMarkup(game.score)}
+            </div>
+
+            <div class="score-pill">
+              <img class="score-pill-label" src="asset/best.webp" alt="Best">
+              ${numberMarkup(Math.max(game.best, game.score))}
+            </div>
+          </div>
+
+          <img class="top-score-title" src="asset/top_score.webp" alt="Top Score">
+
+          ${renderTopScores()}
+
+          ${isNewBest ? `
+            <form id="scoreForm" class="submit-score">
+              <input id="initialInput" maxlength="5" placeholder="INISIAL" required>
+              <input id="igInput" maxlength="40" placeholder="INSTAGRAM" required>
+
+              <button class="start-img-button" type="submit" aria-label="Submit">
+                <img src="asset/start.webp" alt="Submit">
+              </button>
+            </form>
+          ` : `
+            <button id="restartBtn" class="start-img-button" type="button" aria-label="Restart">
+              <img src="asset/start.webp" alt="Restart">
+            </button>
+          `}
         </section>
       `;
 
-      document.getElementById("restartBtn").onclick = startGame;
+      if (isNewBest) {
+        document.getElementById("scoreForm").onsubmit = async (event) => {
+          event.preventDefault();
+
+          const entry = {
+            initials: document.getElementById("initialInput").value.slice(0, 5).toUpperCase(),
+            instagram: document.getElementById("igInput").value.trim(),
+            score: game.score
+          };
+
+          game.best = Math.max(game.best, game.score);
+          localStorage.setItem("imadjiCoffeeBest", String(game.best));
+
+          saveTopScore(entry);
+          await submitToSheet(entry);
+
+          gameOver();
+        };
+      } else {
+        document.getElementById("restartBtn").onclick = startGame;
+      }
     }
 
     function drawBg(image, label, darken = 0.34) {
@@ -392,7 +726,7 @@
       game.spawnRate = Math.max(330, 780 - game.score * 7);
 
       const type = Math.random() > 0.58 ? "bean" : "ice";
-      const size = type === "bean" ? game.beanSize : game.iceSize;
+      const size = type === "bean" ? currentBeanSize() : currentIceSize();
 
       game.items.push({
         type,
@@ -410,21 +744,22 @@
 
       game.lastTime = now;
 
+      const cupWidth = currentCupWidth();
+      const cupHeight = imageHeightByWidth(img.cup, cupWidth);
+
       if (game.keys.left) game.cupX -= 540 * dt;
       if (game.keys.right) game.cupX += 540 * dt;
 
-      const cupHeight = imageHeightByWidth(img.cup, game.cupW);
-      const cupLeftLimit = game.cupW / 2;
-      const cupRightLimit = innerWidth - game.cupW / 2;
-
-      game.cupX = Math.max(cupLeftLimit, Math.min(cupRightLimit, game.cupX));
+      game.cupX = Math.max(cupWidth / 2, Math.min(innerWidth - cupWidth / 2, game.cupX));
       game.cupY = innerHeight - Math.max(cupHeight * 0.55, innerHeight * 0.13);
 
       spawn(now);
 
-      const cupLeft = game.cupX - game.cupW / 2;
-      const cupRight = game.cupX + game.cupW / 2;
+      const cupLeft = game.cupX - cupWidth / 2;
+      const cupRight = game.cupX + cupWidth / 2;
       const cupTop = game.cupY - cupHeight / 2;
+      const cupCatchTop = cupTop;
+      const cupCatchBottom = cupTop + cupHeight * 0.5;
 
       for (let i = game.items.length - 1; i >= 0; i--) {
         const item = game.items[i];
@@ -436,21 +771,17 @@
         item.x += Math.sin(now * 0.002 + item.spin) * item.drift * dt;
         item.spin += dt * 5;
 
+        const itemBottom = item.y + itemHeight / 2;
+
         const caught =
-          item.y + itemHeight / 2 > cupTop &&
-          item.y < game.cupY + cupHeight * 0.38 &&
-          item.x > cupLeft &&
-          item.x < cupRight;
+          itemBottom >= cupCatchTop &&
+          itemBottom <= cupCatchBottom &&
+          item.x > cupLeft + cupWidth * 0.12 &&
+          item.x < cupRight - cupWidth * 0.12;
 
         if (caught) {
           game.score += item.type === "bean" ? 2 : 1;
-          game.best = Math.max(game.best, game.score);
-
-          localStorage.setItem("imadjiCoffeeBest", String(game.best));
-
           game.items.splice(i, 1);
-          game.glitch = 2;
-
           updateHud();
           continue;
         }
@@ -458,8 +789,6 @@
         if (item.y > innerHeight + itemHeight) {
           game.items.splice(i, 1);
           game.lives -= 1;
-          game.glitch = 8;
-
           updateHud();
 
           if (game.lives <= 0) gameOver();
@@ -498,18 +827,17 @@
     }
 
     function drawCup() {
+      const image = img.cup;
+      const width = currentCupWidth();
+      const height = imageHeightByWidth(image, width);
       const x = game.cupX;
       const y = game.cupY;
-      const image = img.cup;
 
       ctx.save();
       ctx.imageSmoothingEnabled = true;
       ctx.imageSmoothingQuality = "high";
 
       if (image.complete && image.naturalWidth > 0) {
-        const width = game.cupW;
-        const height = imageHeightByWidth(image, width);
-
         ctx.drawImage(image, x - width / 2, y - height / 2, width, height);
       } else {
         ctx.fillStyle = "#fff";
@@ -522,22 +850,6 @@
       }
 
       ctx.restore();
-    }
-
-    function drawGlitch() {
-      if (game.glitch <= 0) return;
-
-      for (let i = 0; i < 60; i++) {
-        ctx.fillStyle = Math.random() > 0.5 ? "#fff" : "#000";
-        ctx.fillRect(
-          Math.random() * innerWidth,
-          Math.random() * innerHeight,
-          Math.random() * 180,
-          Math.random() * 24
-        );
-      }
-
-      game.glitch -= 1;
     }
 
     function loop(now) {
@@ -553,7 +865,6 @@
         drawCup();
       }
 
-      drawGlitch();
       requestAnimationFrame(loop);
     }
 
@@ -563,8 +874,26 @@
 
     window.addEventListener("resize", resize);
 
-    window.addEventListener("pointermove", e => moveCup(e.clientX), { passive: true });
-    window.addEventListener("pointerdown", e => moveCup(e.clientX), { passive: true });
+    canvas.addEventListener("pointerdown", (event) => {
+      if (game.mode !== "play") return;
+      game.dragging = true;
+      canvas.setPointerCapture(event.pointerId);
+      moveCup(event.clientX);
+    });
+
+    canvas.addEventListener("pointermove", (event) => {
+      if (game.mode !== "play") return;
+      if (game.dragging || event.pointerType === "mouse") moveCup(event.clientX);
+    });
+
+    canvas.addEventListener("pointerup", (event) => {
+      game.dragging = false;
+      if (canvas.hasPointerCapture(event.pointerId)) canvas.releasePointerCapture(event.pointerId);
+    });
+
+    canvas.addEventListener("pointercancel", () => {
+      game.dragging = false;
+    });
 
     window.addEventListener("keydown", e => {
       if (e.key === "ArrowLeft" || e.key.toLowerCase() === "a") game.keys.left = true;
@@ -581,7 +910,6 @@
     }, { passive: false });
 
     startBtn.onclick = startGame;
-    exitBtn.onclick = showStart;
 
     resize();
     updateHud();
