@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>IMADJI - CUP COLLECTOR</title>
 
   <style>
@@ -11,11 +11,58 @@
       width: 100%;
       height: 100%;
       overflow: hidden;
-      background: #000;
+      background: #111;
       color: #fff;
       font-family: monospace;
       user-select: none;
       touch-action: none;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    /* KONTAINER UTAMA 9:16 */
+    #game-container {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      max-width: calc(100vh * (9 / 16));
+      max-height: calc(100vw * (16 / 9));
+      background: #000;
+      overflow: hidden;
+      container-type: size;
+      container-name: game;
+    }
+
+    /* OVERLAY PERINGATAN UKURAN LAYAR */
+    #size-warning {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: #000;
+      z-index: 9999;
+      place-items: center;
+      text-align: center;
+      padding: 20px;
+    }
+
+    #size-warning p {
+      border: 2px solid #fff;
+      padding: 20px;
+      font-size: 16px;
+      line-height: 1.6;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    /* MATIKAN GAME JIKA DI BAWAH 375x667 */
+    @media (max-width: 374px), (max-height: 666px) {
+      #game-container {
+        display: none !important;
+      }
+      #size-warning {
+        display: grid;
+      }
     }
 
     input, button {
@@ -23,10 +70,10 @@
     }
 
     canvas {
-      position: fixed;
+      position: absolute;
       inset: 0;
-      width: 100vw;
-      height: 100vh;
+      width: 100%;
+      height: 100%;
       touch-action: none;
     }
 
@@ -34,7 +81,7 @@
     .hud,
     .logo-row,
     .visit-fixed {
-      position: fixed;
+      position: absolute;
       z-index: 2;
     }
 
@@ -42,7 +89,7 @@
       inset: 0;
       display: grid;
       place-items: center;
-      padding: 24px;
+      padding: 4cqw;
       box-sizing: border-box;
       text-align: center;
     }
@@ -57,29 +104,29 @@
     .panel {
       display: grid;
       justify-items: center;
-      gap: 18px;
-      width: min(820px, 100%);
+      gap: 3cqh;
+      width: 100%;
       text-shadow: 2px 2px 0 #000;
     }
 
     .logo-row {
-      top: 25px;
+      top: 3cqh;
       left: 50%;
       transform: translateX(-50%);
       display: flex;
       align-items: center;
-      gap: 14px;
+      gap: 3cqw;
       pointer-events: none;
     }
 
     .logo-row img {
-      height: clamp(148px, 16vw, 182px);
+      height: clamp(24px, 16cqw, 182px);
       width: auto;
       display: block;
     }
 
     .logo-x {
-      font-size: 100px;
+      font-size: clamp(18px, 10cqw, 100px);
       line-height: 1;
       color: #fff;
       text-shadow: 2px 2px 0 #000;
@@ -87,10 +134,10 @@
 
     .visit-fixed {
       left: 50%;
-      bottom: 200px;
+      bottom: 8cqh;
       transform: translateX(-50%);
       z-index: 5;
-      font-size: clamp(30px, 4vw, 48px);
+      font-size: clamp(14px, 4.5cqw, 48px);
       letter-spacing: 1px;
       text-transform: uppercase;
       white-space: nowrap;
@@ -99,7 +146,7 @@
 
     .visit-fixed a {
       display: inline-block;
-      padding: 8px 12px;
+      padding: 1cqh 2.5cqw;
       color: #fff;
       background: #000;
       border: 2px solid #fff;
@@ -115,13 +162,14 @@
 
     .kicker {
       margin: 0;
-      font-size: clamp(22px, 2.8vw, 28px);
+      font-size: clamp(14px, 3.5cqw, 28px);
       letter-spacing: 2px;
       text-transform: uppercase;
     }
 
     .home-title-img {
-      width: min(720px, 88vw);
+      width: 88cqw;
+      max-width: 720px;
       height: auto;
       display: block;
     }
@@ -142,7 +190,7 @@
       border: none;
       background: transparent;
       box-shadow: none;
-      margin-top: 18px;
+      margin-top: 2cqh;
       transition: transform 140ms ease;
     }
 
@@ -151,14 +199,15 @@
     }
 
     .start-img-button img {
-      width: min(220px, 44vw);
+      width: 44cqw;
+      max-width: 220px;
       height: auto;
       display: block;
       animation: blinkStart 1.1s steps(1) infinite;
     }
 
     .hud {
-      inset: 18px 18px auto 18px;
+      inset: 3cqh 3cqw auto 3cqw;
       display: flex;
       justify-content: flex-start;
       pointer-events: none;
@@ -168,7 +217,7 @@
     .hud-group {
       display: flex;
       flex-wrap: wrap;
-      gap: 10px;
+      gap: 1.5cqw;
       align-items: flex-start;
     }
 
@@ -176,15 +225,15 @@
     .score-pill {
       display: inline-flex;
       align-items: center;
-      gap: 18px;
-      padding: 6px 12px;
+      gap: 2cqw;
+      padding: 1cqh 2cqw;
       background: #000;
       border: 2px solid #fff;
     }
 
     .hud-label-img,
     .score-pill-label {
-      height: clamp(18px, 2.2vw, 28px);
+      height: clamp(13px, 2.8cqw, 28px);
       width: auto;
       display: block;
     }
@@ -193,24 +242,25 @@
       display: inline-flex;
       align-items: center;
       gap: 4px;
-      margin-left: 10px;
-      min-height: clamp(18px, 2.2vw, 28px);
+      margin-left: 1.5cqw;
+      min-height: clamp(13px, 2.8cqw, 28px);
     }
 
     .number-img-row img {
-      height: clamp(18px, 2.2vw, 28px);
+      height: clamp(13px, 2.8cqw, 28px);
       width: auto;
       display: block;
     }
 
     .number-fallback {
       color: #fff;
-      font-size: clamp(14px, 2vw, 22px);
+      font-size: clamp(12px, 2.5cqw, 22px);
       line-height: 1;
     }
 
     .top-score-title {
-      width: min(360px, 74vw);
+      width: 74cqw;
+      max-width: 360px;
       height: auto;
       display: block;
     }
@@ -219,24 +269,25 @@
       display: flex;
       flex-wrap: wrap;
       justify-content: center;
-      gap: 12px;
+      gap: 2cqw;
     }
 
     .top-score-list {
       display: grid;
-      gap: 6px;
-      width: min(420px, 86vw);
+      gap: 1cqh;
+      width: 86cqw;
+      max-width: 420px;
     }
 
     .top-score-row {
       display: grid;
       grid-template-columns: 40px 1fr auto;
       align-items: center;
-      gap: 12px;
-      padding: 7px 10px;
+      gap: 2cqw;
+      padding: 1cqh 2cqw;
       background: #000;
       border: 2px solid #fff;
-      font-size: clamp(14px, 2vw, 20px);
+      font-size: clamp(12px, 2.5cqw, 20px);
       text-align: left;
     }
 
@@ -251,13 +302,14 @@
 
     .submit-score {
       display: grid;
-      gap: 10px;
+      gap: 2cqh;
       justify-items: center;
     }
 
     .submit-score input {
-      width: min(280px, 76vw);
-      padding: 10px;
+      width: 76cqw;
+      max-width: 280px;
+      padding: 1cqh 2cqw;
       color: #fff;
       background: #000;
       border: 2px solid #fff;
@@ -265,127 +317,85 @@
       text-align: center;
       text-transform: uppercase;
       box-sizing: border-box;
+      font-size: clamp(12px, 3cqw, 18px);
     }
 
     .submit-score input::placeholder {
       color: rgba(255, 255, 255, 0.68);
     }
 
-    @media (max-width: 1024px) {
-      .logo-row {
-        top: 12px;
-        gap: 8px;
-      }
-
-      .logo-row img {
-        height: 24px;
-      }
-
-      .logo-x {
-        font-size: 18px;
-      }
-
-      .visit-fixed {
-        bottom: 12px;
-        font-size: 11px;
-      }
-
-      .home-title-img {
-        width: min(520px, 92vw);
-      }
-
-      .start-img-button img {
-        width: min(170px, 42vw);
-      }
-
-      .hud {
-        inset: 50px 10px auto 10px;
-      }
-
-      .hud-group {
-        gap: 5px;
-      }
-
-      .hud-item {
-        gap: 5px;
-        padding: 3px 5px;
+    @container game (max-width: 600px) {
+      .hud-item, .score-pill {
         border-width: 1px;
+        padding: 0.5cqh 1.5cqw;
       }
-
-      .hud-label-img,
-      .score-pill-label {
-        height: 13px;
-      }
-
-      .number-img-row {
-        gap: 1px;
-        margin-left: 2px;
-        min-height: 13px;
-      }
-
-      .number-img-row img {
-        height: 13px;
-      }
-
-      .number-fallback {
-        font-size: 12px;
-      }
-
       .top-score-row {
-        grid-template-columns: 30px 1fr auto;
+        grid-template-columns: 25px 1fr auto;
       }
     }
   </style>
 </head>
 
 <body>
-  <canvas id="canvas"></canvas>
-
-  <div class="logo-row">
-    <img src="asset/imadji.webp" alt="Imadji">
-    <span class="logo-x">X</span>
-    <img src="asset/dats.webp" alt="DATs">
+  <!-- LAYAR PERINGATAN -->
+  <div id="size-warning">
+    <p>LAYAR TERLALU KECIL<br><br>Minimal Resolusi:<br>375 x 667</p>
   </div>
 
-  <div id="visitLink" class="visit-fixed">
-    <a href="https://datspace.club" target="_blank" rel="noopener noreferrer">KUNJUNGI datspace.club</a>
-  </div>
+  <div id="game-container">
+    <canvas id="canvas"></canvas>
 
-  <main id="screen" class="screen">
-    <section class="panel">
-      <p class="kicker">INTERACTIVE GAME BY DATs</p>
+    <div class="logo-row">
+      <img src="asset/imadji.webp" alt="Imadji">
+      <span class="logo-x">X</span>
+      <img src="asset/dats.webp" alt="DATs">
+    </div>
 
-      <img class="home-title-img" src="asset/home.webp" alt="Kopi Es Data">
+    <div id="visitLink" class="visit-fixed">
+      <a href="https://datspace.club" target="_blank" rel="noopener noreferrer">KUNJUNGI datspace.club</a>
+    </div>
 
-      <button id="startBtn" class="start-img-button" type="button" aria-label="Start">
-        <img src="asset/start.webp" alt="Start">
-      </button>
-    </section>
-  </main>
+    <main id="screen" class="screen">
+      <section class="panel">
+        <p class="kicker">INTERACTIVE GAME BY DATs</p>
+        <img class="home-title-img" src="asset/home.webp" alt="Kopi Es Data">
+        <button id="startBtn" class="start-img-button" type="button" aria-label="Start">
+          <img src="asset/start.webp" alt="Start">
+        </button>
+      </section>
+    </main>
 
-  <div id="hud" class="hud" hidden>
-    <div class="hud-group">
-      <div class="hud-item">
-        <img class="hud-label-img" src="asset/score.webp" alt="Score">
-        <span id="scoreText" class="number-img-row"></span>
-      </div>
-
-      <div class="hud-item">
-        <img class="hud-label-img" src="asset/best.webp" alt="Best">
-        <span id="bestText" class="number-img-row"></span>
-      </div>
-
-      <div class="hud-item">
-        <img class="hud-label-img" src="asset/life.webp" alt="Life">
-        <span id="lifeText" class="number-img-row"></span>
+    <div id="hud" class="hud" hidden>
+      <div class="hud-group">
+        <div class="hud-item">
+          <img class="hud-label-img" src="asset/score.webp" alt="Score">
+          <span id="scoreText" class="number-img-row"></span>
+        </div>
+        <div class="hud-item">
+          <img class="hud-label-img" src="asset/best.webp" alt="Best">
+          <span id="bestText" class="number-img-row"></span>
+        </div>
+        <div class="hud-item">
+          <img class="hud-label-img" src="asset/life.webp" alt="Life">
+          <span id="lifeText" class="number-img-row"></span>
+        </div>
       </div>
     </div>
   </div>
 
   <script>
+    // MENCEGAH FITUR ZOOM PADA SAFARI/IOS
+    document.addEventListener('gesturestart', function(e) {
+      e.preventDefault();
+    });
+    document.addEventListener('dblclick', function(e) {
+      e.preventDefault();
+    }, { passive: false });
+
     const SHEET_ENDPOINT = "";
     const TOP_SCORE_KEY = "imadjiTopScores";
 
+    const container = document.getElementById("game-container");
     const canvas = document.getElementById("canvas");
     const ctx = canvas.getContext("2d");
 
@@ -397,6 +407,9 @@
     const scoreText = document.getElementById("scoreText");
     const bestText = document.getElementById("bestText");
     const lifeText = document.getElementById("lifeText");
+
+    let gameWidth = 0;
+    let gameHeight = 0;
 
     const asset = {
       extBg: "asset/imadji_yos_ext.webp",
@@ -439,40 +452,41 @@
 
       dragging: false,
 
-      keys: {
-        left: false,
-        right: false
-      }
+      keys: { left: false, right: false }
     };
 
     function isCompactScreen() {
-      return window.innerWidth <= 1024;
+      return gameWidth <= 768;
     }
 
     function currentCupWidth() {
-      return isCompactScreen() ? game.cupW * 0.5 : game.cupW;
+      return isCompactScreen() ? game.cupW * 0.55 : game.cupW;
     }
 
     function currentBeanSize() {
-      return isCompactScreen() ? game.beanSize * 0.5 : game.beanSize;
+      return isCompactScreen() ? game.beanSize * 0.55 : game.beanSize;
     }
 
     function currentIceSize() {
-      return isCompactScreen() ? game.iceSize * 0.5 : game.iceSize;
+      return isCompactScreen() ? game.iceSize * 0.55 : game.iceSize;
     }
 
     function resize() {
-      const dpr = window.devicePixelRatio || 1;
+      const rect = container.getBoundingClientRect();
+      // Cegah error pembagian ukuran saat di-display: none (oleh @media warning)
+      if (rect.width === 0 || rect.height === 0) return;
 
-      canvas.width = innerWidth * dpr;
-      canvas.height = innerHeight * dpr;
-      canvas.style.width = innerWidth + "px";
-      canvas.style.height = innerHeight + "px";
+      const dpr = window.devicePixelRatio || 1;
+      gameWidth = rect.width;
+      gameHeight = rect.height;
+
+      canvas.width = gameWidth * dpr;
+      canvas.height = gameHeight * dpr;
 
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-      game.cupX ||= innerWidth / 2;
-      game.cupY = innerHeight - Math.max(104, innerHeight * 0.13);
+      game.cupX ||= gameWidth / 2;
+      game.cupY = gameHeight - Math.max(104, gameHeight * 0.13);
     }
 
     function imageHeightByWidth(image, width) {
@@ -493,26 +507,19 @@
 
     async function submitToSheet(entry) {
       if (!SHEET_ENDPOINT) return;
-
       await fetch(SHEET_ENDPOINT, {
         method: "POST",
         mode: "no-cors",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          initials: entry.initials,
-          instagram: entry.instagram,
-          score: entry.score
-        })
+        body: JSON.stringify({ initials: entry.initials, instagram: entry.instagram, score: entry.score })
       });
     }
 
     function renderNumber(target, value) {
       const text = String(Math.max(0, value));
       target.innerHTML = "";
-
       for (const digit of text) {
         const image = digitImg[digit];
-
         if (image && image.complete && image.naturalWidth > 0) {
           const numberImage = document.createElement("img");
           numberImage.src = `asset/${digit}.webp`;
@@ -529,7 +536,6 @@
 
     function numberMarkup(value) {
       const text = String(Math.max(0, value));
-
       return `
         <span class="number-img-row">
           ${text.split("").map((digit) => `
@@ -547,11 +553,7 @@
 
     function renderTopScores() {
       const scores = getTopScores();
-
-      if (!scores.length) {
-        return `<p>NO TOP SCORE</p>`;
-      }
-
+      if (!scores.length) return `<p>NO TOP SCORE</p>`;
       return `
         <div class="top-score-list">
           ${scores.map((item, index) => `
@@ -574,7 +576,7 @@
       game.lastSpawn = performance.now();
       game.lastTime = performance.now();
       game.bestBeforeRun = game.best;
-      game.cupX = innerWidth / 2;
+      game.cupX = gameWidth / 2;
 
       screen.hidden = true;
       hud.hidden = false;
@@ -595,15 +597,12 @@
       screen.innerHTML = `
         <section class="panel">
           <p class="kicker">INTERACTIVE GAME BY DATs</p>
-
           <img class="home-title-img" src="asset/home.webp" alt="Kopi Es Data">
-
           <button id="newStartBtn" class="start-img-button" type="button" aria-label="Start">
             <img src="asset/start.webp" alt="Start">
           </button>
         </section>
       `;
-
       document.getElementById("newStartBtn").onclick = startGame;
     }
 
@@ -628,22 +627,17 @@
               <img class="score-pill-label" src="asset/score.webp" alt="Score">
               ${numberMarkup(game.score)}
             </div>
-
             <div class="score-pill">
               <img class="score-pill-label" src="asset/best.webp" alt="Best">
               ${numberMarkup(Math.max(game.best, game.score))}
             </div>
           </div>
-
           <img class="top-score-title" src="asset/top_score.webp" alt="Top Score">
-
           ${renderTopScores()}
-
           ${isNewBest ? `
             <form id="scoreForm" class="submit-score">
               <input id="initialInput" maxlength="5" placeholder="INISIAL" required>
               <input id="igInput" maxlength="40" placeholder="INSTAGRAM" required>
-
               <button class="start-img-button" type="submit" aria-label="Submit">
                 <img src="asset/start.webp" alt="Submit">
               </button>
@@ -659,19 +653,15 @@
       if (isNewBest) {
         document.getElementById("scoreForm").onsubmit = async (event) => {
           event.preventDefault();
-
           const entry = {
             initials: document.getElementById("initialInput").value.slice(0, 5).toUpperCase(),
             instagram: document.getElementById("igInput").value.trim(),
             score: game.score
           };
-
           game.best = Math.max(game.best, game.score);
           localStorage.setItem("imadjiCoffeeBest", String(game.best));
-
           saveTopScore(entry);
           await submitToSheet(entry);
-
           gameOver();
         };
       } else {
@@ -685,43 +675,37 @@
       ctx.imageSmoothingQuality = "high";
 
       if (image.complete && image.naturalWidth > 0) {
-        const scale = Math.max(innerWidth / image.naturalWidth, innerHeight / image.naturalHeight);
+        const scale = Math.max(gameWidth / image.naturalWidth, gameHeight / image.naturalHeight);
         const w = image.naturalWidth * scale;
         const h = image.naturalHeight * scale;
-
-        ctx.drawImage(image, (innerWidth - w) / 2, (innerHeight - h) / 2, w, h);
+        ctx.drawImage(image, (gameWidth - w) / 2, (gameHeight - h) / 2, w, h);
       } else {
         ctx.fillStyle = "#000";
-        ctx.fillRect(0, 0, innerWidth, innerHeight);
-
+        ctx.fillRect(0, 0, gameWidth, gameHeight);
         ctx.fillStyle = "#fff";
         ctx.font = "12px monospace";
-
-        for (let y = 14; y < innerHeight; y += 26) {
-          for (let x = y % 52; x < innerWidth; x += 52) {
+        for (let y = 14; y < gameHeight; y += 26) {
+          for (let x = y % 52; x < gameWidth; x += 52) {
             ctx.fillText(label, x, y);
           }
         }
       }
 
       ctx.fillStyle = `rgba(0,0,0,${darken})`;
-      ctx.fillRect(0, 0, innerWidth, innerHeight);
-
+      ctx.fillRect(0, 0, gameWidth, gameHeight);
       ctx.strokeStyle = "rgba(255,255,255,0.18)";
 
-      for (let y = 0; y < innerHeight; y += 6) {
+      for (let y = 0; y < gameHeight; y += 6) {
         ctx.beginPath();
         ctx.moveTo(0, y);
-        ctx.lineTo(innerWidth, y);
+        ctx.lineTo(gameWidth, y);
         ctx.stroke();
       }
-
       ctx.restore();
     }
 
     function spawn(now) {
       if (now - game.lastSpawn < game.spawnRate) return;
-
       game.lastSpawn = now;
       game.spawnRate = Math.max(330, 780 - game.score * 7);
 
@@ -730,7 +714,7 @@
 
       game.items.push({
         type,
-        x: 40 + Math.random() * Math.max(1, innerWidth - 80),
+        x: 40 + Math.random() * Math.max(1, gameWidth - 80),
         y: -size,
         size,
         speed: 145 + Math.random() * 120 + game.score * 1.3,
@@ -741,7 +725,6 @@
 
     function update(now) {
       const dt = Math.min(0.034, (now - game.lastTime) / 1000 || 0.016);
-
       game.lastTime = now;
 
       const cupWidth = currentCupWidth();
@@ -750,8 +733,8 @@
       if (game.keys.left) game.cupX -= 540 * dt;
       if (game.keys.right) game.cupX += 540 * dt;
 
-      game.cupX = Math.max(cupWidth / 2, Math.min(innerWidth - cupWidth / 2, game.cupX));
-      game.cupY = innerHeight - Math.max(cupHeight * 0.55, innerHeight * 0.13);
+      game.cupX = Math.max(cupWidth / 2, Math.min(gameWidth - cupWidth / 2, game.cupX));
+      game.cupY = gameHeight - Math.max(cupHeight * 0.55, gameHeight * 0.13);
 
       spawn(now);
 
@@ -763,7 +746,6 @@
 
       for (let i = game.items.length - 1; i >= 0; i--) {
         const item = game.items[i];
-
         const itemImage = img[item.type];
         const itemHeight = imageHeightByWidth(itemImage, item.size);
 
@@ -772,12 +754,7 @@
         item.spin += dt * 5;
 
         const itemBottom = item.y + itemHeight / 2;
-
-        const caught =
-          itemBottom >= cupCatchTop &&
-          itemBottom <= cupCatchBottom &&
-          item.x > cupLeft + cupWidth * 0.12 &&
-          item.x < cupRight - cupWidth * 0.12;
+        const caught = itemBottom >= cupCatchTop && itemBottom <= cupCatchBottom && item.x > cupLeft + cupWidth * 0.12 && item.x < cupRight - cupWidth * 0.12;
 
         if (caught) {
           game.score += item.type === "bean" ? 2 : 1;
@@ -786,11 +763,10 @@
           continue;
         }
 
-        if (item.y > innerHeight + itemHeight) {
+        if (item.y > gameHeight + itemHeight) {
           game.items.splice(i, 1);
           game.lives -= 1;
           updateHud();
-
           if (game.lives <= 0) gameOver();
         }
       }
@@ -800,16 +776,13 @@
       ctx.save();
       ctx.translate(item.x, item.y);
       ctx.rotate(item.spin);
-
       ctx.imageSmoothingEnabled = true;
       ctx.imageSmoothingQuality = "high";
-
       const image = img[item.type];
 
       if (image.complete && image.naturalWidth > 0) {
         const width = item.size;
         const height = imageHeightByWidth(image, width);
-
         ctx.drawImage(image, -width / 2, -height / 2, width, height);
       } else if (item.type === "bean") {
         ctx.fillStyle = "#fff";
@@ -822,7 +795,6 @@
         ctx.strokeStyle = "#000";
         ctx.strokeRect(-14, -14, 28, 28);
       }
-
       ctx.restore();
     }
 
@@ -848,28 +820,24 @@
         ctx.lineWidth = 8;
         ctx.strokeRect(x + 62, y - 17, 43, 39);
       }
-
       ctx.restore();
     }
 
     function loop(now) {
-      drawBg(
-        game.mode === "play" ? img.inBg : img.extBg,
-        game.mode === "play" ? "IN" : "EXT",
-        game.mode === "play" ? 0.62 : 0.34
-      );
-
+      drawBg(game.mode === "play" ? img.inBg : img.extBg, game.mode === "play" ? "IN" : "EXT", game.mode === "play" ? 0.62 : 0.34);
       if (game.mode === "play") {
         update(now);
         game.items.forEach(drawItem);
         drawCup();
       }
-
       requestAnimationFrame(loop);
     }
 
     function moveCup(x) {
-      if (game.mode === "play") game.cupX = x;
+      if (game.mode === "play") {
+        const rect = container.getBoundingClientRect();
+        game.cupX = x - rect.left;
+      }
     }
 
     window.addEventListener("resize", resize);
