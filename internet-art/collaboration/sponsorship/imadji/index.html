@@ -337,13 +337,21 @@
       border: 2px solid #fff;
       font: inherit;
       text-align: center;
-      text-transform: uppercase;
       box-sizing: border-box;
       font-size: clamp(12px, 3cqw, 18px);
     }
 
+    #initialInput {
+      text-transform: uppercase; /* Inisial tetap kapital */
+    }
+
+    #igInput {
+      text-transform: lowercase; /* Tampilan input IG dipaksa jadi huruf kecil */
+    }
+
     .submit-score input::placeholder {
       color: rgba(255, 255, 255, 0.68);
+      text-transform: uppercase;
     }
 
     .button-group {
@@ -367,6 +375,7 @@
 
 <body>
   
+  <!-- LAYAR PERINGATAN -->
   <div id="size-warning">
     <p>LAYAR TERLALU KECIL<br><br>Minimal Resolusi:<br>375 x 667</p>
   </div>
@@ -385,7 +394,8 @@
     </div>
 
     <main id="screen" class="screen">
-      </main>
+      <!-- Diisi dinamis oleh js -->
+    </main>
 
     <div id="hud" class="hud" hidden>
       <div class="hud-group">
@@ -677,7 +687,7 @@
         if (rawScores && rawScores.length > 0) {
           const formattedScores = rawScores.map(item => ({
             initials: item.initials ? String(item.initials).toUpperCase() : "???",
-            instagram: item.instagram ? String(item.instagram) : "-",
+            instagram: item.instagram ? String(item.instagram).toLowerCase() : "-",
             score: item.score ? Number(item.score) : 0
           }));
           scoresMarkup = buildScoresMarkup(formattedScores);
@@ -745,7 +755,7 @@
           
           <form id="scoreForm" class="submit-score">
             <input id="initialInput" maxlength="5" placeholder="INISIAL" required autocomplete="off">
-            <input id="igInput" maxlength="40" placeholder="INSTAGRAM" required autocomplete="off">
+            <input id="igInput" maxlength="40" placeholder="instagram" required autocomplete="off">
             
             <div class="button-group">
               <button class="btn-action" type="submit">SUBMIT SCORE</button>
@@ -766,7 +776,8 @@
 
         const entry = {
           initials: document.getElementById("initialInput").value.slice(0, 5).toUpperCase(),
-          instagram: document.getElementById("igInput").value.trim(),
+          // Memastikan data IG yang disimpan dikirim sebagai huruf kecil penuh
+          instagram: document.getElementById("igInput").value.trim().toLowerCase(),
           score: game.score
         };
         
