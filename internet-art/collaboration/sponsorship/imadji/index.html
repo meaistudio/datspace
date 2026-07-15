@@ -409,7 +409,7 @@
     document.addEventListener('gesturestart', function(e) { e.preventDefault(); });
     document.addEventListener('dblclick', function(e) { e.preventDefault(); }, { passive: false });
 
-    // === URL ENDPOINT WEB APP SCRIPT UTAMA ===
+    // === URL ENDPOINT WEB APP SCRIPT ===
     const SHEET_ENDPOINT = "https://script.google.com/macros/s/AKfycbzZmC9hqt_D0_SMzwZpU5Buawfn-LPfQh1xp6qyiBd_saQM17TsnpfEjWNpXsdLaz12/exec"; 
 
     const TOP_SCORE_KEY = "imadjiTopScores";
@@ -547,7 +547,6 @@
       }
     }
 
-    // Fungsi global penangkap data JSONP Callback dari server makro
     window.processOnlineLeaderboard = function(data) {
       if (globalJsonpResolver) {
         globalJsonpResolver(data);
@@ -590,6 +589,7 @@
       renderNumber(lifeText, game.lives);
     }
 
+    // === HANYA MENAMPILKAN INISIAL DI LEADERBOARD ===
     function buildScoresMarkup(scoresArray) {
       if (!scoresArray || !scoresArray.length) {
         return `<p style="letter-spacing:1px; opacity:0.7;">BELUM ADA SKOR</p>`;
@@ -599,7 +599,7 @@
           ${scoresArray.map((item, index) => `
             <div class="top-score-row">
               <span>${index + 1}</span>
-              <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${item.initials} (${item.instagram})</span>
+              <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${item.initials}</span>
               ${numberMarkup(item.score)}
             </div>
           `).join("")}
@@ -607,7 +607,6 @@
       `;
     }
 
-    // === TAMPILAN HALAMAN UTAMA (HOME) ===
     function showHomeScreen() {
       game.mode = "start";
       hud.hidden = true;
@@ -634,7 +633,6 @@
       document.getElementById("homeLeaderboardBtn").onclick = showLeaderboardScreen;
     }
 
-    // === TAMPILAN LEADERBOARD AMAN DENGAN INTEGRASI JSONP SCRIPT TAG ===
     async function showLeaderboardScreen() {
       game.mode = "leaderboard";
       
@@ -651,14 +649,13 @@
         return new Promise((resolve, reject) => {
           globalJsonpResolver = resolve;
 
-          // Memanggil JSONP via tag Script dinamis untuk mem-bypass error CORS dari Google secara mutlak
           const dynamicScript = document.createElement("script");
-          dynamicScript.src = `${SHEET_ENDPOINT}?callback=processOnlineLeaderboard&_nonce=${Date.now()}`;
+          dynamicScript.src = `${SHEET_ENDPOINT}?callback=processOnlineLeaderboard&_nocache=${Date.now()}`;
           dynamicScript.id = "jsonp-leaderboard-core";
 
           dynamicScript.onerror = () => {
             cleanUpScript();
-            reject(new Error("Gagal mengambil data dari Google Apps Script"));
+            reject(new Error("Gagal load script"));
           };
 
           const cleanUpScript = () => {
@@ -666,10 +663,9 @@
             if (currentScript) currentScript.remove();
           };
 
-          // Timer pembatas pelindung (jika koneksi lambat, batasi maksimal 4 detik)
           setTimeout(() => {
             cleanUpScript();
-            reject(new Error("Koneksi Timeout"));
+            reject(new Error("Timeout"));
           }, 4000);
 
           document.body.appendChild(dynamicScript);
@@ -678,15 +674,18 @@
 
       try {
         const rawScores = await fetchOnlineLeaderboard();
-        // Bersihkan dan petakan data jika format array objek masuk dengan benar
-        const formattedScores = rawScores.map(item => ({
-          initials: item.initials ? String(item.initials).toUpperCase() : "???",
-          instagram: item.instagram ? String(item.instagram) : "-",
-          score: item.score ? Number(item.score) : 0
-        }));
-        scoresMarkup = buildScoresMarkup(formattedScores);
+        if (rawScores && rawScores.length > 0) {
+          const formattedScores = rawScores.map(item => ({
+            initials: item.initials ? String(item.initials).toUpperCase() : "???",
+            instagram: item.instagram ? String(item.instagram) : "-",
+            score: item.score ? Number(item.score) : 0
+          }));
+          scoresMarkup = buildScoresMarkup(formattedScores);
+        } else {
+          scoresMarkup = buildScoresMarkup([]);
+        }
       } catch (err) {
-        console.warn("Koneksi eksternal sibuk, beralih menampilkan data cadangan lokal:", err);
+        console.warn("Menggunakan data lokal browser karena timeout/CORS:", err);
         scoresMarkup = buildScoresMarkup(getTopScoresLocal());
       }
 
@@ -774,8 +773,7 @@
         saveTopScoreLocal(entry);
         await submitToSheet(entry);
         
-        // Jeda waktu tunggu proses penulisan server makro sheet selesai, lalu muat leaderboard
-        setTimeout(showLeaderboardScreen, 400);
+        setTimeout(showLeaderboardScreen, 500);
       };
     }
 
