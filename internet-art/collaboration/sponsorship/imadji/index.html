@@ -342,11 +342,11 @@
     }
 
     #initialInput {
-      text-transform: uppercase; /* Inisial tetap kapital */
+      text-transform: uppercase; 
     }
 
     #igInput {
-      text-transform: lowercase; /* Tampilan input IG dipaksa jadi huruf kecil */
+      text-transform: lowercase; 
     }
 
     .submit-score input::placeholder {
@@ -375,7 +375,6 @@
 
 <body>
   
-  <!-- LAYAR PERINGATAN -->
   <div id="size-warning">
     <p>LAYAR TERLALU KECIL<br><br>Minimal Resolusi:<br>375 x 667</p>
   </div>
@@ -394,8 +393,7 @@
     </div>
 
     <main id="screen" class="screen">
-      <!-- Diisi dinamis oleh js -->
-    </main>
+      </main>
 
     <div id="hud" class="hud" hidden>
       <div class="hud-group">
@@ -599,7 +597,6 @@
       renderNumber(lifeText, game.lives);
     }
 
-    // === HANYA MENAMPILKAN INISIAL DI LEADERBOARD ===
     function buildScoresMarkup(scoresArray) {
       if (!scoresArray || !scoresArray.length) {
         return `<p style="letter-spacing:1px; opacity:0.7;">BELUM ADA SKOR</p>`;
@@ -754,7 +751,7 @@
           </div>
           
           <form id="scoreForm" class="submit-score">
-            <input id="initialInput" maxlength="5" placeholder="INISIAL" required autocomplete="off">
+            <input id="initialInput" minlength="3" maxlength="15" placeholder="USERNAME" required autocomplete="off" title="Username wajib 3 - 15 huruf">
             <input id="igInput" maxlength="40" placeholder="instagram" required autocomplete="off">
             
             <div class="button-group">
@@ -774,9 +771,9 @@
         submitBtn.style.pointerEvents = 'none';
         submitBtn.style.opacity = '0.5';
 
+        // Tidak di potong slice(0, 5) lagi agar bisa 15 huruf utuh
         const entry = {
-          initials: document.getElementById("initialInput").value.slice(0, 5).toUpperCase(),
-          // Memastikan data IG yang disimpan dikirim sebagai huruf kecil penuh
+          initials: document.getElementById("initialInput").value.trim().toUpperCase(),
           instagram: document.getElementById("igInput").value.trim().toLowerCase(),
           score: game.score
         };
