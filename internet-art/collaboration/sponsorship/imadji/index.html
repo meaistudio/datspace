@@ -9,7 +9,8 @@
     html, body {
       margin: 0;
       width: 100%;
-      height: 100%;
+      height: 100vh; /* Fallback untuk browser lawas */
+      height: 100dvh; /* Anti-Error UI Safari/iOS */
       overflow: hidden;
       background: #111;
       color: #fff;
@@ -26,7 +27,7 @@
       position: relative;
       width: 100%;
       height: 100%;
-      max-width: calc(100vh * (9 / 16));
+      max-width: calc(100dvh * (9 / 16));
       max-height: calc(100vw * (16 / 9));
       background: #000;
       overflow: hidden;
@@ -55,8 +56,8 @@
       letter-spacing: 1px;
     }
 
-    /* MATIKAN GAME JIKA DI BAWAH 375x667 */
-    @media (max-width: 374px), (max-height: 666px) {
+    /* MATIKAN GAME JIKA DI BAWAH 320x500 (Aman untuk in-app browser IG/TikTok di iPhone) */
+    @media (max-width: 319px), (max-height: 499px) {
       #game-container {
         display: none !important;
       }
@@ -443,9 +444,8 @@
 
 <body>
   
-  <!-- LAYAR PERINGATAN -->
   <div id="size-warning">
-    <p>LAYAR TERLALU KECIL<br><br>Minimal Resolusi:<br>375 x 667</p>
+    <p>LAYAR TERLALU KECIL /<br>TIDAK MENDUKUNG LANDSCAPE<br><br>Mohon putar HP ke mode potret<br>atau perbesar jendela layar.</p>
   </div>
 
   <div id="game-container">
@@ -462,8 +462,7 @@
     </div>
 
     <main id="screen" class="screen">
-      <!-- Diisi dinamis oleh js -->
-    </main>
+      </main>
 
     <div id="hud" class="hud" hidden>
       <div class="hud-group">
@@ -482,7 +481,6 @@
       </div>
     </div>
 
-    <!-- === POPUP IKLAN === -->
     <div id="ad-popup" class="ad-overlay" hidden>
       <div class="ad-content">
         <button id="closeAdBtn" class="close-ad-btn">X</button>
@@ -490,9 +488,7 @@
         <img id="adImage" alt="Iklan Banner" style="width:100%; height:auto; display:block; min-height:120px; background:#e0e0e0;">
       </div>
     </div>
-    <!-- =================== -->
-
-  </div>
+    </div>
 
   <script>
     document.addEventListener('gesturestart', function(e) { e.preventDefault(); });
@@ -944,7 +940,6 @@
       let type;
       let size;
 
-      // Peluang kemunculan dijarangkan lagi menjadi total hanya 2% (1% DATs, 1% Imadji)
       if (rand < 0.01) {
         type = "dats";
         size = currentSpecialSize();
