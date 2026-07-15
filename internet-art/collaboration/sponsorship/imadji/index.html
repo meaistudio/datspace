@@ -104,7 +104,7 @@
     .panel {
       display: grid;
       justify-items: center;
-      gap: 3cqh;
+      gap: 2cqh;
       width: 100%;
       text-shadow: 2px 2px 0 #000;
     }
@@ -134,10 +134,10 @@
 
     .visit-fixed {
       left: 50%;
-      bottom: 8cqh;
+      bottom: 4cqh;
       transform: translateX(-50%);
       z-index: 5;
-      font-size: clamp(14px, 4.5cqw, 48px);
+      font-size: clamp(12px, 4cqw, 40px);
       letter-spacing: 1px;
       text-transform: uppercase;
       white-space: nowrap;
@@ -185,12 +185,31 @@
       56%, 100% { opacity: 1; filter: none; }
     }
 
+    .btn-action {
+      display: inline-block;
+      padding: 1.5cqh 4cqw;
+      color: #fff;
+      background: #000;
+      border: 2px solid #fff;
+      font-size: clamp(14px, 4cqw, 24px);
+      text-transform: uppercase;
+      font-weight: bold;
+      letter-spacing: 1px;
+      transition: transform 140ms ease, background 120ms ease, color 120ms ease;
+    }
+
+    .btn-action:hover {
+      transform: scale(1.04);
+      background: #fff;
+      color: #000;
+    }
+
     .start-img-button {
       padding: 0;
       border: none;
       background: transparent;
       box-shadow: none;
-      margin-top: 2cqh;
+      margin-top: 1cqh;
       transition: transform 140ms ease;
     }
 
@@ -274,9 +293,11 @@
 
     .top-score-list {
       display: grid;
-      gap: 1cqh;
+      gap: 0.8cqh;
       width: 86cqw;
       max-width: 420px;
+      max-height: 35cqh;
+      overflow-y: auto;
     }
 
     .top-score-row {
@@ -302,8 +323,9 @@
 
     .submit-score {
       display: grid;
-      gap: 2cqh;
+      gap: 1.5cqh;
       justify-items: center;
+      width: 100%;
     }
 
     .submit-score input {
@@ -324,6 +346,13 @@
       color: rgba(255, 255, 255, 0.68);
     }
 
+    .button-group {
+      display: flex;
+      gap: 3cqw;
+      justify-content: center;
+      width: 100%;
+    }
+
     @container game (max-width: 600px) {
       .hud-item, .score-pill {
         border-width: 1px;
@@ -338,7 +367,6 @@
 
 <body>
   
-  <!-- LAYAR PERINGATAN -->
   <div id="size-warning">
     <p>LAYAR TERLALU KECIL<br><br>Minimal Resolusi:<br>375 x 667</p>
   </div>
@@ -357,14 +385,7 @@
     </div>
 
     <main id="screen" class="screen">
-      <section class="panel">
-        <p class="kicker">INTERACTIVE GAME BY DATs</p>
-        <img class="home-title-img" src="asset/home.webp" alt="Kopi Es Data">
-        <button id="startBtn" class="start-img-button" type="button" aria-label="Start">
-          <img src="asset/start.webp" alt="Start">
-        </button>
-      </section>
-    </main>
+      </main>
 
     <div id="hud" class="hud" hidden>
       <div class="hud-group">
@@ -388,9 +409,8 @@
     document.addEventListener('gesturestart', function(e) { e.preventDefault(); });
     document.addEventListener('dblclick', function(e) { e.preventDefault(); }, { passive: false });
 
-    // === TEMPEL URL WEB APP GOOGLE SHEETS DI SINI ===
-const SHEET_ENDPOINT = "https://script.google.com/macros/s/AKfycbzZmC9hqt_D0_SMzwZpU5Buawfn-LPfQh1xp6qyiBd_saQM17TsnpfEjWNpXsdLaz12/exec"; 
-// ================================================
+    // === URL WEB APP GOOGLE SHEETS ===
+    const SHEET_ENDPOINT = "https://script.google.com/macros/s/AKfycbzZmC9hqt_D0_SMzwZpU5Buawfn-LPfQh1xp6qyiBd_saQM17TsnpfEjWNpXsdLaz12/exec"; 
     // ================================================
 
     const TOP_SCORE_KEY = "imadjiTopScores";
@@ -403,7 +423,6 @@ const SHEET_ENDPOINT = "https://script.google.com/macros/s/AKfycbzZmC9hqt_D0_SMz
     const hud = document.getElementById("hud");
     const visitLink = document.getElementById("visitLink");
     const logoRow = document.querySelector(".logo-row");
-    const startBtn = document.getElementById("startBtn");
     const scoreText = document.getElementById("scoreText");
     const bestText = document.getElementById("bestText");
     const lifeText = document.getElementById("lifeText");
@@ -435,7 +454,6 @@ const SHEET_ENDPOINT = "https://script.google.com/macros/s/AKfycbzZmC9hqt_D0_SMz
       mode: "start",
       score: 0,
       best: Number(localStorage.getItem("imadjiCoffeeBest") || 0),
-      bestBeforeRun: 0,
       lives: 3,
 
       cupX: 0,
@@ -451,7 +469,6 @@ const SHEET_ENDPOINT = "https://script.google.com/macros/s/AKfycbzZmC9hqt_D0_SMz
       spawnRate: 780,
 
       dragging: false,
-
       keys: { left: false, right: false }
     };
 
@@ -493,21 +510,34 @@ const SHEET_ENDPOINT = "https://script.google.com/macros/s/AKfycbzZmC9hqt_D0_SMz
       return width / (image.naturalWidth / image.naturalHeight);
     }
 
-    function getTopScores() {
+    // Mengambil data dari LocalStorage
+    function getTopScoresLocal() {
       return JSON.parse(localStorage.getItem(TOP_SCORE_KEY) || "[]");
     }
 
-    function saveTopScore(entry) {
-      const scores = getTopScores();
-      scores.push(entry);
+    // Simpan/Replace data di Local Storage
+    function saveTopScoreLocal(entry) {
+      let scores = getTopScoresLocal();
+      const existingIdx = scores.findIndex(
+        item => item.initials === entry.initials && item.instagram.toLowerCase() === entry.instagram.toLowerCase()
+      );
+
+      if (existingIdx !== -1) {
+        if (entry.score > scores[existingIdx].score) {
+          scores[existingIdx].score = entry.score;
+        }
+      } else {
+        scores.push(entry);
+      }
+
       scores.sort((a, b) => b.score - a.score);
       localStorage.setItem(TOP_SCORE_KEY, JSON.stringify(scores.slice(0, 10)));
     }
 
+    // POST data baru/skor terupdate ke Google Sheets
     async function submitToSheet(entry) {
       if (!SHEET_ENDPOINT) return;
       try {
-        // Menggunakan text/plain untuk menghindari CORS Preflight Error
         await fetch(SHEET_ENDPOINT, {
           method: "POST",
           headers: { "Content-Type": "text/plain;charset=utf-8" },
@@ -554,20 +584,91 @@ const SHEET_ENDPOINT = "https://script.google.com/macros/s/AKfycbzZmC9hqt_D0_SMz
       renderNumber(lifeText, game.lives);
     }
 
-    function renderTopScores() {
-      const scores = getTopScores();
-      if (!scores.length) return `<p>NO TOP SCORE</p>`;
+    // Mengubah array skor menjadi struktur HTML list
+    function buildScoresMarkup(scoresArray) {
+      if (!scoresArray || !scoresArray.length) {
+        return `<p style="letter-spacing:1px; opacity:0.7;">BELUM ADA SKOR</p>`;
+      }
       return `
         <div class="top-score-list">
-          ${scores.map((item, index) => `
+          ${scoresArray.map((item, index) => `
             <div class="top-score-row">
               <span>${index + 1}</span>
-              <span>${item.initials}</span>
+              <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${item.initials} (${item.instagram})</span>
               ${numberMarkup(item.score)}
             </div>
           `).join("")}
         </div>
       `;
+    }
+
+    // === TAMPILAN HALAMAN UTAMA (HOME) ===
+    function showHomeScreen() {
+      game.mode = "start";
+      hud.hidden = true;
+      screen.hidden = false;
+      visitLink.hidden = false;
+      logoRow.hidden = false;
+
+      screen.innerHTML = `
+        <section class="panel">
+          <p class="kicker">INTERACTIVE GAME BY DATs</p>
+          <img class="home-title-img" src="asset/home.webp" alt="Kopi Es Data">
+          
+          <button id="startBtn" class="start-img-button" type="button" aria-label="Start">
+            <img src="asset/start.webp" alt="Start">
+          </button>
+
+          <button id="homeLeaderboardBtn" class="btn-action" type="button" style="margin-top: 1cqh;">
+            LEADERBOARD
+          </button>
+        </section>
+      `;
+
+      document.getElementById("startBtn").onclick = startGame;
+      document.getElementById("homeLeaderboardBtn").onclick = showLeaderboardScreen;
+    }
+
+    // === TAMPILAN LEADERBOARD KONEKSI LANGSUNG GOOGLE SPREADSHEET ===
+    async function showLeaderboardScreen() {
+      game.mode = "leaderboard";
+      
+      // Layar Loading Sementara
+      screen.innerHTML = `
+        <section class="panel">
+          <img class="top-score-title" src="asset/top_score.webp" alt="Top Score" style="margin-top: 6cqh;">
+          <p id="loadingText" style="letter-spacing:1px; opacity:0.7;">MEMUAT DATA SPREADSHEET...</p>
+        </section>
+      `;
+
+      let scoresMarkup = "";
+
+      try {
+        // GET Request mengambil data real-time langsung dari database server sheet
+        const response = await fetch(SHEET_ENDPOINT);
+        if (!response.ok) throw new Error("Jaringan bermasalah");
+        
+        const globalScores = await response.json();
+        scoresMarkup = buildScoresMarkup(globalScores);
+      } catch (err) {
+        console.error("Gagal memuat online database, menggunakan Local Storage cadangan:", err);
+        // Fallback mengambil local jika koneksi internet terputus
+        const localScores = getTopScoresLocal();
+        scoresMarkup = buildScoresMarkup(localScores);
+      }
+
+      // Render Layout Utama setelah data berhasil didapat
+      screen.innerHTML = `
+        <section class="panel">
+          <img class="top-score-title" src="asset/top_score.webp" alt="Top Score" style="margin-top: 6cqh;">
+          ${scoresMarkup}
+          <button id="backToHomeBtn" class="btn-action" type="button" style="margin-top:2cqh;">
+            KEMBALI
+          </button>
+        </section>
+      `;
+      
+      document.getElementById("backToHomeBtn").onclick = showHomeScreen;
     }
 
     function startGame() {
@@ -578,7 +679,6 @@ const SHEET_ENDPOINT = "https://script.google.com/macros/s/AKfycbzZmC9hqt_D0_SMz
       game.spawnRate = 780;
       game.lastSpawn = performance.now();
       game.lastTime = performance.now();
-      game.bestBeforeRun = game.best;
       game.cupX = gameWidth / 2;
 
       screen.hidden = true;
@@ -589,6 +689,7 @@ const SHEET_ENDPOINT = "https://script.google.com/macros/s/AKfycbzZmC9hqt_D0_SMz
       updateHud();
     }
 
+    // === TAMPILAN LAYAR GAME OVER ===
     function gameOver() {
       game.mode = "over";
       hud.hidden = true;
@@ -596,76 +697,58 @@ const SHEET_ENDPOINT = "https://script.google.com/macros/s/AKfycbzZmC9hqt_D0_SMz
       visitLink.hidden = false;
       logoRow.hidden = false;
 
-      // Apakah skor kali ini mengalahkan skor terbaik SEBELUM mulai main?
-      const isNewBest = game.score > game.bestBeforeRun;
-
-      if (!isNewBest) {
-        game.best = Math.max(game.best, game.score);
-        localStorage.setItem("imadjiCoffeeBest", String(game.best));
-      }
+      game.best = Math.max(game.best, game.score);
+      localStorage.setItem("imadjiCoffeeBest", String(game.best));
 
       screen.innerHTML = `
         <section class="panel">
-          <div class="score-summary">
+          <div class="score-summary" style="margin-top: 4cqh;">
             <div class="score-pill">
               <img class="score-pill-label" src="asset/score.webp" alt="Score">
               ${numberMarkup(game.score)}
             </div>
             <div class="score-pill">
               <img class="score-pill-label" src="asset/best.webp" alt="Best">
-              ${numberMarkup(Math.max(game.best, game.score))}
+              ${numberMarkup(game.best)}
             </div>
           </div>
-          <img class="top-score-title" src="asset/top_score.webp" alt="Top Score">
-          ${renderTopScores()}
-          ${isNewBest ? `
-            <form id="scoreForm" class="submit-score">
-              <input id="initialInput" maxlength="5" placeholder="INISIAL" required autocomplete="off">
-              <input id="igInput" maxlength="40" placeholder="INSTAGRAM" required autocomplete="off">
-              <button class="start-img-button" type="submit" aria-label="Submit">
-                <img src="asset/start.webp" alt="Submit">
-              </button>
-            </form>
-          ` : `
-            <button id="restartBtn" class="start-img-button" type="button" aria-label="Restart">
-              <img src="asset/start.webp" alt="Restart">
-            </button>
-          `}
+          
+          <form id="scoreForm" class="submit-score">
+            <input id="initialInput" maxlength="5" placeholder="INISIAL" required autocomplete="off">
+            <input id="igInput" maxlength="40" placeholder="INSTAGRAM" required autocomplete="off">
+            
+            <div class="button-group">
+              <button class="btn-action" type="submit">SUBMIT SCORE</button>
+              <button id="failRestartBtn" class="btn-action" type="button">RESTART</button>
+            </div>
+          </form>
         </section>
       `;
 
-      if (isNewBest) {
-        document.getElementById("scoreForm").onsubmit = async (event) => {
-          event.preventDefault();
-          
-          // Mencegah double click yang menyebabkan tersubmit 2x
-          const submitBtn = event.target.querySelector('button');
-          submitBtn.style.pointerEvents = 'none';
-          submitBtn.style.opacity = '0.5';
+      document.getElementById("failRestartBtn").onclick = startGame;
 
-          const entry = {
-            initials: document.getElementById("initialInput").value.slice(0, 5).toUpperCase(),
-            instagram: document.getElementById("igInput").value.trim(),
-            score: game.score
-          };
-          
-          // Simpan ke local storage
-          game.best = Math.max(game.best, game.score);
-          localStorage.setItem("imadjiCoffeeBest", String(game.best));
-          saveTopScore(entry);
+      document.getElementById("scoreForm").onsubmit = async (event) => {
+        event.preventDefault();
+        
+        const submitBtn = event.target.querySelector('button[type="submit"]');
+        submitBtn.style.pointerEvents = 'none';
+        submitBtn.style.opacity = '0.5';
 
-          // Kirim ke Spreadsheet
-          await submitToSheet(entry);
-
-          // FIX: Perbarui batas skor terbaik agar tidak ditagih form lagi saat layar direfresh!
-          game.bestBeforeRun = game.best;
-
-          // Render ulang layar (karena bestBeforeRun sudah sama, form akan hilang jadi tombol Restart)
-          gameOver();
+        const entry = {
+          initials: document.getElementById("initialInput").value.slice(0, 5).toUpperCase(),
+          instagram: document.getElementById("igInput").value.trim(),
+          score: game.score
         };
-      } else {
-        document.getElementById("restartBtn").onclick = startGame;
-      }
+        
+        // Simpan lokal di browser (logika replace aktif)
+        saveTopScoreLocal(entry);
+
+        // Kirim & Sinkronisasi data ke Google Sheets Cloud database
+        await submitToSheet(entry);
+
+        // Secara otomatis beralih memuat papan Leaderboard online global
+        showLeaderboardScreen();
+      };
     }
 
     function drawBg(image, label, darken = 0.34) {
@@ -876,9 +959,9 @@ const SHEET_ENDPOINT = "https://script.google.com/macros/s/AKfycbzZmC9hqt_D0_SMz
       if (e.touches.length > 1) e.preventDefault();
     }, { passive: false });
 
-    startBtn.onclick = startGame;
-
+    // Mulai Inisialisasi Tampilan Awal Game
     resize();
+    showHomeScreen();
     updateHud();
     requestAnimationFrame(loop);
   </script>
