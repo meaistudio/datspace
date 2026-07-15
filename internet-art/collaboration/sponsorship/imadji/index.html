@@ -337,6 +337,7 @@
 </head>
 
 <body>
+  
   <!-- LAYAR PERINGATAN -->
   <div id="size-warning">
     <p>LAYAR TERLALU KECIL<br><br>Minimal Resolusi:<br>375 x 667</p>
@@ -384,15 +385,14 @@
   </div>
 
   <script>
-    // MENCEGAH FITUR ZOOM PADA SAFARI/IOS
-    document.addEventListener('gesturestart', function(e) {
-      e.preventDefault();
-    });
-    document.addEventListener('dblclick', function(e) {
-      e.preventDefault();
-    }, { passive: false });
+    document.addEventListener('gesturestart', function(e) { e.preventDefault(); });
+    document.addEventListener('dblclick', function(e) { e.preventDefault(); }, { passive: false });
 
-    const SHEET_ENDPOINT = "";
+    // === TEMPEL URL WEB APP GOOGLE SHEETS DI SINI ===
+const SHEET_ENDPOINT = "https://script.google.com/macros/s/AKfycbzZmC9hqt_D0_SMzwZpU5Buawfn-LPfQh1xp6qyiBd_saQM17TsnpfEjWNpXsdLaz12/exec"; 
+// ================================================
+    // ================================================
+
     const TOP_SCORE_KEY = "imadjiTopScores";
 
     const container = document.getElementById("game-container");
@@ -473,7 +473,6 @@
 
     function resize() {
       const rect = container.getBoundingClientRect();
-      // Cegah error pembagian ukuran saat di-display: none (oleh @media warning)
       if (rect.width === 0 || rect.height === 0) return;
 
       const dpr = window.devicePixelRatio || 1;
@@ -507,12 +506,16 @@
 
     async function submitToSheet(entry) {
       if (!SHEET_ENDPOINT) return;
-      await fetch(SHEET_ENDPOINT, {
-        method: "POST",
-        mode: "no-cors",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ initials: entry.initials, instagram: entry.instagram, score: entry.score })
-      });
+      try {
+        // Menggunakan text/plain untuk menghindari CORS Preflight Error
+        await fetch(SHEET_ENDPOINT, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify(entry)
+        });
+      } catch (err) {
+        console.error("Gagal mengirim ke spreadsheet:", err);
+      }
     }
 
     function renderNumber(target, value) {
@@ -586,26 +589,6 @@
       updateHud();
     }
 
-    function showStart() {
-      game.mode = "start";
-      game.items = [];
-      hud.hidden = true;
-      screen.hidden = false;
-      visitLink.hidden = false;
-      logoRow.hidden = false;
-
-      screen.innerHTML = `
-        <section class="panel">
-          <p class="kicker">INTERACTIVE GAME BY DATs</p>
-          <img class="home-title-img" src="asset/home.webp" alt="Kopi Es Data">
-          <button id="newStartBtn" class="start-img-button" type="button" aria-label="Start">
-            <img src="asset/start.webp" alt="Start">
-          </button>
-        </section>
-      `;
-      document.getElementById("newStartBtn").onclick = startGame;
-    }
-
     function gameOver() {
       game.mode = "over";
       hud.hidden = true;
@@ -613,6 +596,7 @@
       visitLink.hidden = false;
       logoRow.hidden = false;
 
+      // Apakah skor kali ini mengalahkan skor terbaik SEBELUM mulai main?
       const isNewBest = game.score > game.bestBeforeRun;
 
       if (!isNewBest) {
@@ -636,8 +620,8 @@
           ${renderTopScores()}
           ${isNewBest ? `
             <form id="scoreForm" class="submit-score">
-              <input id="initialInput" maxlength="5" placeholder="INISIAL" required>
-              <input id="igInput" maxlength="40" placeholder="INSTAGRAM" required>
+              <input id="initialInput" maxlength="5" placeholder="INISIAL" required autocomplete="off">
+              <input id="igInput" maxlength="40" placeholder="INSTAGRAM" required autocomplete="off">
               <button class="start-img-button" type="submit" aria-label="Submit">
                 <img src="asset/start.webp" alt="Submit">
               </button>
@@ -653,15 +637,30 @@
       if (isNewBest) {
         document.getElementById("scoreForm").onsubmit = async (event) => {
           event.preventDefault();
+          
+          // Mencegah double click yang menyebabkan tersubmit 2x
+          const submitBtn = event.target.querySelector('button');
+          submitBtn.style.pointerEvents = 'none';
+          submitBtn.style.opacity = '0.5';
+
           const entry = {
             initials: document.getElementById("initialInput").value.slice(0, 5).toUpperCase(),
             instagram: document.getElementById("igInput").value.trim(),
             score: game.score
           };
+          
+          // Simpan ke local storage
           game.best = Math.max(game.best, game.score);
           localStorage.setItem("imadjiCoffeeBest", String(game.best));
           saveTopScore(entry);
+
+          // Kirim ke Spreadsheet
           await submitToSheet(entry);
+
+          // FIX: Perbarui batas skor terbaik agar tidak ditagih form lagi saat layar direfresh!
+          game.bestBeforeRun = game.best;
+
+          // Render ulang layar (karena bestBeforeRun sudah sama, form akan hilang jadi tombol Restart)
           gameOver();
         };
       } else {
