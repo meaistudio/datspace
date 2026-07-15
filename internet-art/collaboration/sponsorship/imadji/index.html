@@ -40,7 +40,7 @@
       position: fixed;
       inset: 0;
       background: #000;
-      z-index: 9999;
+      z-index: 99999;
       place-items: center;
       text-align: center;
       padding: 20px;
@@ -361,6 +361,68 @@
       width: 100%;
     }
 
+    /* === STYLING POPUP IKLAN === */
+    .ad-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.85);
+      z-index: 9999;
+      display: grid;
+      place-items: center;
+      padding: 5cqw;
+    }
+    .ad-overlay[hidden] {
+      display: none;
+    }
+    .ad-content {
+      background: #fff;
+      padding: 2cqh 3cqw;
+      width: 85%;
+      max-width: 340px;
+      position: relative;
+      border: 4px solid #000;
+      box-shadow: 4px 4px 0 #fff;
+      text-align: center;
+      animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    }
+    .ad-label {
+      color: #000;
+      margin: 0 0 1cqh 0;
+      font-weight: bold;
+      font-size: clamp(12px, 3cqw, 16px);
+      letter-spacing: 1px;
+      text-shadow: none;
+    }
+    .close-ad-btn {
+      position: absolute;
+      top: -15px;
+      right: -15px;
+      background: #000;
+      color: #fff;
+      border: 2px solid #fff;
+      width: 35px;
+      height: 35px;
+      font-weight: bold;
+      font-size: 16px;
+      cursor: pointer;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      padding: 0;
+      transition: transform 0.2s;
+      box-shadow: 2px 2px 0 #fff;
+    }
+    .close-ad-btn:hover {
+      transform: scale(1.1);
+      background: #fff;
+      color: #000;
+      border-color: #000;
+    }
+    @keyframes popIn {
+      0% { transform: scale(0.8); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
     @container game (max-width: 600px) {
       .hud-item, .score-pill {
         border-width: 1px;
@@ -370,11 +432,18 @@
         grid-template-columns: 25px 1fr auto;
       }
     }
+
+    /* Efek visual ketika mode pelan aktif */
+    #game-container.slow-mode canvas {
+      filter: saturate(1.2) contrast(1.1);
+      transition: filter 0.3s ease;
+    }
   </style>
 </head>
 
 <body>
   
+  <!-- LAYAR PERINGATAN -->
   <div id="size-warning">
     <p>LAYAR TERLALU KECIL<br><br>Minimal Resolusi:<br>375 x 667</p>
   </div>
@@ -393,7 +462,8 @@
     </div>
 
     <main id="screen" class="screen">
-      </main>
+      <!-- Diisi dinamis oleh js -->
+    </main>
 
     <div id="hud" class="hud" hidden>
       <div class="hud-group">
@@ -411,6 +481,17 @@
         </div>
       </div>
     </div>
+
+    <!-- === POPUP IKLAN === -->
+    <div id="ad-popup" class="ad-overlay" hidden>
+      <div class="ad-content">
+        <button id="closeAdBtn" class="close-ad-btn">X</button>
+        <p class="ad-label">SPONSOR</p>
+        <img id="adImage" alt="Iklan Banner" style="width:100%; height:auto; display:block; min-height:120px; background:#e0e0e0;">
+      </div>
+    </div>
+    <!-- =================== -->
+
   </div>
 
   <script>
@@ -433,18 +514,28 @@
     const scoreText = document.getElementById("scoreText");
     const bestText = document.getElementById("bestText");
     const lifeText = document.getElementById("lifeText");
+    
+    const adPopup = document.getElementById("ad-popup");
+    const closeAdBtn = document.getElementById("closeAdBtn");
+
+    closeAdBtn.onclick = () => {
+      adPopup.hidden = true;
+    };
 
     let gameWidth = 0;
     let gameHeight = 0;
 
     let globalJsonpResolver = null;
 
+    // === ASSETS ===
     const asset = {
       extBg: "asset/imadji_yos_ext.webp",
       inBg: "asset/imadji_yos_in.webp",
       cup: "asset/cup.webp",
       ice: "asset/ice.webp",
-      bean: "asset/bean.webp"
+      bean: "asset/bean.webp",
+      dats: "asset/dats.webp",
+      imadji: "asset/imadji.webp"
     };
 
     const img = {};
@@ -471,11 +562,13 @@
 
       beanSize: 92,
       iceSize: 86,
+      specialSize: 82,
 
       items: [],
       lastSpawn: 0,
       lastTime: 0,
-      spawnRate: 780,
+      
+      slowUntil: 0,
 
       dragging: false,
       keys: { left: false, right: false }
@@ -495,6 +588,10 @@
 
     function currentIceSize() {
       return isCompactScreen() ? game.iceSize * 0.55 : game.iceSize;
+    }
+
+    function currentSpecialSize() {
+      return isCompactScreen() ? game.specialSize * 0.55 : game.specialSize;
     }
 
     function resize() {
@@ -638,6 +735,18 @@
 
       document.getElementById("startBtn").onclick = startGame;
       document.getElementById("homeLeaderboardBtn").onclick = showLeaderboardScreen;
+
+      // Cek Iklan Otomatis di Home Page
+      const adCheckImg = new Image();
+      adCheckImg.onload = function() {
+        const adElement = document.getElementById("adImage");
+        if(adElement) adElement.src = this.src;
+        adPopup.hidden = false;
+      };
+      adCheckImg.onerror = function() {
+        adPopup.hidden = true;
+      };
+      adCheckImg.src = "asset/iklan.webp?v=" + new Date().getTime();
     }
 
     async function showLeaderboardScreen() {
@@ -714,7 +823,7 @@
       game.score = 0;
       game.lives = 3;
       game.items = [];
-      game.spawnRate = 780;
+      game.slowUntil = 0;
       game.lastSpawn = performance.now();
       game.lastTime = performance.now();
       game.cupX = gameWidth / 2;
@@ -723,7 +832,9 @@
       hud.hidden = false;
       visitLink.hidden = true;
       logoRow.hidden = true;
+      adPopup.hidden = true;
 
+      container.classList.remove("slow-mode");
       updateHud();
     }
 
@@ -771,7 +882,6 @@
         submitBtn.style.pointerEvents = 'none';
         submitBtn.style.opacity = '0.5';
 
-        // Tidak di potong slice(0, 5) lagi agar bisa 15 huruf utuh
         const entry = {
           initials: document.getElementById("initialInput").value.trim().toUpperCase(),
           instagram: document.getElementById("igInput").value.trim().toLowerCase(),
@@ -821,19 +931,39 @@
     }
 
     function spawn(now) {
-      if (now - game.lastSpawn < game.spawnRate) return;
-      game.lastSpawn = now;
-      game.spawnRate = Math.max(330, 780 - game.score * 7);
+      const isSlow = now < game.slowUntil;
+      
+      let baseSpawnRate = Math.max(330, 780 - game.score * 3); 
+      
+      let activeSpawnRate = isSlow ? baseSpawnRate * 2.5 : baseSpawnRate;
 
-      const type = Math.random() > 0.58 ? "bean" : "ice";
-      const size = type === "bean" ? currentBeanSize() : currentIceSize();
+      if (now - game.lastSpawn < activeSpawnRate) return;
+      game.lastSpawn = now;
+
+      const rand = Math.random();
+      let type;
+      let size;
+
+      // Peluang kemunculan dijarangkan lagi menjadi total hanya 2% (1% DATs, 1% Imadji)
+      if (rand < 0.01) {
+        type = "dats";
+        size = currentSpecialSize();
+      } else if (rand < 0.02) {
+        type = "imadji";
+        size = currentSpecialSize();
+      } else {
+        type = Math.random() > 0.58 ? "bean" : "ice";
+        size = type === "bean" ? currentBeanSize() : currentIceSize();
+      }
+
+      let baseSpeed = 145 + Math.random() * 120 + game.score * 0.6;
 
       game.items.push({
         type,
         x: 40 + Math.random() * Math.max(1, gameWidth - 80),
         y: -size,
         size,
-        speed: 145 + Math.random() * 120 + game.score * 1.3,
+        speed: baseSpeed,
         drift: (Math.random() - 0.5) * 46,
         spin: Math.random() * Math.PI
       });
@@ -854,6 +984,15 @@
 
       spawn(now);
 
+      const isSlow = now < game.slowUntil;
+      const speedMultiplier = isSlow ? 0.4 : 1;
+      
+      if (isSlow) {
+        container.classList.add("slow-mode");
+      } else {
+        container.classList.remove("slow-mode");
+      }
+
       const cupLeft = game.cupX - cupWidth / 2;
       const cupRight = game.cupX + cupWidth / 2;
       const cupTop = game.cupY - cupHeight / 2;
@@ -865,15 +1004,20 @@
         const itemImage = img[item.type];
         const itemHeight = imageHeightByWidth(itemImage, item.size);
 
-        item.y += item.speed * dt;
-        item.x += Math.sin(now * 0.002 + item.spin) * item.drift * dt;
-        item.spin += dt * 5;
+        item.y += item.speed * speedMultiplier * dt;
+        item.x += Math.sin(now * 0.002 + item.spin) * item.drift * speedMultiplier * dt;
+        item.spin += dt * 5 * speedMultiplier;
 
         const itemBottom = item.y + itemHeight / 2;
         const caught = itemBottom >= cupCatchTop && itemBottom <= cupCatchBottom && item.x > cupLeft + cupWidth * 0.12 && item.x < cupRight - cupWidth * 0.12;
 
         if (caught) {
-          game.score += item.type === "bean" ? 2 : 1;
+          if (item.type === "dats" || item.type === "imadji") {
+            game.slowUntil = now + 5000;
+            game.score += 5; 
+          } else {
+            game.score += item.type === "bean" ? 2 : 1;
+          }
           game.items.splice(i, 1);
           updateHud();
           continue;
@@ -881,9 +1025,11 @@
 
         if (item.y > gameHeight + itemHeight) {
           game.items.splice(i, 1);
-          game.lives -= 1;
-          updateHud();
-          if (game.lives <= 0) gameOver();
+          if (item.type === "bean" || item.type === "ice") {
+            game.lives -= 1;
+            updateHud();
+            if (game.lives <= 0) gameOver();
+          }
         }
       }
     }
