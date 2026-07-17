@@ -362,7 +362,7 @@
       width: 100%;
     }
 
-    /* === STYLING POPUP IKLAN === */
+    /* === STYLING POPUP IKLAN (SANGAT MINIMALIS) === */
     .ad-overlay {
       position: absolute;
       inset: 0;
@@ -376,42 +376,36 @@
       display: none;
     }
     .ad-content {
-      background: #fff;
-      padding: 2cqh 3cqw;
+      background: transparent;
+      padding: 0;
       width: 85%;
       max-width: 340px;
       position: relative;
-      border: 4px solid #000;
-      box-shadow: 4px 4px 0 #fff;
+      border: none;
+      box-shadow: none;
+      border-radius: 8px;
       text-align: center;
       animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
     }
-    .ad-label {
-      color: #000;
-      margin: 0 0 1cqh 0;
-      font-weight: bold;
-      font-size: clamp(12px, 3cqw, 16px);
-      letter-spacing: 1px;
-      text-shadow: none;
-    }
     .close-ad-btn {
       position: absolute;
-      top: -15px;
-      right: -15px;
+      top: -12px;
+      right: -12px;
       background: #000;
       color: #fff;
       border: 2px solid #fff;
-      width: 35px;
-      height: 35px;
+      width: 30px;
+      height: 30px;
       font-weight: bold;
-      font-size: 16px;
+      font-size: 14px;
       cursor: pointer;
       border-radius: 50%;
       display: grid;
       place-items: center;
       padding: 0;
       transition: transform 0.2s;
-      box-shadow: 2px 2px 0 #fff;
+      z-index: 10;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.5);
     }
     .close-ad-btn:hover {
       transform: scale(1.1);
@@ -444,6 +438,7 @@
 
 <body>
   
+  <!-- LAYAR PERINGATAN -->
   <div id="size-warning">
     <p>LAYAR TERLALU KECIL /<br>TIDAK MENDUKUNG LANDSCAPE<br><br>Mohon putar HP ke mode potret<br>atau perbesar jendela layar.</p>
   </div>
@@ -462,7 +457,8 @@
     </div>
 
     <main id="screen" class="screen">
-      </main>
+      <!-- Diisi dinamis oleh js -->
+    </main>
 
     <div id="hud" class="hud" hidden>
       <div class="hud-group">
@@ -481,14 +477,16 @@
       </div>
     </div>
 
+    <!-- === POPUP IKLAN === -->
     <div id="ad-popup" class="ad-overlay" hidden>
       <div class="ad-content">
         <button id="closeAdBtn" class="close-ad-btn">X</button>
-        <p class="ad-label">SPONSOR</p>
-        <img id="adImage" alt="Iklan Banner" style="width:100%; height:auto; display:block; min-height:120px; background:#e0e0e0;">
+        <img id="adImage" alt="Iklan Banner" style="width:100%; height:auto; display:block; border-radius:8px; background:transparent;">
       </div>
     </div>
-    </div>
+    <!-- =================== -->
+
+  </div>
 
   <script>
     document.addEventListener('gesturestart', function(e) { e.preventDefault(); });
