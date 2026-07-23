@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Ultimate Hybrid Mapping Testcard (Responsive UI)</title>
+    <title>MEAI Projection Mapping Tool</title>
     <style>
         body {
             background-color: #000000;
@@ -15,14 +15,14 @@
             height: 100vh;
             overflow: hidden;
             font-family: sans-serif;
-            touch-action: none; /* Mencegah pull-to-refresh di HP */
+            touch-action: none; 
         }
         
         .minimal-ui {
             position: absolute;
             top: 30px;
             display: flex;
-            flex-wrap: wrap; /* Otomatis turun baris jika sempit */
+            flex-wrap: wrap; 
             justify-content: center;
             gap: 15px;
             align-items: center;
@@ -32,8 +32,8 @@
             border-radius: 12px;
             border: 2px solid rgba(255, 255, 255, 0.2);
             transition: opacity 0.3s ease, background 0.3s ease;
-            z-index: 10;
-            max-width: 90vw; /* Agar tidak melebihi lebar layar */
+            z-index: 100;
+            max-width: 90vw; 
         }
         .minimal-ui:hover {
             background: rgba(20, 20, 20, 0.95);
@@ -82,76 +82,137 @@
             white-space: nowrap;
         }
         button:hover { background: #1b5e20; }
+        
+        .btn-map { background: #d32f2f; }
+        .btn-map:hover { background: #9a0007; }
+        .btn-map.active { background: #1976d2; box-shadow: 0 0 10px #2196f3; }
 
+        /* Workspace & Canvas Settings */
+        .workspace {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
         canvas {
-            max-width: 100%;
-            max-height: 100%;
+            max-width: 90vw;
+            max-height: 90vh;
             object-fit: contain;
+            transform-origin: 0 0; 
+            box-shadow: 0 0 20px rgba(255,255,255,0.1);
         }
 
-        /* ========================================= */
-        /* RESPONSIVE DESIGN UNTUK IPAD & TABLET     */
-        /* ========================================= */
+        /* Mapping Handles (Corner Pins) */
+        .handle {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            background: rgba(0, 255, 0, 0.2); 
+            border: 2px solid rgba(255, 255, 255, 0.7);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            cursor: grab;
+            display: none;
+            z-index: 50;
+            box-shadow: 0 0 5px rgba(0,0,0,0.5);
+            
+            /* Dibuat tidak terlihat secara default */
+            opacity: 0; 
+            transition: opacity 0.3s ease, border-color 0.2s, background 0.2s;
+        }
+
+        /* Trik: Memperbesar area sensitif hover tak kasat mata di sekitar titik */
+        .handle::after {
+            content: '';
+            position: absolute;
+            top: -40px; bottom: -40px; left: -40px; right: -40px;
+            border-radius: 50%;
+        }
+
+        /* Titik akan muncul jika kursor masuk area sensitif, atau saat sedang aktif/dipilih */
+        .handle:hover,
+        .handle:active,
+        .handle.selected {
+            opacity: 1; 
+        }
+
+        .handle:active { cursor: grabbing; background: rgba(0, 255, 0, 0.4); }
+        .handle.selected {
+            border: 3px solid #ffeb3b; 
+            background: rgba(255, 235, 59, 0.25);
+            box-shadow: 0 0 15px rgba(255, 235, 59, 0.8);
+        }
+
+        /* Panel Kontrol Presisi Mapping */
+        .mapping-panel {
+            position: absolute;
+            bottom: 30px;
+            right: 30px;
+            background: rgba(20, 20, 20, 0.9);
+            border: 1px solid #444;
+            border-radius: 12px;
+            padding: 15px;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            z-index: 101;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.7);
+        }
+        .mapping-panel .title {
+            color: #ffeb3b; font-size: 14px; font-weight: bold; margin-bottom: 10px; text-align: center;
+        }
+        .d-pad {
+            display: grid;
+            grid-template-columns: 40px 40px 40px;
+            grid-template-rows: 40px 40px 40px;
+            gap: 5px;
+            margin-bottom: 10px;
+        }
+        .d-pad button {
+            background: #444; padding: 0; width: 100%; height: 100%; font-size: 18px; border-radius: 6px;
+        }
+        .d-pad button:hover { background: #666; }
+        .d-pad button:active { background: #888; }
+        .d-up { grid-column: 2; grid-row: 1; }
+        .d-left { grid-column: 1; grid-row: 2; }
+        .d-right { grid-column: 3; grid-row: 2; }
+        .d-down { grid-column: 2; grid-row: 3; }
+
+        /* Responsive Mobile/Tablet */
         @media (max-width: 1024px) {
-            .minimal-ui {
-                gap: 10px;
-                padding: 12px 20px;
-            }
-            input[type="number"], select {
-                font-size: 16px;
-                padding: 8px 12px;
-                width: 80px;
-            }
-            .checkbox-label, button {
-                font-size: 16px;
-            }
+            .minimal-ui { gap: 10px; padding: 12px 20px; }
+            input[type="number"], select { font-size: 16px; padding: 8px 12px; width: 80px; }
+            .checkbox-label, button { font-size: 16px; }
             button { padding: 10px 20px; }
         }
 
-        /* ========================================= */
-        /* RESPONSIVE DESIGN UNTUK HP (MOBILE)       */
-        /* ========================================= */
         @media (max-width: 600px) {
             .minimal-ui {
-                top: auto; 
-                bottom: 20px; /* Pindah ke bawah agar mudah diklik jempol */
-                gap: 8px;
-                padding: 10px 15px;
-                border-radius: 10px;
-                width: 92vw;
+                top: 10px; gap: 8px;
+                padding: 10px 15px; border-radius: 10px; width: 92vw;
             }
-            input[type="number"] {
-                flex-grow: 1; /* Input memanjang mengisi ruang kosong */
-                width: 30%;
-                font-size: 15px;
-                padding: 8px;
+            input[type="number"] { flex-grow: 1; width: 25%; font-size: 15px; padding: 8px; }
+            select { flex-grow: 1; width: 100%; font-size: 15px; padding: 8px; }
+            .checkbox-label { font-size: 14px; flex-grow: 1; justify-content: center; }
+            .checkbox-label input[type="checkbox"] { width: 18px; height: 18px; }
+            button { width: 100%; font-size: 15px; padding: 12px; }
+            
+            .handle { width: 50px; height: 50px; }
+            
+            .mapping-panel {
+                bottom: 20px; right: 50%; transform: translateX(50%);
+                flex-direction: row; gap: 20px; padding: 10px 20px;
             }
-            select {
-                flex-grow: 1;
-                width: 100%; /* Dropdown memanjang penuh */
-                font-size: 15px;
-                padding: 8px;
-            }
-            .checkbox-label {
-                font-size: 14px;
-                flex-grow: 1;
-                justify-content: center;
-            }
-            .checkbox-label input[type="checkbox"] {
-                width: 18px;
-                height: 18px;
-            }
-            button {
-                width: 100%; /* Tombol simpan memanjang penuh di bawah */
-                font-size: 15px;
-                padding: 12px;
-            }
+            .mapping-panel .title { margin-bottom: 0; width: 100px; text-align: left;}
         }
     </style>
 </head>
 <body>
 
-    <div class="minimal-ui">
+    <div class="minimal-ui" id="ui-panel">
         <input type="number" id="meter_width" value="10" step="0.5" placeholder="P(m)" title="Panjang Fisik (Meter)" onchange="updateCanvas()">
         <input type="number" id="meter_height" value="4" step="0.5" placeholder="T(m)" title="Tinggi Fisik (Meter)" onchange="updateCanvas()">
         
@@ -171,10 +232,34 @@
             <input type="checkbox" id="show_focus" checked onchange="updateCanvas()"> Fokus
         </label>
 
+        <button class="btn-map" id="btn-map" onclick="toggleMappingMode()" title="Mode Live Mapping">📐 Mapping Mode</button>
         <button onclick="downloadImage()" title="Download PNG">⬇ Simpan</button>
     </div>
 
-    <canvas id="testcard"></canvas>
+    <!-- Panel Mapping Khusus Presisi -->
+    <div class="mapping-panel" id="mapping-panel">
+        <div class="title" id="selected-pin-name">Pilih Corner Pin</div>
+        
+        <label class="checkbox-label" style="margin-bottom: 10px; font-size: 14px;">
+            <input type="checkbox" id="lock_drag" onchange="toggleLock()"> 🔒 Kunci Geser
+        </label>
+
+        <div class="d-pad">
+            <button class="d-up" onclick="movePin(0, -1)" title="Atas">▲</button>
+            <button class="d-left" onclick="movePin(-1, 0)" title="Kiri">◀</button>
+            <button class="d-right" onclick="movePin(1, 0)" title="Kanan">▶</button>
+            <button class="d-down" onclick="movePin(0, 1)" title="Bawah">▼</button>
+        </div>
+        <div style="font-size: 11px; color: #888; text-align: center;">Gunakan Keyboard Panah<br>untuk presisi pixel</div>
+    </div>
+
+    <div class="workspace" id="workspace">
+        <canvas id="testcard"></canvas>
+        <div class="handle" id="handle-tl"></div>
+        <div class="handle" id="handle-tr"></div>
+        <div class="handle" id="handle-bl"></div>
+        <div class="handle" id="handle-br"></div>
+    </div>
 
     <script>
         let currentCanvasWidth = 3840;
@@ -182,14 +267,10 @@
 
         const watermarkImg = new Image();
         watermarkImg.src = 'meai.png';
-        watermarkImg.onload = function() {
-            updateCanvas(); 
-        };
+        watermarkImg.onload = () => updateCanvas(); 
 
-        // Otomatis refresh jika HP dirotasi (portrait ke landscape / sebaliknya)
         window.addEventListener('resize', () => {
-            // Kita beri sedikit delay agar browser selesai menghitung rotasi
-            setTimeout(updateCanvas, 100);
+            if(!isMappingMode) setTimeout(updateCanvas, 100);
         });
 
         function updateCanvas() {
@@ -202,43 +283,32 @@
             let pxPerMeter, pxW, pxH;
 
             if (meterW >= meterH) {
-                pxW = maxRes;
-                pxPerMeter = pxW / meterW;
-                pxH = Math.round(meterH * pxPerMeter);
+                pxW = maxRes; pxPerMeter = pxW / meterW; pxH = Math.round(meterH * pxPerMeter);
             } else {
-                pxH = maxRes;
-                pxPerMeter = pxH / meterH;
-                pxW = Math.round(meterW * pxPerMeter);
+                pxH = maxRes; pxPerMeter = pxH / meterH; pxW = Math.round(meterW * pxPerMeter);
             }
 
             currentCanvasWidth = pxW;
             currentCanvasHeight = pxH;
 
             drawTestcard(pxW, pxH, meterW, meterH, pxPerMeter, showColor, showFocus);
+            if (isMappingMode) resetMappingHandles(); 
         }
 
+        // ==========================================
+        // FUNGSI MENGGAMBAR TESTCARD
+        // ==========================================
         function drawTestcard(width, height, meterW, meterH, pxPerMeter, showColor, showFocus) {
             const canvas = document.getElementById('testcard');
-            canvas.width = width;
-            canvas.height = height;
+            canvas.width = width; canvas.height = height;
             const ctx = canvas.getContext('2d');
+            const centerX = width / 2; const centerY = height / 2;
 
-            const centerX = width / 2;
-            const centerY = height / 2;
+            ctx.fillStyle = '#7a7a7a'; ctx.fillRect(0, 0, width, height);
 
-            // ==========================================
-            // 1. Background Abu-abu
-            // ==========================================
-            ctx.fillStyle = '#7a7a7a'; 
-            ctx.fillRect(0, 0, width, height);
-
-            // ==========================================
-            // 2. Grid Fisik (Lebih Kecil & Lebih Tebal)
-            // ==========================================
             const mainGridStep = pxPerMeter / 2; 
             const subGridStep = pxPerMeter / 4;  
 
-            // Sub Grid
             ctx.lineWidth = Math.max(2, width * 0.0012); 
             ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
             ctx.setLineDash([8, 8]);
@@ -247,10 +317,8 @@
             for (let x = centerX; x >= 0; x -= subGridStep) { ctx.moveTo(x, 0); ctx.lineTo(x, height); }
             for (let y = centerY; y <= height; y += subGridStep) { ctx.moveTo(0, y); ctx.lineTo(width, y); }
             for (let y = centerY; y >= 0; y -= subGridStep) { ctx.moveTo(0, y); ctx.lineTo(width, y); }
-            ctx.stroke();
-            ctx.setLineDash([]); 
+            ctx.stroke(); ctx.setLineDash([]); 
 
-            // Main Grid
             ctx.lineWidth = Math.max(4, width * 0.0025); 
             ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
             ctx.beginPath();
@@ -260,12 +328,8 @@
             for (let y = centerY; y >= 0; y -= mainGridStep) { ctx.moveTo(0, y); ctx.lineTo(width, y); }
             ctx.stroke();
 
-            // ==========================================
-            // 3. Border Castellated & Center Markers 
-            // ==========================================
             const borderThickness = Math.max(20, width * 0.015);
             const blockLength = borderThickness * 3;
-            
             for (let x = 0; x < width; x += blockLength) {
                 ctx.fillStyle = (Math.floor(x / blockLength) % 2 === 0) ? '#000000' : '#ffffff';
                 ctx.fillRect(x, 0, blockLength, borderThickness); 
@@ -286,192 +350,326 @@
             ctx.beginPath(); ctx.moveTo(0, centerY - markerSize); ctx.lineTo(0, centerY + markerSize); ctx.lineTo(markerSize, centerY); ctx.fill(); 
             ctx.beginPath(); ctx.moveTo(width, centerY - markerSize); ctx.lineTo(width, centerY + markerSize); ctx.lineTo(width - markerSize, centerY); ctx.fill(); 
 
-            // ==========================================
-            // 4. Garis Diagonal & Salib Utama
-            // ==========================================
-            ctx.lineWidth = Math.max(2, width * 0.0015);
-            ctx.strokeStyle = 'rgba(255, 0, 0, 0.7)';
-            ctx.beginPath();
-            ctx.moveTo(0, 0); ctx.lineTo(width, height);
-            ctx.moveTo(width, 0); ctx.lineTo(0, height);
-            ctx.stroke();
+            ctx.lineWidth = Math.max(2, width * 0.0015); ctx.strokeStyle = 'rgba(255, 0, 0, 0.7)';
+            ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(width, height); ctx.moveTo(width, 0); ctx.lineTo(0, height); ctx.stroke();
 
-            ctx.lineWidth = Math.max(3, width * 0.002);
-            ctx.strokeStyle = '#00ff00';
-            ctx.beginPath();
-            ctx.moveTo(width / 2, 0); ctx.lineTo(width / 2, height);
-            ctx.moveTo(0, height / 2); ctx.lineTo(width, height / 2);
-            ctx.stroke();
+            ctx.lineWidth = Math.max(3, width * 0.002); ctx.strokeStyle = '#00ff00';
+            ctx.beginPath(); ctx.moveTo(width / 2, 0); ctx.lineTo(width / 2, height); ctx.moveTo(0, height / 2); ctx.lineTo(width, height / 2); ctx.stroke();
 
-            // ==========================================
-            // 5. Lingkaran Pusat
-            // ==========================================
             const circleRadius = Math.min(width, height) * 0.35;
             const circleLineW = Math.max(8, width * 0.006);
+            ctx.beginPath(); ctx.arc(centerX, centerY, circleRadius, 0, 2 * Math.PI); ctx.lineWidth = circleLineW; ctx.strokeStyle = '#000000'; ctx.stroke();
+            ctx.beginPath(); ctx.arc(centerX, centerY, circleRadius - circleLineW, 0, 2 * Math.PI); ctx.lineWidth = circleLineW; ctx.strokeStyle = '#ffffff'; ctx.stroke();
+            ctx.beginPath(); ctx.arc(centerX, centerY, circleRadius + (circleLineW * 0.8), 0, 2 * Math.PI); ctx.lineWidth = Math.max(4, width * 0.0025); ctx.strokeStyle = '#ffff00'; ctx.stroke();
             
-            ctx.beginPath(); ctx.arc(centerX, centerY, circleRadius, 0, 2 * Math.PI);
-            ctx.lineWidth = circleLineW; ctx.strokeStyle = '#000000'; ctx.stroke();
-            
-            ctx.beginPath(); ctx.arc(centerX, centerY, circleRadius - circleLineW, 0, 2 * Math.PI);
-            ctx.lineWidth = circleLineW; ctx.strokeStyle = '#ffffff'; ctx.stroke();
-
-            ctx.beginPath(); ctx.arc(centerX, centerY, circleRadius + (circleLineW * 0.8), 0, 2 * Math.PI);
-            ctx.lineWidth = Math.max(4, width * 0.0025); ctx.strokeStyle = '#ffff00'; ctx.stroke();
-            
-            const stackHeight = circleRadius * 1.2;
-            const blockW = circleRadius * 0.25;
-            const blockH = stackHeight / 6;
-            const blockYStart = centerY - (stackHeight / 2);
+            const stackHeight = circleRadius * 1.2; const blockW = circleRadius * 0.25; const blockH = stackHeight / 6; const blockYStart = centerY - (stackHeight / 2);
             for (let i = 0; i < 6; i++) {
                 const val = Math.floor(255 - (i * (255/5))); 
                 ctx.fillStyle = `rgb(${val},${val},${val})`;
                 ctx.fillRect(centerX - (blockW/2), blockYStart + (i * blockH), blockW, blockH);
             }
 
-            // ==========================================
-            // 6. Watermark Logo
-            // ==========================================
             if (watermarkImg.complete && watermarkImg.naturalWidth > 0) {
                 ctx.save();
                 const targetSize = Math.min(width, height) * 0.65;
                 const scale = targetSize / Math.max(watermarkImg.width, watermarkImg.height);
-                const imgW = watermarkImg.width * scale;
-                const imgH = watermarkImg.height * scale;
-                const imgX = (width - imgW) / 2;
-                const imgY = (height - imgH) / 2;
-
-                ctx.filter = 'brightness(0) invert(1)';
-                ctx.globalAlpha = 0.35; 
+                const imgW = watermarkImg.width * scale; const imgH = watermarkImg.height * scale;
+                const imgX = (width - imgW) / 2; const imgY = (height - imgH) / 2;
+                ctx.filter = 'brightness(0) invert(1)'; ctx.globalAlpha = 0.35; 
                 ctx.drawImage(watermarkImg, imgX, imgY, imgW, imgH);
                 ctx.restore();
             }
 
-            // ==========================================
-            // 7. Uji Fokus
-            // ==========================================
             if (showFocus) {
                 const focusMargin = borderThickness + (width * 0.02);
-                
-                ctx.fillStyle = '#ffffff';
-                ctx.textAlign = 'left';
-                ctx.textBaseline = 'top';
-                let textY = focusMargin;
-                const fontSizes = [0.03, 0.02, 0.015, 0.01, 0.007]; 
-                
-                ctx.font = `bold ${Math.max(12, width * 0.02)}px Arial`;
-                ctx.fillText("FOCUS TEST", focusMargin, textY);
-                textY += (width * 0.03);
-
+                ctx.fillStyle = '#ffffff'; ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+                let textY = focusMargin; const fontSizes = [0.03, 0.02, 0.015, 0.01, 0.007]; 
+                ctx.font = `bold ${Math.max(12, width * 0.02)}px Arial`; ctx.fillText("FOCUS TEST", focusMargin, textY); textY += (width * 0.03);
                 fontSizes.forEach(sizeRatio => {
                     const fontSize = Math.max(8, width * sizeRatio);
-                    ctx.font = `${fontSize}px Arial`;
-                    ctx.fillText(`Text reading size ${Math.round(fontSize)}px`, focusMargin, textY);
-                    textY += (fontSize * 1.5);
+                    ctx.font = `${fontSize}px Arial`; ctx.fillText(`Text reading size ${Math.round(fontSize)}px`, focusMargin, textY); textY += (fontSize * 1.5);
                 });
 
-                const boxMax = width * 0.08;
-                const boxX = width - focusMargin - boxMax;
-                const boxY = focusMargin;
-                ctx.strokeStyle = '#ffffff';
-                ctx.lineWidth = Math.max(1, width * 0.001);
+                const boxMax = width * 0.08; const boxX = width - focusMargin - boxMax; const boxY = focusMargin;
+                ctx.strokeStyle = '#ffffff'; ctx.lineWidth = Math.max(1, width * 0.001);
                 for (let i = 0; i < 5; i++) {
-                    const shrink = i * (boxMax / 10);
-                    ctx.strokeRect(boxX + shrink, boxY + shrink, boxMax - (shrink*2), boxMax - (shrink*2));
+                    const shrink = i * (boxMax / 10); ctx.strokeRect(boxX + shrink, boxY + shrink, boxMax - (shrink*2), boxMax - (shrink*2));
                 }
 
-                const dotAreaSize = boxMax;
-                const dotAreaX = boxX - dotAreaSize - (width * 0.02);
-                const dotCols = 8;
-                const spacing = dotAreaSize / dotCols;
-                const dotRadius = Math.max(1.5, width * 0.0015);
-
+                const dotAreaSize = boxMax; const dotAreaX = boxX - dotAreaSize - (width * 0.02); const dotCols = 8;
+                const spacing = dotAreaSize / dotCols; const dotRadius = Math.max(1.5, width * 0.0015);
                 for (let r = 0; r < dotCols; r++) {
                     for (let c = 0; c < dotCols; c++) {
                         ctx.fillStyle = (r + c) % 2 === 0 ? '#ffffff' : '#ff0000';
-                        ctx.beginPath();
-                        ctx.arc(dotAreaX + (c * spacing) + (spacing/2), boxY + (r * spacing) + (spacing/2), dotRadius, 0, Math.PI * 2);
-                        ctx.fill();
+                        ctx.beginPath(); ctx.arc(dotAreaX + (c * spacing) + (spacing/2), boxY + (r * spacing) + (spacing/2), dotRadius, 0, Math.PI * 2); ctx.fill();
                     }
                 }
             }
 
-            // ==========================================
-            // 8. Uji Warna
-            // ==========================================
             if (showColor) {
-                const barWidth = width * 0.32; 
-                const barHeight = height * 0.05; 
-                const colorMargin = borderThickness + (width * 0.02);
-                const colorY = height - barHeight - colorMargin;
-                const steps = 11;
-
+                const barWidth = width * 0.32; const barHeight = height * 0.05; 
+                const colorMargin = borderThickness + (width * 0.02); const colorY = height - barHeight - colorMargin; const steps = 11;
                 const colorW = barWidth / steps;
                 for (let i = 0; i < steps; i++) {
-                    const hue = Math.floor((i / (steps - 1)) * 300);
-                    ctx.fillStyle = `hsl(${hue}, 100%, 50%)`;
-                    ctx.fillRect(colorMargin + (i * colorW), colorY, colorW, barHeight);
+                    const hue = Math.floor((i / (steps - 1)) * 300); ctx.fillStyle = `hsl(${hue}, 100%, 50%)`; ctx.fillRect(colorMargin + (i * colorW), colorY, colorW, barHeight);
                 }
-
-                const grayW = barWidth / steps;
-                const grayStartX = width - barWidth - colorMargin;
+                const grayW = barWidth / steps; const grayStartX = width - barWidth - colorMargin;
                 for (let i = 0; i < steps; i++) {
-                    const val = Math.floor((i / (steps - 1)) * 255);
-                    ctx.fillStyle = `rgb(${val},${val},${val})`;
-                    ctx.fillRect(grayStartX + (i * grayW), colorY, grayW, barHeight);
+                    const val = Math.floor((i / (steps - 1)) * 255); ctx.fillStyle = `rgb(${val},${val},${val})`; ctx.fillRect(grayStartX + (i * grayW), colorY, grayW, barHeight);
                 }
             }
 
-            // ==========================================
-            // 9. GARIS PINGGIR (OUTER FRAME)
-            // ==========================================
             const frameThickness = Math.max(6, width * 0.0035);
-            ctx.lineWidth = frameThickness;
-            ctx.strokeStyle = '#ffffff'; 
+            ctx.lineWidth = frameThickness; ctx.strokeStyle = '#ffffff'; 
             ctx.strokeRect(frameThickness/2, frameThickness/2, width - frameThickness, height - frameThickness);
 
-            // ==========================================
-            // 10. Teks Spesifikasi Pusat
-            // ==========================================
             const fontSizeTitle = Math.max(24, Math.min(width, height) * 0.05);
             const fontSizeSub = fontSizeTitle * 0.4;
             const titleText = `${width}x${height}`;
             const subText = `${meterW}m x ${meterH}m (${Math.round(pxPerMeter)} px/m)`;
 
-            ctx.font = `bold ${fontSizeTitle}px Arial`;
-            const titleMetrics = ctx.measureText(titleText);
-            ctx.font = `${fontSizeSub}px Arial`;
-            const subMetrics = ctx.measureText(subText);
+            ctx.font = `bold ${fontSizeTitle}px Arial`; const titleMetrics = ctx.measureText(titleText);
+            ctx.font = `${fontSizeSub}px Arial`; const subMetrics = ctx.measureText(subText);
             const boxWidth = Math.max(titleMetrics.width, subMetrics.width) + (fontSizeTitle * 1.5);
             const boxHeight = fontSizeTitle + fontSizeSub + (fontSizeTitle);
 
-            ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-            ctx.fillRect(centerX - (boxWidth / 2), centerY - (boxHeight / 2), boxWidth, boxHeight);
-
-            ctx.fillStyle = '#ffffff';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.font = `bold ${fontSizeTitle}px Arial`;
-            ctx.fillText(titleText, centerX, centerY - (fontSizeSub / 1.5));
-            ctx.font = `${fontSizeSub}px Arial`;
-            ctx.fillText(subText, centerX, centerY + (fontSizeTitle / 1.5));
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.7)'; ctx.fillRect(centerX - (boxWidth / 2), centerY - (boxHeight / 2), boxWidth, boxHeight);
+            ctx.fillStyle = '#ffffff'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+            ctx.font = `bold ${fontSizeTitle}px Arial`; ctx.fillText(titleText, centerX, centerY - (fontSizeSub / 1.5));
+            ctx.font = `${fontSizeSub}px Arial`; ctx.fillText(subText, centerX, centerY + (fontSizeTitle / 1.5));
         }
 
-        function downloadImage() {
-            try {
-                const canvas = document.getElementById('testcard');
-                const link = document.createElement('a');
-                const meterW = document.getElementById('meter_width').value;
-                const meterH = document.getElementById('meter_height').value;
+        // ==========================================
+        // LIVE MAPPING (WARPING & PRECISION MODE)
+        // ==========================================
+        let isMappingMode = false;
+        let isDragLocked = false;
+        let selectedPinIndex = -1; 
+        
+        let handles = [];
+        let srcPoints = [];
+        let dstPoints = [];
+        
+        const canvasEl = document.getElementById('testcard');
+        const mappingPanel = document.getElementById('mapping-panel');
+        
+        function toggleMappingMode() {
+            isMappingMode = !isMappingMode;
+            const btnMap = document.getElementById('btn-map');
+            const hElements = document.querySelectorAll('.handle');
+            const uiPanel = document.getElementById('ui-panel');
+
+            if (isMappingMode) {
+                btnMap.classList.add('active');
+                btnMap.innerText = "✖ Tutup Mapping";
+                uiPanel.style.opacity = "0.3"; 
+                mappingPanel.style.display = "flex";
+                hElements.forEach(h => h.style.display = 'block');
                 
-                link.download = `Testcard_Responsive_${meterW}mx${meterH}m_${currentCanvasWidth}x${currentCanvasHeight}px.png`;
-                link.href = canvas.toDataURL('image/png'); 
-                link.click();
-            } catch (err) {
-                alert("Tombol simpan diblokir oleh keamanan browser karena memuat gambar lokal (meai.png) secara offline.\n\nCARA ALTERNATIF: \nSilakan KLIK KANAN (atau sentuh dan tahan layar pada HP) di sembarang area gambar, lalu pilih 'Simpan Gambar' atau 'Save image as...'.");
-                console.error("Canvas CORS Error: ", err);
+                canvasEl.style.position = 'absolute';
+                resetMappingHandles();
+            } else {
+                btnMap.classList.remove('active');
+                btnMap.innerText = "📐 Mode Mapping";
+                uiPanel.style.opacity = "1";
+                mappingPanel.style.display = "none";
+                hElements.forEach(h => h.style.display = 'none');
+                
+                canvasEl.style.position = 'static';
+                canvasEl.style.transform = 'none';
+                canvasEl.style.top = 'auto';
+                canvasEl.style.left = 'auto';
+                
+                selectedPinIndex = -1;
+                updateSelectionUI();
             }
         }
 
+        function toggleLock() {
+            isDragLocked = document.getElementById('lock_drag').checked;
+        }
+
+        function resetMappingHandles() {
+            if (!isMappingMode) return;
+            const rect = canvasEl.getBoundingClientRect();
+            
+            canvasEl.style.left = rect.left + 'px';
+            canvasEl.style.top = rect.top + 'px';
+            canvasEl.style.width = rect.width + 'px';
+            canvasEl.style.height = rect.height + 'px';
+            canvasEl.style.maxWidth = 'none';
+            canvasEl.style.maxHeight = 'none';
+
+            srcPoints = [
+                {x: 0, y: 0},
+                {x: rect.width, y: 0},
+                {x: 0, y: rect.height},
+                {x: rect.width, y: rect.height}
+            ];
+            dstPoints = [
+                {x: rect.left, y: rect.top},
+                {x: rect.right, y: rect.top},
+                {x: rect.left, y: rect.bottom},
+                {x: rect.right, y: rect.bottom}
+            ];
+
+            updateHandlesUI();
+            applyWarp();
+        }
+
+        function updateHandlesUI() {
+            const hTopLeft = document.getElementById('handle-tl');
+            const hTopRight = document.getElementById('handle-tr');
+            const hBottomLeft = document.getElementById('handle-bl');
+            const hBottomRight = document.getElementById('handle-br');
+
+            handles = [
+                { el: hTopLeft, index: 0 },
+                { el: hTopRight, index: 1 },
+                { el: hBottomLeft, index: 2 },
+                { el: hBottomRight, index: 3 }
+            ];
+
+            handles.forEach(h => {
+                h.el.style.left = dstPoints[h.index].x + 'px';
+                h.el.style.top = dstPoints[h.index].y + 'px';
+            });
+        }
+
+        function applyWarp() {
+            let A = []; let B = [];
+            for (let i = 0; i < 4; i++) {
+                A.push([srcPoints[i].x, srcPoints[i].y, 1, 0, 0, 0, -srcPoints[i].x * dstPoints[i].x, -srcPoints[i].y * dstPoints[i].x]);
+                A.push([0, 0, 0, srcPoints[i].x, srcPoints[i].y, 1, -srcPoints[i].x * dstPoints[i].y, -srcPoints[i].y * dstPoints[i].y]);
+                B.push(dstPoints[i].x); B.push(dstPoints[i].y);
+            }
+
+            let h = solveGauss(A, B);
+            let matrix3d = `matrix3d(
+                ${h[0]}, ${h[3]}, 0, ${h[6]},
+                ${h[1]}, ${h[4]}, 0, ${h[7]},
+                0, 0, 1, 0,
+                ${h[2]}, ${h[5]}, 0, 1
+            )`;
+            
+            canvasEl.style.transform = matrix3d;
+            canvasEl.style.left = '0px'; 
+            canvasEl.style.top = '0px'; 
+        }
+
+        function solveGauss(A, b) {
+            let n = A.length;
+            for (let i = 0; i < n; i++) A[i].push(b[i]);
+            for (let i = 0; i < n; i++) {
+                let maxEl = Math.abs(A[i][i]), maxRow = i;
+                for (let k = i + 1; k < n; k++) {
+                    if (Math.abs(A[k][i]) > maxEl) { maxEl = Math.abs(A[k][i]); maxRow = k; }
+                }
+                for (let k = i; k < n + 1; k++) {
+                    let tmp = A[maxRow][k]; A[maxRow][k] = A[i][k]; A[i][k] = tmp;
+                }
+                for (let k = i + 1; k < n; k++) {
+                    let c = -A[k][i] / A[i][i];
+                    for (let j = i; j < n + 1; j++) {
+                        if (i == j) A[k][j] = 0; else A[k][j] += c * A[i][j];
+                    }
+                }
+            }
+            let x = new Array(n);
+            for (let i = n - 1; i > -1; i--) {
+                x[i] = A[i][n] / A[i][i];
+                for (let k = i - 1; k > -1; k--) A[k][n] -= A[k][i] * x[i];
+            }
+            return x;
+        }
+
+        // --- Presisi (Pixel by Pixel Move) ---
+        function selectPin(index) {
+            selectedPinIndex = index;
+            updateSelectionUI();
+        }
+
+        function updateSelectionUI() {
+            const labels = ["Kiri Atas", "Kanan Atas", "Kiri Bawah", "Kanan Bawah"];
+            if(selectedPinIndex >= 0) {
+                document.getElementById('selected-pin-name').innerText = "Titik: " + labels[selectedPinIndex];
+            } else {
+                document.getElementById('selected-pin-name').innerText = "Pilih Corner Pin";
+            }
+            
+            handles.forEach(h => {
+                if(h.index === selectedPinIndex) h.el.classList.add('selected');
+                else h.el.classList.remove('selected');
+            });
+        }
+
+        function movePin(dx, dy) {
+            if(!isMappingMode || selectedPinIndex === -1) return;
+            dstPoints[selectedPinIndex].x += dx;
+            dstPoints[selectedPinIndex].y += dy;
+            updateHandlesUI();
+            applyWarp();
+        }
+
+        // Dukungan Keyboard Panah untuk Presisi
+        window.addEventListener('keydown', (e) => {
+            if(!isMappingMode || selectedPinIndex === -1) return;
+            if(e.key === 'ArrowUp') { movePin(0, -1); e.preventDefault(); }
+            if(e.key === 'ArrowDown') { movePin(0, 1); e.preventDefault(); }
+            if(e.key === 'ArrowLeft') { movePin(-1, 0); e.preventDefault(); }
+            if(e.key === 'ArrowRight') { movePin(1, 0); e.preventDefault(); }
+        });
+
+        // --- Logika Drag ---
+        let activeHandle = null;
+
+        function startDrag(e, handleObj) {
+            e.preventDefault();
+            selectPin(handleObj.index); 
+            if(isDragLocked) return; 
+            activeHandle = handleObj;
+        }
+
+        function doDrag(e) {
+            if (!activeHandle || isDragLocked) return;
+            let clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            let clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            
+            dstPoints[activeHandle.index].x = clientX;
+            dstPoints[activeHandle.index].y = clientY;
+            
+            activeHandle.el.style.left = clientX + 'px';
+            activeHandle.el.style.top = clientY + 'px';
+            
+            applyWarp();
+        }
+
+        function endDrag() { activeHandle = null; }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const hElements = document.querySelectorAll('.handle');
+            hElements.forEach((el, index) => {
+                let handleObj = { el: el, index: index };
+                el.addEventListener('mousedown', (e) => startDrag(e, handleObj));
+                el.addEventListener('touchstart', (e) => startDrag(e, handleObj), {passive: false});
+            });
+            window.addEventListener('mousemove', doDrag);
+            window.addEventListener('touchmove', doDrag, {passive: false});
+            window.addEventListener('mouseup', endDrag);
+            window.addEventListener('touchend', endDrag);
+        });
+
+        function downloadImage() {
+            try {
+                const link = document.createElement('a');
+                link.download = `Mapping_Testcard.png`;
+                link.href = canvasEl.toDataURL('image/png'); 
+                link.click();
+            } catch (err) {
+                alert("Simpan diblokir browser karena mode file:// (offline).\nSilakan KLIK KANAN lalu pilih 'Save image as...'");
+            }
+        }
+        
         window.onload = updateCanvas;
     </script>
 </body>
