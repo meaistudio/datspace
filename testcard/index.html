@@ -2,8 +2,8 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MEAI TESTCARD GENERATOR</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Ultimate Hybrid Mapping Testcard (Responsive UI)</title>
     <style>
         body {
             background-color: #000000;
@@ -15,21 +15,25 @@
             height: 100vh;
             overflow: hidden;
             font-family: sans-serif;
+            touch-action: none; /* Mencegah pull-to-refresh di HP */
         }
         
         .minimal-ui {
             position: absolute;
             top: 30px;
             display: flex;
-            gap: 20px;
+            flex-wrap: wrap; /* Otomatis turun baris jika sempit */
+            justify-content: center;
+            gap: 15px;
             align-items: center;
             background: rgba(20, 20, 20, 0.85);
             backdrop-filter: blur(8px);
-            padding: 15px 30px;
+            padding: 15px 25px;
             border-radius: 12px;
             border: 2px solid rgba(255, 255, 255, 0.2);
             transition: opacity 0.3s ease, background 0.3s ease;
             z-index: 10;
+            max-width: 90vw; /* Agar tidak melebihi lebar layar */
         }
         .minimal-ui:hover {
             background: rgba(20, 20, 20, 0.95);
@@ -39,10 +43,10 @@
             background: rgba(0, 0, 0, 0.7);
             border: 1px solid #777;
             color: #fff;
-            padding: 12px 15px;
+            padding: 10px 15px;
             border-radius: 6px;
             font-size: 18px;
-            width: 110px;
+            width: 90px;
             outline: none;
             font-weight: bold;
         }
@@ -56,11 +60,12 @@
             gap: 8px;
             cursor: pointer;
             font-weight: bold;
+            white-space: nowrap;
         }
         
         .checkbox-label input[type="checkbox"] {
-            width: 24px;
-            height: 24px;
+            width: 22px;
+            height: 22px;
             cursor: pointer;
         }
 
@@ -74,6 +79,7 @@
             font-size: 18px;
             font-weight: bold;
             transition: background 0.2s;
+            white-space: nowrap;
         }
         button:hover { background: #1b5e20; }
 
@@ -81,6 +87,65 @@
             max-width: 100%;
             max-height: 100%;
             object-fit: contain;
+        }
+
+        /* ========================================= */
+        /* RESPONSIVE DESIGN UNTUK IPAD & TABLET     */
+        /* ========================================= */
+        @media (max-width: 1024px) {
+            .minimal-ui {
+                gap: 10px;
+                padding: 12px 20px;
+            }
+            input[type="number"], select {
+                font-size: 16px;
+                padding: 8px 12px;
+                width: 80px;
+            }
+            .checkbox-label, button {
+                font-size: 16px;
+            }
+            button { padding: 10px 20px; }
+        }
+
+        /* ========================================= */
+        /* RESPONSIVE DESIGN UNTUK HP (MOBILE)       */
+        /* ========================================= */
+        @media (max-width: 600px) {
+            .minimal-ui {
+                top: auto; 
+                bottom: 20px; /* Pindah ke bawah agar mudah diklik jempol */
+                gap: 8px;
+                padding: 10px 15px;
+                border-radius: 10px;
+                width: 92vw;
+            }
+            input[type="number"] {
+                flex-grow: 1; /* Input memanjang mengisi ruang kosong */
+                width: 30%;
+                font-size: 15px;
+                padding: 8px;
+            }
+            select {
+                flex-grow: 1;
+                width: 100%; /* Dropdown memanjang penuh */
+                font-size: 15px;
+                padding: 8px;
+            }
+            .checkbox-label {
+                font-size: 14px;
+                flex-grow: 1;
+                justify-content: center;
+            }
+            .checkbox-label input[type="checkbox"] {
+                width: 18px;
+                height: 18px;
+            }
+            button {
+                width: 100%; /* Tombol simpan memanjang penuh di bawah */
+                font-size: 15px;
+                padding: 12px;
+            }
         }
     </style>
 </head>
@@ -120,6 +185,12 @@
         watermarkImg.onload = function() {
             updateCanvas(); 
         };
+
+        // Otomatis refresh jika HP dirotasi (portrait ke landscape / sebaliknya)
+        window.addEventListener('resize', () => {
+            // Kita beri sedikit delay agar browser selesai menghitung rotasi
+            setTimeout(updateCanvas, 100);
+        });
 
         function updateCanvas() {
             const meterW = Math.max(0.1, parseFloat(document.getElementById('meter_width').value) || 10);
@@ -164,15 +235,14 @@
             // ==========================================
             // 2. Grid Fisik (Lebih Kecil & Lebih Tebal)
             // ==========================================
-            const mainGridStep = pxPerMeter / 2; // Jarak 0.5 meter (lebih rapat)
-            const subGridStep = pxPerMeter / 4;  // Jarak 0.25 meter
+            const mainGridStep = pxPerMeter / 2; 
+            const subGridStep = pxPerMeter / 4;  
 
-            // A. Sub Grid (Putus-putus) ditaruh di layer bawah
-            ctx.lineWidth = Math.max(2, width * 0.0012); // Garis dipertebal
+            // Sub Grid
+            ctx.lineWidth = Math.max(2, width * 0.0012); 
             ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
             ctx.setLineDash([8, 8]);
             ctx.beginPath();
-            // Render simetris dari tengah
             for (let x = centerX; x <= width; x += subGridStep) { ctx.moveTo(x, 0); ctx.lineTo(x, height); }
             for (let x = centerX; x >= 0; x -= subGridStep) { ctx.moveTo(x, 0); ctx.lineTo(x, height); }
             for (let y = centerY; y <= height; y += subGridStep) { ctx.moveTo(0, y); ctx.lineTo(width, y); }
@@ -180,11 +250,10 @@
             ctx.stroke();
             ctx.setLineDash([]); 
 
-            // B. Main Grid (Solid) ditaruh di layer atas
-            ctx.lineWidth = Math.max(4, width * 0.0025); // Garis dipertebal
+            // Main Grid
+            ctx.lineWidth = Math.max(4, width * 0.0025); 
             ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
             ctx.beginPath();
-            // Render simetris dari tengah
             for (let x = centerX; x <= width; x += mainGridStep) { ctx.moveTo(x, 0); ctx.lineTo(x, height); }
             for (let x = centerX; x >= 0; x -= mainGridStep) { ctx.moveTo(x, 0); ctx.lineTo(x, height); }
             for (let y = centerY; y <= height; y += mainGridStep) { ctx.moveTo(0, y); ctx.lineTo(width, y); }
@@ -394,11 +463,11 @@
                 const meterW = document.getElementById('meter_width').value;
                 const meterH = document.getElementById('meter_height').value;
                 
-                link.download = `Testcard_DenseGrid_${meterW}mx${meterH}m_${currentCanvasWidth}x${currentCanvasHeight}px.png`;
+                link.download = `Testcard_Responsive_${meterW}mx${meterH}m_${currentCanvasWidth}x${currentCanvasHeight}px.png`;
                 link.href = canvas.toDataURL('image/png'); 
                 link.click();
             } catch (err) {
-                alert("Tombol simpan diblokir oleh keamanan browser karena memuat gambar lokal (meai.png) secara offline.\n\nCARA ALTERNATIF: \nSilakan KLIK KANAN di sembarang area gambar, lalu pilih 'Save image as...' (Simpan gambar sebagai...).");
+                alert("Tombol simpan diblokir oleh keamanan browser karena memuat gambar lokal (meai.png) secara offline.\n\nCARA ALTERNATIF: \nSilakan KLIK KANAN (atau sentuh dan tahan layar pada HP) di sembarang area gambar, lalu pilih 'Simpan Gambar' atau 'Save image as...'.");
                 console.error("Canvas CORS Error: ", err);
             }
         }
