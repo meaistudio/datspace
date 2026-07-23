@@ -118,13 +118,10 @@
             display: none;
             z-index: 50;
             box-shadow: 0 0 5px rgba(0,0,0,0.5);
-            
-            /* Dibuat tidak terlihat secara default */
             opacity: 0; 
-            transition: opacity 0.3s ease, border-color 0.2s, background 0.2s;
+            transition: opacity 0.3s ease, border-color 0.4s, background 0.4s, box-shadow 0.4s;
         }
 
-        /* Trik: Memperbesar area sensitif hover tak kasat mata di sekitar titik */
         .handle::after {
             content: '';
             position: absolute;
@@ -132,7 +129,6 @@
             border-radius: 50%;
         }
 
-        /* Titik akan muncul jika kursor masuk area sensitif, atau saat sedang aktif/dipilih */
         .handle:hover,
         .handle:active,
         .handle.selected {
@@ -142,7 +138,7 @@
         .handle:active { cursor: grabbing; background: rgba(0, 255, 0, 0.4); }
         .handle.selected {
             border: 3px solid #ffeb3b; 
-            background: rgba(255, 235, 59, 0.25);
+            background: rgba(255, 235, 59, 0.3);
             box-shadow: 0 0 15px rgba(255, 235, 59, 0.8);
         }
 
@@ -151,8 +147,9 @@
             position: absolute;
             bottom: 30px;
             right: 30px;
-            background: rgba(20, 20, 20, 0.9);
-            border: 1px solid #444;
+            background: rgba(20, 20, 20, 0.85);
+            backdrop-filter: blur(8px);
+            border: 2px solid rgba(255, 255, 255, 0.2);
             border-radius: 12px;
             padding: 15px;
             display: none;
@@ -160,7 +157,49 @@
             align-items: center;
             z-index: 101;
             box-shadow: 0 5px 15px rgba(0,0,0,0.7);
+            opacity: 0.3; 
+            transition: all 0.3s ease;
         }
+        
+        .mapping-panel:hover, .mapping-panel.expanded {
+            opacity: 1;
+            background: rgba(20, 20, 20, 0.95);
+        }
+
+        /* Logo Transparan Sederhana (Lingkaran) */
+        .mapping-toggle {
+            cursor: pointer;
+            padding: 5px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: transform 0.2s;
+        }
+        .mapping-toggle .circle-icon {
+            width: 20px;
+            height: 20px;
+            border: 3px solid #ccc;
+            border-radius: 50%;
+            transition: border-color 0.2s;
+        }
+        .mapping-toggle:hover .circle-icon {
+            border-color: #fff;
+            transform: scale(1.1);
+        }
+
+        .mapping-content {
+            display: none; 
+            flex-direction: column;
+            align-items: center;
+            margin-top: 15px;
+            border-top: 1px solid #444;
+            padding-top: 15px;
+        }
+        
+        .mapping-panel.expanded .mapping-content {
+            display: flex; 
+        }
+
         .mapping-panel .title {
             color: #ffeb3b; font-size: 14px; font-weight: bold; margin-bottom: 10px; text-align: center;
         }
@@ -203,10 +242,8 @@
             .handle { width: 50px; height: 50px; }
             
             .mapping-panel {
-                bottom: 20px; right: 50%; transform: translateX(50%);
-                flex-direction: row; gap: 20px; padding: 10px 20px;
+                bottom: 20px; right: 20px; padding: 10px;
             }
-            .mapping-panel .title { margin-bottom: 0; width: 100px; text-align: left;}
         }
     </style>
 </head>
@@ -232,25 +269,31 @@
             <input type="checkbox" id="show_focus" checked onchange="updateCanvas()"> Fokus
         </label>
 
-        <button class="btn-map" id="btn-map" onclick="toggleMappingMode()" title="Mode Live Mapping">📐 Mapping Mode</button>
+        <button class="btn-map" id="btn-map" onclick="toggleMappingMode()" title="Mode Live Mapping">📐 Mode Mapping</button>
         <button onclick="downloadImage()" title="Download PNG">⬇ Simpan</button>
     </div>
 
     <!-- Panel Mapping Khusus Presisi -->
     <div class="mapping-panel" id="mapping-panel">
-        <div class="title" id="selected-pin-name">Pilih Corner Pin</div>
-        
-        <label class="checkbox-label" style="margin-bottom: 10px; font-size: 14px;">
-            <input type="checkbox" id="lock_drag" onchange="toggleLock()"> 🔒 Kunci Geser
-        </label>
-
-        <div class="d-pad">
-            <button class="d-up" onclick="movePin(0, -1)" title="Atas">▲</button>
-            <button class="d-left" onclick="movePin(-1, 0)" title="Kiri">◀</button>
-            <button class="d-right" onclick="movePin(1, 0)" title="Kanan">▶</button>
-            <button class="d-down" onclick="movePin(0, 1)" title="Bawah">▼</button>
+        <div class="mapping-toggle" onclick="togglePrecisionPanel()" title="Klik untuk membuka Kontrol Presisi">
+            <div class="circle-icon"></div>
         </div>
-        <div style="font-size: 11px; color: #888; text-align: center;">Gunakan Keyboard Panah<br>untuk presisi pixel</div>
+        
+        <div class="mapping-content" id="mapping-content">
+            <div class="title" id="selected-pin-name">Pilih Corner Pin</div>
+            
+            <label class="checkbox-label" style="margin-bottom: 10px; font-size: 14px;">
+                <input type="checkbox" id="lock_drag" onchange="toggleLock()"> 🔒 Kunci Geser
+            </label>
+
+            <div class="d-pad">
+                <button class="d-up" onclick="movePin(0, -1)" title="Atas">▲</button>
+                <button class="d-left" onclick="movePin(-1, 0)" title="Kiri">◀</button>
+                <button class="d-right" onclick="movePin(1, 0)" title="Kanan">▶</button>
+                <button class="d-down" onclick="movePin(0, 1)" title="Bawah">▼</button>
+            </div>
+            <div style="font-size: 11px; color: #888; text-align: center; margin-top: 5px;">Gunakan Keyboard Panah<br>untuk presisi pixel</div>
+        </div>
     </div>
 
     <div class="workspace" id="workspace">
@@ -445,6 +488,7 @@
         let isMappingMode = false;
         let isDragLocked = false;
         let selectedPinIndex = -1; 
+        let selectionTimeout; // Timer untuk menghilangkan efek kuning
         
         let handles = [];
         let srcPoints = [];
@@ -453,6 +497,10 @@
         const canvasEl = document.getElementById('testcard');
         const mappingPanel = document.getElementById('mapping-panel');
         
+        function togglePrecisionPanel() {
+            mappingPanel.classList.toggle('expanded');
+        }
+
         function toggleMappingMode() {
             isMappingMode = !isMappingMode;
             const btnMap = document.getElementById('btn-map');
@@ -472,7 +520,10 @@
                 btnMap.classList.remove('active');
                 btnMap.innerText = "📐 Mode Mapping";
                 uiPanel.style.opacity = "1";
+                
                 mappingPanel.style.display = "none";
+                mappingPanel.classList.remove('expanded'); 
+                
                 hElements.forEach(h => h.style.display = 'none');
                 
                 canvasEl.style.position = 'static';
@@ -587,6 +638,12 @@
         function selectPin(index) {
             selectedPinIndex = index;
             updateSelectionUI();
+            
+            // Hilangkan warna kuning setelah 1.5 detik
+            clearTimeout(selectionTimeout);
+            selectionTimeout = setTimeout(() => {
+                handles.forEach(h => h.el.classList.remove('selected'));
+            }, 1500); 
         }
 
         function updateSelectionUI() {
@@ -609,6 +666,9 @@
             dstPoints[selectedPinIndex].y += dy;
             updateHandlesUI();
             applyWarp();
+            
+            // Panggil ulang seleksi agar warna kuning muncul sesaat
+            selectPin(selectedPinIndex);
         }
 
         // Dukungan Keyboard Panah untuk Presisi
