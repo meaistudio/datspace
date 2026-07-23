@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ultimate Hybrid Mapping Testcard (With Frame)</title>
+    <title>Ultimate Hybrid Mapping Testcard (Thick Small Grid)</title>
     <style>
         body {
             background-color: #000000;
@@ -162,25 +162,34 @@
             ctx.fillRect(0, 0, width, height);
 
             // ==========================================
-            // 2. Grid Fisik Meteran
+            // 2. Grid Fisik (Lebih Kecil & Lebih Tebal)
             // ==========================================
-            ctx.lineWidth = Math.max(2, width * 0.001);
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
-            ctx.beginPath();
-            const offsetX = (width % pxPerMeter) / 2;
-            const offsetY = (height % pxPerMeter) / 2;
-            for (let x = offsetX; x <= width; x += pxPerMeter) { ctx.moveTo(x, 0); ctx.lineTo(x, height); }
-            for (let y = offsetY; y <= height; y += pxPerMeter) { ctx.moveTo(0, y); ctx.lineTo(width, y); }
-            ctx.stroke();
+            const mainGridStep = pxPerMeter / 2; // Jarak 0.5 meter (lebih rapat)
+            const subGridStep = pxPerMeter / 4;  // Jarak 0.25 meter
 
-            ctx.lineWidth = Math.max(1, width * 0.0005);
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
-            ctx.setLineDash([10, 10]);
+            // A. Sub Grid (Putus-putus) ditaruh di layer bawah
+            ctx.lineWidth = Math.max(2, width * 0.0012); // Garis dipertebal
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+            ctx.setLineDash([8, 8]);
             ctx.beginPath();
-            for (let x = offsetX + (pxPerMeter/2); x < width; x += pxPerMeter) { ctx.moveTo(x, 0); ctx.lineTo(x, height); }
-            for (let y = offsetY + (pxPerMeter/2); y < height; y += pxPerMeter) { ctx.moveTo(0, y); ctx.lineTo(width, y); }
+            // Render simetris dari tengah
+            for (let x = centerX; x <= width; x += subGridStep) { ctx.moveTo(x, 0); ctx.lineTo(x, height); }
+            for (let x = centerX; x >= 0; x -= subGridStep) { ctx.moveTo(x, 0); ctx.lineTo(x, height); }
+            for (let y = centerY; y <= height; y += subGridStep) { ctx.moveTo(0, y); ctx.lineTo(width, y); }
+            for (let y = centerY; y >= 0; y -= subGridStep) { ctx.moveTo(0, y); ctx.lineTo(width, y); }
             ctx.stroke();
             ctx.setLineDash([]); 
+
+            // B. Main Grid (Solid) ditaruh di layer atas
+            ctx.lineWidth = Math.max(4, width * 0.0025); // Garis dipertebal
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
+            ctx.beginPath();
+            // Render simetris dari tengah
+            for (let x = centerX; x <= width; x += mainGridStep) { ctx.moveTo(x, 0); ctx.lineTo(x, height); }
+            for (let x = centerX; x >= 0; x -= mainGridStep) { ctx.moveTo(x, 0); ctx.lineTo(x, height); }
+            for (let y = centerY; y <= height; y += mainGridStep) { ctx.moveTo(0, y); ctx.lineTo(width, y); }
+            for (let y = centerY; y >= 0; y -= mainGridStep) { ctx.moveTo(0, y); ctx.lineTo(width, y); }
+            ctx.stroke();
 
             // ==========================================
             // 3. Border Castellated & Center Markers 
@@ -349,7 +358,6 @@
             const frameThickness = Math.max(6, width * 0.0035);
             ctx.lineWidth = frameThickness;
             ctx.strokeStyle = '#ffffff'; 
-            // Menggambar batas kotak persis di ujung kanvas
             ctx.strokeRect(frameThickness/2, frameThickness/2, width - frameThickness, height - frameThickness);
 
             // ==========================================
@@ -386,7 +394,7 @@
                 const meterW = document.getElementById('meter_width').value;
                 const meterH = document.getElementById('meter_height').value;
                 
-                link.download = `Testcard_Framed_${meterW}mx${meterH}m_${currentCanvasWidth}x${currentCanvasHeight}px.png`;
+                link.download = `Testcard_DenseGrid_${meterW}mx${meterH}m_${currentCanvasWidth}x${currentCanvasHeight}px.png`;
                 link.href = canvas.toDataURL('image/png'); 
                 link.click();
             } catch (err) {
