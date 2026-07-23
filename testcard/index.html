@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ultimate Hybrid Mapping Testcard (With Frame)</title>
+    <style>
+        body {
+            background-color: #000000;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+            font-family: sans-serif;
+        }
+        
+        .minimal-ui {
+            position: absolute;
+            top: 30px;
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            background: rgba(20, 20, 20, 0.85);
+            backdrop-filter: blur(8px);
+            padding: 15px 30px;
+            border-radius: 12px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            transition: opacity 0.3s ease, background 0.3s ease;
+            z-index: 10;
+        }
+        .minimal-ui:hover {
+            background: rgba(20, 20, 20, 0.95);
+        }
+
+        input[type="number"], select {
+            background: rgba(0, 0, 0, 0.7);
+            border: 1px solid #777;
+            color: #fff;
+            padding: 12px 15px;
+            border-radius: 6px;
+            font-size: 18px;
+            width: 110px;
+            outline: none;
+            font-weight: bold;
+        }
+        select { width: auto; cursor: pointer; }
+        
+        .checkbox-label {
+            color: #eee;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        
+        .checkbox-label input[type="checkbox"] {
+            width: 24px;
+            height: 24px;
+            cursor: pointer;
+        }
+
+        button {
+            background: #2e7d32;
+            color: #fff;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 18px;
+            font-weight: bold;
+            transition: background 0.2s;
+        }
+        button:hover { background: #1b5e20; }
+
+        canvas {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="minimal-ui">
+        <input type="number" id="meter_width" value="10" step="0.5" placeholder="P(m)" title="Panjang Fisik (Meter)" onchange="updateCanvas()">
+        <input type="number" id="meter_height" value="4" step="0.5" placeholder="T(m)" title="Tinggi Fisik (Meter)" onchange="updateCanvas()">
+        
+        <select id="resolution_preset" onchange="updateCanvas()" title="Target Resolusi">
+            <option value="7680">8K</option>
+            <option value="3840" selected>4K</option>
+            <option value="2560">2K</option>
+            <option value="1920">FHD</option>
+            <option value="1280">HD</option>
+        </select>
+        
+        <label class="checkbox-label" title="Tampilkan Uji Warna Tambahan">
+            <input type="checkbox" id="show_color" checked onchange="updateCanvas()"> Warna
+        </label>
+        
+        <label class="checkbox-label" title="Tampilkan Uji Fokus Tambahan">
+            <input type="checkbox" id="show_focus" checked onchange="updateCanvas()"> Fokus
+        </label>
+
+        <button onclick="downloadImage()" title="Download PNG">⬇ Simpan</button>
+    </div>
+
+    <canvas id="testcard"></canvas>
+
+    <script>
+        let currentCanvasWidth = 3840;
+        let currentCanvasHeight = 1536;
+
+        const watermarkImg = new Image();
+        watermarkImg.src = 'meai.png';
+        watermarkImg.onload = function() {
+            updateCanvas(); 
+        };
+
+        function updateCanvas() {
+            const meterW = Math.max(0.1, parseFloat(document.getElementById('meter_width').value) || 10);
+            const meterH = Math.max(0.1, parseFloat(document.getElementById('meter_height').value) || 4);
+            const maxRes = parseInt(document.getElementById('resolution_preset').value);
+            const showColor = document.getElementById('show_color').checked;
+            const showFocus = document.getElementById('show_focus').checked;
+
+            let pxPerMeter, pxW, pxH;
+
+            if (meterW >= meterH) {
+                pxW = maxRes;
+                pxPerMeter = pxW / meterW;
+                pxH = Math.round(meterH * pxPerMeter);
+            } else {
+                pxH = maxRes;
+                pxPerMeter = pxH / meterH;
+                pxW = Math.round(meterW * pxPerMeter);
+            }
+
+            currentCanvasWidth = pxW;
+            currentCanvasHeight = pxH;
+
+            drawTestcard(pxW, pxH, meterW, meterH, pxPerMeter, showColor, showFocus);
+        }
+
+        function drawTestcard(width, height, meterW, meterH, pxPerMeter, showColor, showFocus) {
+            const canvas = document.getElementById('testcard');
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+
+            const centerX = width / 2;
+            const centerY = height / 2;
+
+            // ==========================================
+            // 1. Background Abu-abu
+            // ==========================================
+            ctx.fillStyle = '#7a7a7a'; 
+            ctx.fillRect(0, 0, width, height);
+
+            // ==========================================
+            // 2. Grid Fisik Meteran
+            // ==========================================
+            ctx.lineWidth = Math.max(2, width * 0.001);
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
+            ctx.beginPath();
+            const offsetX = (width % pxPerMeter) / 2;
+            const offsetY = (height % pxPerMeter) / 2;
+            for (let x = offsetX; x <= width; x += pxPerMeter) { ctx.moveTo(x, 0); ctx.lineTo(x, height); }
+            for (let y = offsetY; y <= height; y += pxPerMeter) { ctx.moveTo(0, y); ctx.lineTo(width, y); }
+            ctx.stroke();
+
+            ctx.lineWidth = Math.max(1, width * 0.0005);
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+            ctx.setLineDash([10, 10]);
+            ctx.beginPath();
+            for (let x = offsetX + (pxPerMeter/2); x < width; x += pxPerMeter) { ctx.moveTo(x, 0); ctx.lineTo(x, height); }
+            for (let y = offsetY + (pxPerMeter/2); y < height; y += pxPerMeter) { ctx.moveTo(0, y); ctx.lineTo(width, y); }
+            ctx.stroke();
+            ctx.setLineDash([]); 
+
+            // ==========================================
+            // 3. Border Castellated & Center Markers 
+            // ==========================================
+            const borderThickness = Math.max(20, width * 0.015);
+            const blockLength = borderThickness * 3;
+            
+            for (let x = 0; x < width; x += blockLength) {
+                ctx.fillStyle = (Math.floor(x / blockLength) % 2 === 0) ? '#000000' : '#ffffff';
+                ctx.fillRect(x, 0, blockLength, borderThickness); 
+                ctx.fillStyle = (Math.floor(x / blockLength) % 2 !== 0) ? '#000000' : '#ffffff';
+                ctx.fillRect(x, height - borderThickness, blockLength, borderThickness); 
+            }
+            for (let y = 0; y < height; y += blockLength) {
+                ctx.fillStyle = (Math.floor(y / blockLength) % 2 === 0) ? '#000000' : '#ffffff';
+                ctx.fillRect(0, y, borderThickness, blockLength); 
+                ctx.fillStyle = (Math.floor(y / blockLength) % 2 !== 0) ? '#000000' : '#ffffff';
+                ctx.fillRect(width - borderThickness, y, borderThickness, blockLength); 
+            }
+
+            const markerSize = borderThickness * 2;
+            ctx.fillStyle = '#000000';
+            ctx.beginPath(); ctx.moveTo(centerX - markerSize, 0); ctx.lineTo(centerX + markerSize, 0); ctx.lineTo(centerX, markerSize); ctx.fill(); 
+            ctx.beginPath(); ctx.moveTo(centerX - markerSize, height); ctx.lineTo(centerX + markerSize, height); ctx.lineTo(centerX, height - markerSize); ctx.fill(); 
+            ctx.beginPath(); ctx.moveTo(0, centerY - markerSize); ctx.lineTo(0, centerY + markerSize); ctx.lineTo(markerSize, centerY); ctx.fill(); 
+            ctx.beginPath(); ctx.moveTo(width, centerY - markerSize); ctx.lineTo(width, centerY + markerSize); ctx.lineTo(width - markerSize, centerY); ctx.fill(); 
+
+            // ==========================================
+            // 4. Garis Diagonal & Salib Utama
+            // ==========================================
+            ctx.lineWidth = Math.max(2, width * 0.0015);
+            ctx.strokeStyle = 'rgba(255, 0, 0, 0.7)';
+            ctx.beginPath();
+            ctx.moveTo(0, 0); ctx.lineTo(width, height);
+            ctx.moveTo(width, 0); ctx.lineTo(0, height);
+            ctx.stroke();
+
+            ctx.lineWidth = Math.max(3, width * 0.002);
+            ctx.strokeStyle = '#00ff00';
+            ctx.beginPath();
+            ctx.moveTo(width / 2, 0); ctx.lineTo(width / 2, height);
+            ctx.moveTo(0, height / 2); ctx.lineTo(width, height / 2);
+            ctx.stroke();
+
+            // ==========================================
+            // 5. Lingkaran Pusat
+            // ==========================================
+            const circleRadius = Math.min(width, height) * 0.35;
+            const circleLineW = Math.max(8, width * 0.006);
+            
+            ctx.beginPath(); ctx.arc(centerX, centerY, circleRadius, 0, 2 * Math.PI);
+            ctx.lineWidth = circleLineW; ctx.strokeStyle = '#000000'; ctx.stroke();
+            
+            ctx.beginPath(); ctx.arc(centerX, centerY, circleRadius - circleLineW, 0, 2 * Math.PI);
+            ctx.lineWidth = circleLineW; ctx.strokeStyle = '#ffffff'; ctx.stroke();
+
+            ctx.beginPath(); ctx.arc(centerX, centerY, circleRadius + (circleLineW * 0.8), 0, 2 * Math.PI);
+            ctx.lineWidth = Math.max(4, width * 0.0025); ctx.strokeStyle = '#ffff00'; ctx.stroke();
+            
+            const stackHeight = circleRadius * 1.2;
+            const blockW = circleRadius * 0.25;
+            const blockH = stackHeight / 6;
+            const blockYStart = centerY - (stackHeight / 2);
+            for (let i = 0; i < 6; i++) {
+                const val = Math.floor(255 - (i * (255/5))); 
+                ctx.fillStyle = `rgb(${val},${val},${val})`;
+                ctx.fillRect(centerX - (blockW/2), blockYStart + (i * blockH), blockW, blockH);
+            }
+
+            // ==========================================
+            // 6. Watermark Logo
+            // ==========================================
+            if (watermarkImg.complete && watermarkImg.naturalWidth > 0) {
+                ctx.save();
+                const targetSize = Math.min(width, height) * 0.65;
+                const scale = targetSize / Math.max(watermarkImg.width, watermarkImg.height);
+                const imgW = watermarkImg.width * scale;
+                const imgH = watermarkImg.height * scale;
+                const imgX = (width - imgW) / 2;
+                const imgY = (height - imgH) / 2;
+
+                ctx.filter = 'brightness(0) invert(1)';
+                ctx.globalAlpha = 0.35; 
+                ctx.drawImage(watermarkImg, imgX, imgY, imgW, imgH);
+                ctx.restore();
+            }
+
+            // ==========================================
+            // 7. Uji Fokus
+            // ==========================================
+            if (showFocus) {
+                const focusMargin = borderThickness + (width * 0.02);
+                
+                ctx.fillStyle = '#ffffff';
+                ctx.textAlign = 'left';
+                ctx.textBaseline = 'top';
+                let textY = focusMargin;
+                const fontSizes = [0.03, 0.02, 0.015, 0.01, 0.007]; 
+                
+                ctx.font = `bold ${Math.max(12, width * 0.02)}px Arial`;
+                ctx.fillText("FOCUS TEST", focusMargin, textY);
+                textY += (width * 0.03);
+
+                fontSizes.forEach(sizeRatio => {
+                    const fontSize = Math.max(8, width * sizeRatio);
+                    ctx.font = `${fontSize}px Arial`;
+                    ctx.fillText(`Text reading size ${Math.round(fontSize)}px`, focusMargin, textY);
+                    textY += (fontSize * 1.5);
+                });
+
+                const boxMax = width * 0.08;
+                const boxX = width - focusMargin - boxMax;
+                const boxY = focusMargin;
+                ctx.strokeStyle = '#ffffff';
+                ctx.lineWidth = Math.max(1, width * 0.001);
+                for (let i = 0; i < 5; i++) {
+                    const shrink = i * (boxMax / 10);
+                    ctx.strokeRect(boxX + shrink, boxY + shrink, boxMax - (shrink*2), boxMax - (shrink*2));
+                }
+
+                const dotAreaSize = boxMax;
+                const dotAreaX = boxX - dotAreaSize - (width * 0.02);
+                const dotCols = 8;
+                const spacing = dotAreaSize / dotCols;
+                const dotRadius = Math.max(1.5, width * 0.0015);
+
+                for (let r = 0; r < dotCols; r++) {
+                    for (let c = 0; c < dotCols; c++) {
+                        ctx.fillStyle = (r + c) % 2 === 0 ? '#ffffff' : '#ff0000';
+                        ctx.beginPath();
+                        ctx.arc(dotAreaX + (c * spacing) + (spacing/2), boxY + (r * spacing) + (spacing/2), dotRadius, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                }
+            }
+
+            // ==========================================
+            // 8. Uji Warna
+            // ==========================================
+            if (showColor) {
+                const barWidth = width * 0.32; 
+                const barHeight = height * 0.05; 
+                const colorMargin = borderThickness + (width * 0.02);
+                const colorY = height - barHeight - colorMargin;
+                const steps = 11;
+
+                const colorW = barWidth / steps;
+                for (let i = 0; i < steps; i++) {
+                    const hue = Math.floor((i / (steps - 1)) * 300);
+                    ctx.fillStyle = `hsl(${hue}, 100%, 50%)`;
+                    ctx.fillRect(colorMargin + (i * colorW), colorY, colorW, barHeight);
+                }
+
+                const grayW = barWidth / steps;
+                const grayStartX = width - barWidth - colorMargin;
+                for (let i = 0; i < steps; i++) {
+                    const val = Math.floor((i / (steps - 1)) * 255);
+                    ctx.fillStyle = `rgb(${val},${val},${val})`;
+                    ctx.fillRect(grayStartX + (i * grayW), colorY, grayW, barHeight);
+                }
+            }
+
+            // ==========================================
+            // 9. GARIS PINGGIR (OUTER FRAME)
+            // ==========================================
+            const frameThickness = Math.max(6, width * 0.0035);
+            ctx.lineWidth = frameThickness;
+            ctx.strokeStyle = '#ffffff'; 
+            // Menggambar batas kotak persis di ujung kanvas
+            ctx.strokeRect(frameThickness/2, frameThickness/2, width - frameThickness, height - frameThickness);
+
+            // ==========================================
+            // 10. Teks Spesifikasi Pusat
+            // ==========================================
+            const fontSizeTitle = Math.max(24, Math.min(width, height) * 0.05);
+            const fontSizeSub = fontSizeTitle * 0.4;
+            const titleText = `${width}x${height}`;
+            const subText = `${meterW}m x ${meterH}m (${Math.round(pxPerMeter)} px/m)`;
+
+            ctx.font = `bold ${fontSizeTitle}px Arial`;
+            const titleMetrics = ctx.measureText(titleText);
+            ctx.font = `${fontSizeSub}px Arial`;
+            const subMetrics = ctx.measureText(subText);
+            const boxWidth = Math.max(titleMetrics.width, subMetrics.width) + (fontSizeTitle * 1.5);
+            const boxHeight = fontSizeTitle + fontSizeSub + (fontSizeTitle);
+
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+            ctx.fillRect(centerX - (boxWidth / 2), centerY - (boxHeight / 2), boxWidth, boxHeight);
+
+            ctx.fillStyle = '#ffffff';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.font = `bold ${fontSizeTitle}px Arial`;
+            ctx.fillText(titleText, centerX, centerY - (fontSizeSub / 1.5));
+            ctx.font = `${fontSizeSub}px Arial`;
+            ctx.fillText(subText, centerX, centerY + (fontSizeTitle / 1.5));
+        }
+
+        function downloadImage() {
+            try {
+                const canvas = document.getElementById('testcard');
+                const link = document.createElement('a');
+                const meterW = document.getElementById('meter_width').value;
+                const meterH = document.getElementById('meter_height').value;
+                
+                link.download = `Testcard_Framed_${meterW}mx${meterH}m_${currentCanvasWidth}x${currentCanvasHeight}px.png`;
+                link.href = canvas.toDataURL('image/png'); 
+                link.click();
+            } catch (err) {
+                alert("Tombol simpan diblokir oleh keamanan browser karena memuat gambar lokal (meai.png) secara offline.\n\nCARA ALTERNATIF: \nSilakan KLIK KANAN di sembarang area gambar, lalu pilih 'Save image as...' (Simpan gambar sebagai...).");
+                console.error("Canvas CORS Error: ", err);
+            }
+        }
+
+        window.onload = updateCanvas;
+    </script>
+</body>
+</html>
