@@ -28,8 +28,10 @@
 
     <div id="content" class="content"></div>
 <!-- Lightbox Overlay -->
-<div id="lightbox" class="lightbox" onclick="closeLightbox()">
-    <img id="lightbox-img" src="" alt="Full view">
+<div class="lightbox" id="lightbox" onclick="closeLightbox()">
+    <span class="lightbox-nav lightbox-prev" onclick="prevLightboxImage(event)">&#10094;</span>
+    <img id="lightbox-img" src="" alt="Documentation" onclick="event.stopPropagation()">
+    <span class="lightbox-nav lightbox-next" onclick="nextLightboxImage(event)">&#10095;</span>
 </div>
 
 <script src="script.js"></script>
