@@ -985,6 +985,30 @@ function openLightbox(imgSrc) {
         lightbox.style.opacity = "1";
     }, 10);
 }
+let currentGalleryImages = [];
+let currentLightboxIndex = 0;
+
+function openLightbox(imgSrc) {
+    const lightbox = document.getElementById("lightbox");
+    const lightboxImg = document.getElementById("lightbox-img");
+
+    if (!lightbox || !lightboxImg) return;
+
+    // Kumpulkan semua sumber gambar dari galeri yang sedang aktif
+    const activeDocMediaElements = document.querySelectorAll('.doc-media');
+    currentGalleryImages = Array.from(activeDocMediaElements).map(el => el.src);
+    
+    // Temukan index gambar yang diklik
+    currentLightboxIndex = currentGalleryImages.indexOf(imgSrc);
+    if (currentLightboxIndex === -1) currentLightboxIndex = 0;
+
+    lightboxImg.src = currentGalleryImages[currentLightboxIndex];
+    lightbox.style.display = "flex";
+
+    setTimeout(() => {
+        lightbox.style.opacity = "1";
+    }, 10);
+}
 
 function closeLightbox() {
     const lightbox = document.getElementById("lightbox");
@@ -998,10 +1022,27 @@ function closeLightbox() {
     }, 300);
 }
 
-document.addEventListener("DOMContentLoaded", async () => {
-    await fetchEventDataFromSheet();
-    updateContent();
-});
+function nextLightboxImage(e) {
+    if (e) e.stopPropagation();
+    if (currentGalleryImages.length === 0) return;
+    
+    currentLightboxIndex = (currentLightboxIndex + 1) % currentGalleryImages.length;
+    const lightboxImg = document.getElementById("lightbox-img");
+    if (lightboxImg) {
+        lightboxImg.src = currentGalleryImages[currentLightboxIndex];
+    }
+}
+
+function prevLightboxImage(e) {
+    if (e) e.stopPropagation();
+    if (currentGalleryImages.length === 0) return;
+    
+    currentLightboxIndex = (currentLightboxIndex - 1 + currentGalleryImages.length) % currentGalleryImages.length;
+    const lightboxImg = document.getElementById("lightbox-img");
+    if (lightboxImg) {
+        lightboxImg.src = currentGalleryImages[currentLightboxIndex];
+    }
+}
 
 /* ======================================================== */
 /* 5. GENERATIVE CANVAS DRAW ENGINE                         */
