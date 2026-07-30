@@ -971,6 +971,7 @@ function renderDocumentationPage(id) {
         </div>
     `;
 }
+
 let currentGalleryImages = [];
 let currentLightboxIndex = 0;
 
