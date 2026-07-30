@@ -332,8 +332,10 @@ a, a:visited, a:hover, a:active {
     transition: filter 0.4s ease;
 }
 
-.doc-media-box:hover
+.doc-media-box:hover .doc-media {
+    filter: none;
 }
+
 /* ======================================================== 
    INTERNET ART ARCHIVE ELEMENTS
    ======================================================== */
