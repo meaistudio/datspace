@@ -293,49 +293,38 @@ a, a:visited, a:hover, a:active {
    UNIVERSAL DOCUMENTATION SYSTEM (FOR ARCHIVE LOGS)
    ======================================================== */
 .doc-header {
-    margin-top: 30px;
-    margin-bottom: 40px;
-    border-bottom: 1px dashed rgba(255, 255, 255, 0.2);
-    padding-bottom: 25px;
+   margin-top: 30px; 
+   margin-bottom: 40px; 
+   border-bottom: 1px dashed rgba(255, 255, 255, 0.2); 
+   padding-bottom: 25px; 
 }
-
 .doc-meta {
-    font-size: 16px;
-    opacity: 0.5;
-    margin-top: 8px;
-    letter-spacing: 1px;
+   font-size: 16px; 
+   opacity: 0.5; 
+   margin-top: 8px; 
+   letter-spacing: 1px; 
 }
-
 .doc-gallery {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    height:100%;
-    gap: 25px;
-    margin-top: 40px;
-    padding-bottom: 60px;
+   display: grid; 
+   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); 
+   height:100%; 
+   gap: 25px; 
+   margin-top: 40px; 
+   padding-bottom: 60px; 
 }
-
 .doc-media-box {
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    padding: 8px;
-    background: #050505;
-    aspect-ratio: 4 / 3; 
-    display: flex;
+   border: 1px solid rgba(255, 255, 255, 0.15); 
+                padding: 8px; background: #050505; 
+                aspect-ratio: 4 / 3; display: flex; 
 }
-
 .doc-media {
     width: 100%;
     height: 100%;
     display: block;
-    object-fit: cover; 
+    object-fit: cover;
+    /* Perubahan: Menghapus efek hitam putih */
     filter: none;
     transition: filter 0.4s ease;
-}
-
-.doc-media-box:hover .doc-media {
-    filter: none;
-}
-
 /* ======================================================== 
    INTERNET ART ARCHIVE ELEMENTS
    ======================================================== */
@@ -540,26 +529,59 @@ a, a:visited, a:hover, a:active {
     display: none;
     position: fixed;
     z-index: 9999;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
     background-color: rgba(0, 0, 0, 0.9);
     cursor: pointer;
     justify-content: center;
     align-items: center;
     opacity: 0;
     transition: opacity 0.3s ease;
-    display: none; /* Tetap pertahankan display none untuk logika JS */
+    /* Hapus duplikasi display: none; */
 }
+
 .lightbox.show {
     display: flex;
     opacity: 1;
 }
+
 .lightbox img {
     max-width: 90%;
     max-height: 90%;
     border: 1px solid #333;
 }
 
+.doc-media {cursor: zoom-in; }
+
+/* Perubahan: Menambahkan tombol navigasi lightbox */
+.lightbox-nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 40px;
+    color: white;
+    cursor: pointer;
+    padding: 20px;
+    background: rgba(0, 0, 0, 0.5);
+    border-radius: 5px;
+    z-index: 10000;
+}
+
+.lightbox-prev {
+    left: 20px;
+}
+
+.lightbox-next {
+    right: 20px;
+}
+
+/* Hover effect for nav buttons */
+.lightbox-nav:hover {
+    background: rgba(255, 255, 255, 0.8);
+    color: black;
+}
 .doc-media {
     cursor: zoom-in;
 }
