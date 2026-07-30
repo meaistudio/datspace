@@ -983,10 +983,13 @@ function openLightbox(clickedImgElement) {
 
     // Ambil semua elemen gambar di galeri aktif saat ini
     const activeDocMediaElements = document.querySelectorAll('.doc-media');
-    currentGalleryImages = Array.from(activeDocMediaElements).map(el => el.src);
+    currentGalleryImages = Array.from(activeDocMediaElements).map(el => el.getAttribute('src'));
     
-    // Cari posisi index gambar yang tepat berdasarkan elemen yang diklik secara langsung
-    currentLightboxIndex = currentGalleryImages.indexOf(clickedImgElement.src);
+    // Ambil path src mentah dari elemen yang diklik agar cocok dengan format di array
+    const clickedSrc = clickedImgElement.getAttribute('src');
+    
+    // Cari posisi index gambar yang tepat
+    currentLightboxIndex = currentGalleryImages.indexOf(clickedSrc);
     if (currentLightboxIndex === -1) currentLightboxIndex = 0;
 
     lightboxImg.src = currentGalleryImages[currentLightboxIndex];
