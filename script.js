@@ -944,10 +944,10 @@ function renderDocumentationPage(id) {
 
     let galleryHTML = "";
 
-    docData.media.forEach(src => {
+    docData.media.forEach((src) => {
         galleryHTML += `
             <div class="doc-media-box">
-                <img src="${src}" class="doc-media" alt="Documentation" onclick="openLightbox('${src}')">
+                <img src="${src}" class="doc-media" alt="Documentation" onclick="openLightbox(this)">
             </div>
         `;
     });
@@ -971,35 +971,21 @@ function renderDocumentationPage(id) {
         </div>
     `;
 }
-
-function openLightbox(imgSrc) {
-    const lightbox = document.getElementById("lightbox");
-    const lightboxImg = document.getElementById("lightbox-img");
-
-    if (!lightbox || !lightboxImg) return;
-
-    lightboxImg.src = imgSrc;
-    lightbox.style.display = "flex";
-
-    setTimeout(() => {
-        lightbox.style.opacity = "1";
-    }, 10);
-}
 let currentGalleryImages = [];
 let currentLightboxIndex = 0;
 
-function openLightbox(imgSrc) {
+function openLightbox(clickedImgElement) {
     const lightbox = document.getElementById("lightbox");
     const lightboxImg = document.getElementById("lightbox-img");
 
     if (!lightbox || !lightboxImg) return;
 
-    // Kumpulkan semua sumber gambar dari galeri yang sedang aktif
+    // Ambil semua elemen gambar di galeri aktif saat ini
     const activeDocMediaElements = document.querySelectorAll('.doc-media');
     currentGalleryImages = Array.from(activeDocMediaElements).map(el => el.src);
     
-    // Temukan index gambar yang diklik
-    currentLightboxIndex = currentGalleryImages.indexOf(imgSrc);
+    // Cari posisi index gambar yang tepat berdasarkan elemen yang diklik secara langsung
+    currentLightboxIndex = currentGalleryImages.indexOf(clickedImgElement.src);
     if (currentLightboxIndex === -1) currentLightboxIndex = 0;
 
     lightboxImg.src = currentGalleryImages[currentLightboxIndex];
@@ -1012,11 +998,9 @@ function openLightbox(imgSrc) {
 
 function closeLightbox() {
     const lightbox = document.getElementById("lightbox");
-
     if (!lightbox) return;
 
     lightbox.style.opacity = "0";
-
     setTimeout(() => {
         lightbox.style.display = "none";
     }, 300);
@@ -1028,9 +1012,7 @@ function nextLightboxImage(e) {
     
     currentLightboxIndex = (currentLightboxIndex + 1) % currentGalleryImages.length;
     const lightboxImg = document.getElementById("lightbox-img");
-    if (lightboxImg) {
-        lightboxImg.src = currentGalleryImages[currentLightboxIndex];
-    }
+    if (lightboxImg) lightboxImg.src = currentGalleryImages[currentLightboxIndex];
 }
 
 function prevLightboxImage(e) {
@@ -1039,11 +1021,8 @@ function prevLightboxImage(e) {
     
     currentLightboxIndex = (currentLightboxIndex - 1 + currentGalleryImages.length) % currentGalleryImages.length;
     const lightboxImg = document.getElementById("lightbox-img");
-    if (lightboxImg) {
-        lightboxImg.src = currentGalleryImages[currentLightboxIndex];
-    }
+    if (lightboxImg) lightboxImg.src = currentGalleryImages[currentLightboxIndex];
 }
-
 /* ======================================================== */
 /* 5. GENERATIVE CANVAS DRAW ENGINE                         */
 /* ======================================================== */
