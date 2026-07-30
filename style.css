@@ -305,12 +305,12 @@ a, a:visited, a:hover, a:active {
     width: 100%;
     height: auto;
     display: block;
-    filter: grayscale(100%);
+    filter: none;
     transition: filter 0.4s ease;
 }
 
 .doc-media-box:hover .doc-media {
-    filter: grayscale(0%);
+    filter: none;
 }
 
 /* ======================================================== 
