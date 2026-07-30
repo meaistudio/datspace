@@ -1202,3 +1202,10 @@ document.addEventListener("touchend", (e) => {
 
     lastTouchEnd = now;
 }, { passive: false });
+
+document.addEventListener("DOMContentLoaded", () => {
+    fetchEventDataFromSheet();
+    updateContent();
+});
+
+draw();
