@@ -587,7 +587,7 @@ function switchInternetArtSubTab(subTabState) {
 /* 3. DYNAMIC CONTENT RENDERING CONTROLLER (SPA ENGINE)     */
 /* ======================================================== */
 function updateContent() {
-    if (currentTab === "HOME") {
+if (currentTab === "HOME") {
         homeExpanded = false;
         showTitle = true;
 
@@ -600,36 +600,30 @@ function updateContent() {
                 if (homeExpanded) return;
 
                 homeExpanded = true;
-                content.classList.add("fade-out");
-
-                setTimeout(() => {
-                    showTitle = false;
-                    content.classList.add("home-desc");
-                    content.innerHTML = `
-                    DATs (Data Space) is a creative exploration space under Meai Studio, 
-                    born from the need for a playground and a testing ground. 
-                    At DATs, data, sound, and light are deconstructed, played with, 
-                    and reassembled into works that are constantly in motion.
-                    <br><br>
-                    This space becomes a meeting point where visual artists, 
-                    experimental audio practitioners, and audiovisual creators 
-                    come together within one ecosystem.
-                    <br><br>
-                    The process at DATs is closely tied to experimentation, 
-                    trial and error, and noise as an essential part of artistic practice.
-                    <br><br>
-                    Through visual mapping and audiovisual performances, 
-                    DATs encourages the emergence of new visual languages 
-                    while building an alternative creative ecosystem in Bali.
-                    `;
-
-                    content.classList.remove("fade-out");
-                    content.classList.add("fade-in");
-                }, 400);
+                showTitle = false;
+                
+                // Langsung ubah class dan isi teks tanpa timeout / delay
+                content.className = "content home-desc";
+                content.innerHTML = `
+                DATs (Data Space) is a creative exploration space under Meai Studio, 
+                born from the need for a playground and a testing ground. 
+                At DATs, data, sound, and light are deconstructed, played with, 
+                and reassembled into works that are constantly in motion.
+                <br><br>
+                This space becomes a meeting point where visual artists, 
+                experimental audio practitioners, and audiovisual creators 
+                come together within one ecosystem.
+                <br><br>
+                The process at DATs is closely tied to experimentation, 
+                trial and error, and noise as an essential part of artistic practice.
+                <br><br>
+                Through visual mapping and audiovisual performances, 
+                DATs encourages the emergence of new visual languages 
+                while building an alternative creative ecosystem in Bali.
+                `;
             };
         }
     }
-
     if (currentTab === "INTERNET-ART") {
         showTitle = false;
         content.classList.add("content-event");
