@@ -6,7 +6,6 @@
   <title>IMADJI - CUP COLLECTOR</title>
 
   <style>
-    /* === FIX GLOBAL HIDDEN === */
     [hidden] {
       display: none !important;
     }
@@ -14,8 +13,8 @@
     html, body {
       margin: 0;
       width: 100%;
-      height: 100vh; /* Fallback untuk browser lawas */
-      height: 100dvh; /* Anti-Error UI Safari/iOS */
+      height: 100vh;
+      height: 100dvh;
       overflow: hidden;
       background: #111;
       color: #fff;
@@ -27,7 +26,6 @@
       align-items: center;
     }
 
-    /* KONTAINER UTAMA 9:16 */
     #game-container {
       position: relative;
       width: 100%;
@@ -40,7 +38,6 @@
       container-name: game;
     }
 
-    /* OVERLAY PERINGATAN UKURAN LAYAR */
     #size-warning {
       display: none;
       position: fixed;
@@ -59,9 +56,9 @@
       line-height: 1.6;
       text-transform: uppercase;
       letter-spacing: 1px;
+      color: #fff;
     }
 
-    /* MATIKAN GAME JIKA DI BAWAH 320x500 (Aman untuk in-app browser IG/TikTok di iPhone) */
     @media (max-width: 319px), (max-height: 499px) {
       #game-container {
         display: none !important;
@@ -75,6 +72,7 @@
       font-family: monospace;
       cursor: pointer;
       touch-action: manipulation;
+      color: #fff;
     }
 
     canvas {
@@ -108,6 +106,7 @@
       gap: 2cqh;
       width: 100%;
       text-shadow: 2px 2px 0 #000;
+      color: #fff;
     }
 
     .logo-row {
@@ -133,7 +132,6 @@
       text-shadow: 2px 2px 0 #000;
     }
 
-    /* === GRUP TOMBOL BAWAH (LEADERBOARD & KUNJUNGI) === */
     .visit-fixed {
       left: 50%;
       bottom: 4cqh;
@@ -171,6 +169,7 @@
       font-size: clamp(14px, 3.5cqw, 28px);
       letter-spacing: 2px;
       text-transform: uppercase;
+      color: #fff;
     }
 
     .home-title-img {
@@ -199,7 +198,6 @@
       color: #000;
     }
 
-    /* === TOMBOL START (GAMBAR START.WEBP DI DALAM KOTAK PUTIH) === */
     .btn-start-box {
       display: inline-flex;
       justify-content: center;
@@ -218,12 +216,11 @@
     }
 
     .btn-start-box img {
-      width: 55cqw; /* Diperbesar agar pas dengan kotaknya */
+      width: 55cqw;
       max-width: 270px;
       height: auto;
       display: block;
-      /* Membalikkan warna logo/teks di gambar menjadi hitam */
-      filter: invert(1); 
+      filter: invert(1);
     }
 
     @keyframes blinkStartBox {
@@ -255,6 +252,7 @@
       padding: 1cqh 2cqw;
       background: #000;
       border: 2px solid #fff;
+      color: #fff;
     }
 
     .hud-label-img,
@@ -317,6 +315,7 @@
       border: 2px solid #fff;
       font-size: clamp(12px, 2.5cqw, 20px);
       text-align: left;
+      color: #fff;
     }
 
     .top-score-row span:first-child {
@@ -368,7 +367,6 @@
       width: 100%;
     }
 
-    /* === STYLING POPUP IKLAN === */
     .ad-overlay {
       position: absolute;
       inset: 0;
@@ -435,7 +433,6 @@
       }
     }
 
-    /* Efek visual ketika mode pelan aktif */
     #game-container.slow-mode canvas {
       filter: saturate(1.2) contrast(1.1);
       transition: filter 0.3s ease;
@@ -445,7 +442,6 @@
 
 <body>
   
-  <!-- LAYAR PERINGATAN -->
   <div id="size-warning">
     <p>LAYAR TERLALU KECIL /<br>TIDAK MENDUKUNG LANDSCAPE<br><br>Mohon putar HP ke mode potret<br>atau perbesar jendela layar.</p>
   </div>
@@ -459,14 +455,12 @@
       <img src="asset/dats.webp" alt="DATs">
     </div>
 
-    <!-- === KUNJUNGI & LEADERBOARD (Tersusun di Bawah) === -->
     <div id="visitLink" class="visit-fixed">
       <button id="homeLeaderboardBtn" class="btn-action" type="button" hidden>LEADERBOARD</button>
       <a href="https://datspace.club" target="_blank" rel="noopener noreferrer">KUNJUNGI datspace.club</a>
     </div>
 
     <main id="screen" class="screen">
-      <!-- Diisi dinamis oleh js -->
     </main>
 
     <div id="hud" class="hud" hidden>
@@ -486,14 +480,12 @@
       </div>
     </div>
 
-    <!-- === POPUP IKLAN === -->
     <div id="ad-popup" class="ad-overlay" hidden>
       <div class="ad-content">
         <button id="closeAdBtn" class="close-ad-btn">X</button>
         <img id="adImage" alt="Iklan Banner" style="width:100%; height:auto; display:block; border-radius:8px; background:transparent;">
       </div>
     </div>
-    <!-- =================== -->
 
   </div>
 
@@ -501,9 +493,7 @@
     document.addEventListener('gesturestart', function(e) { e.preventDefault(); });
     document.addEventListener('dblclick', function(e) { e.preventDefault(); }, { passive: false });
 
-    // === URL ENDPOINT WEB APP SCRIPT ===
     const SHEET_ENDPOINT = "https://script.google.com/macros/s/AKfycbzZmC9hqt_D0_SMzwZpU5Buawfn-LPfQh1xp6qyiBd_saQM17TsnpfEjWNpXsdLaz12/exec"; 
-
     const TOP_SCORE_KEY = "imadjiTopScores";
 
     const container = document.getElementById("game-container");
@@ -527,10 +517,9 @@
 
     let gameWidth = 0;
     let gameHeight = 0;
-
     let globalJsonpResolver = null;
+    let cachedOnlineScores = []; // Menyimpan data leaderboard online sementara untuk pengecekan duplikat
 
-    // === ASSETS ===
     const asset = {
       extBg: "asset/imadji_yos_ext.webp",
       inBg: "asset/imadji_yos_in.webp",
@@ -558,21 +547,16 @@
       score: 0,
       best: Number(localStorage.getItem("imadjiCoffeeBest") || 0),
       lives: 3,
-
       cupX: 0,
       cupY: 0,
       cupW: 250,
-
       beanSize: 92,
       iceSize: 86,
       specialSize: 82,
-
       items: [],
       lastSpawn: 0,
       lastTime: 0,
-      
       slowUntil: 0,
-
       dragging: false,
       keys: { left: false, right: false }
     };
@@ -626,12 +610,13 @@
     function saveTopScoreLocal(entry) {
       let scores = getTopScoresLocal();
       const existingIdx = scores.findIndex(
-        item => item.initials === entry.initials && item.instagram.toLowerCase() === entry.instagram.toLowerCase()
+        item => item.initials === entry.initials
       );
 
       if (existingIdx !== -1) {
         if (entry.score > scores[existingIdx].score) {
           scores[existingIdx].score = entry.score;
+          scores[existingIdx].instagram = entry.instagram;
         }
       } else {
         scores.push(entry);
@@ -660,6 +645,33 @@
         globalJsonpResolver(data);
       }
     };
+
+    function fetchOnlineLeaderboard() {
+      return new Promise((resolve, reject) => {
+        globalJsonpResolver = resolve;
+
+        const dynamicScript = document.createElement("script");
+        dynamicScript.src = `${SHEET_ENDPOINT}?callback=processOnlineLeaderboard&_nocache=${Date.now()}`;
+        dynamicScript.id = "jsonp-leaderboard-core";
+
+        dynamicScript.onerror = () => {
+          cleanUpScript();
+          reject(new Error("Gagal load script"));
+        };
+
+        const cleanUpScript = () => {
+          const currentScript = document.getElementById("jsonp-leaderboard-core");
+          if (currentScript) currentScript.remove();
+        };
+
+        setTimeout(() => {
+          cleanUpScript();
+          reject(new Error("Timeout"));
+        }, 4000);
+
+        document.body.appendChild(dynamicScript);
+      });
+    }
 
     function renderNumber(target, value) {
       const text = String(Math.max(0, value));
@@ -699,14 +711,14 @@
 
     function buildScoresMarkup(scoresArray) {
       if (!scoresArray || !scoresArray.length) {
-        return `<p style="letter-spacing:1px; opacity:0.7;">BELUM ADA SKOR</p>`;
+        return `<p style="letter-spacing:1px; color:#fff; opacity:0.7;">BELUM ADA SKOR</p>`;
       }
       return `
         <div class="top-score-list">
           ${scoresArray.map((item, index) => `
             <div class="top-score-row">
-              <span>${index + 1}</span>
-              <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${item.initials}</span>
+              <span style="color:#fff;">${index + 1}</span>
+              <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:#fff;">${item.initials}</span>
               ${numberMarkup(item.score)}
             </div>
           `).join("")}
@@ -738,7 +750,6 @@
       document.getElementById("startBtn").onclick = startGame;
       if(lbBtn) lbBtn.onclick = showLeaderboardScreen;
 
-      // Cek Iklan Otomatis di Home Page
       const adCheckImg = new Image();
       adCheckImg.onload = function() {
         const adElement = document.getElementById("adImage");
@@ -760,54 +771,29 @@
       screen.innerHTML = `
         <section class="panel">
           <img class="top-score-title" src="asset/top_score.webp" alt="Top Score" style="margin-top: 6cqh;">
-          <p id="loadingText" style="letter-spacing:1px; opacity:0.7;">MEMUAT DATA TOP SCORE...</p>
+          <p id="loadingText" style="letter-spacing:1px; color:#fff; opacity:0.7;">MEMUAT DATA TOP SCORE...</p>
         </section>
       `;
 
       let scoresMarkup = "";
 
-      const fetchOnlineLeaderboard = () => {
-        return new Promise((resolve, reject) => {
-          globalJsonpResolver = resolve;
-
-          const dynamicScript = document.createElement("script");
-          dynamicScript.src = `${SHEET_ENDPOINT}?callback=processOnlineLeaderboard&_nocache=${Date.now()}`;
-          dynamicScript.id = "jsonp-leaderboard-core";
-
-          dynamicScript.onerror = () => {
-            cleanUpScript();
-            reject(new Error("Gagal load script"));
-          };
-
-          const cleanUpScript = () => {
-            const currentScript = document.getElementById("jsonp-leaderboard-core");
-            if (currentScript) currentScript.remove();
-          };
-
-          setTimeout(() => {
-            cleanUpScript();
-            reject(new Error("Timeout"));
-          }, 4000);
-
-          document.body.appendChild(dynamicScript);
-        });
-      };
-
       try {
         const rawScores = await fetchOnlineLeaderboard();
         if (rawScores && rawScores.length > 0) {
-          const formattedScores = rawScores.map(item => ({
+          cachedOnlineScores = rawScores.map(item => ({
             initials: item.initials ? String(item.initials).toUpperCase() : "???",
             instagram: item.instagram ? String(item.instagram).toLowerCase() : "-",
             score: item.score ? Number(item.score) : 0
           }));
-          scoresMarkup = buildScoresMarkup(formattedScores);
+          scoresMarkup = buildScoresMarkup(cachedOnlineScores);
         } else {
+          cachedOnlineScores = [];
           scoresMarkup = buildScoresMarkup([]);
         }
       } catch (err) {
         console.warn("Menggunakan data lokal browser karena timeout/CORS:", err);
-        scoresMarkup = buildScoresMarkup(getTopScoresLocal());
+        cachedOnlineScores = getTopScoresLocal();
+        scoresMarkup = buildScoresMarkup(cachedOnlineScores);
       }
 
       screen.innerHTML = `
@@ -823,7 +809,7 @@
       document.getElementById("backToHomeBtn").onclick = showHomeScreen;
     }
 
-    function startGame() {
+    async function startGame() {
       game.mode = "play";
       game.score = 0;
       game.lives = 3;
@@ -844,6 +830,33 @@
 
       container.classList.remove("slow-mode");
       updateHud();
+
+      // Ambil cache data leaderboard di awal permainan agar saat game over sudah siap
+      try {
+        const rawScores = await fetchOnlineLeaderboard();
+        if (rawScores && rawScores.length > 0) {
+          cachedOnlineScores = rawScores.map(item => ({
+            initials: item.initials ? String(item.initials).toUpperCase() : "???",
+            instagram: item.instagram ? String(item.instagram).toLowerCase() : "-",
+            score: item.score ? Number(item.score) : 0
+          }));
+        }
+      } catch (e) {
+        cachedOnlineScores = getTopScoresLocal();
+      }
+    }
+
+    async function processAndSaveScore(initials, instagram) {
+      const entry = {
+        initials: initials,
+        instagram: instagram,
+        score: game.score
+      };
+      
+      saveTopScoreLocal(entry);
+      await submitToSheet(entry);
+      
+      setTimeout(showLeaderboardScreen, 500);
     }
 
     function gameOver() {
@@ -881,28 +894,57 @@
               <button id="failRestartBtn" class="btn-action" type="button">RESTART</button>
             </div>
           </form>
+
+          <!-- MODAL PERINGATAN NAMA SAMA -->
+          <div id="duplicateModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.9); z-index:99999; place-items:center; padding:20px;">
+            <div style="background:#000; border:2px solid #fff; padding:25px; max-width:320px; text-align:center; color:#fff;">
+              <p style="margin-bottom:20px; font-size:14px; line-height:1.5; text-transform:uppercase; color:#fff;">USERNAME INI SUDAH TERDAFTAR DI LEADERBOARD!</p>
+              <div style="display:flex; flex-direction:column; gap:10px;">
+                <button id="btnUpdateExisting" class="btn-action" type="button" style="width:100%;">UPDATE SCORE</button>
+                <button id="btnChangeName" class="btn-action" type="button" style="width:100%;">GANTI NAMA</button>
+              </div>
+            </div>
+          </div>
         </section>
       `;
 
       document.getElementById("failRestartBtn").onclick = startGame;
 
-      document.getElementById("scoreForm").onsubmit = async (event) => {
-        event.preventDefault();
-        
-        const submitBtn = event.target.querySelector('button[type="submit"]');
-        submitBtn.style.pointerEvents = 'none';
-        submitBtn.style.opacity = '0.5';
+      const scoreForm = document.getElementById("scoreForm");
+      const duplicateModal = document.getElementById("duplicateModal");
+      const initialInput = document.getElementById("initialInput");
+      const igInput = document.getElementById("igInput");
 
-        const entry = {
-          initials: document.getElementById("initialInput").value.trim().toUpperCase(),
-          instagram: document.getElementById("igInput").value.trim().toLowerCase(),
-          score: game.score
-        };
-        
-        saveTopScoreLocal(entry);
-        await submitToSheet(entry);
-        
-        setTimeout(showLeaderboardScreen, 500);
+      scoreForm.onsubmit = async (event) => {
+        event.preventDefault();
+
+        const inputInitials = initialInput.value.trim().toUpperCase();
+        const inputIg = igInput.value.trim().toLowerCase();
+
+        // Cek duplikat dari data cached online maupun dari lokal
+        const checkSource = cachedOnlineScores.length > 0 ? cachedOnlineScores : getTopScoresLocal();
+        const isDuplicate = checkSource.some(item => item.initials === inputInitials);
+
+        if (isDuplicate) {
+          duplicateModal.style.display = "grid";
+          return;
+        }
+
+        await processAndSaveScore(inputInitials, inputIg);
+      };
+
+      document.getElementById("btnUpdateExisting").onclick = async () => {
+        duplicateModal.style.display = "none";
+        await processAndSaveScore(
+          initialInput.value.trim().toUpperCase(),
+          igInput.value.trim().toLowerCase()
+        );
+      };
+
+      document.getElementById("btnChangeName").onclick = () => {
+        duplicateModal.style.display = "none";
+        initialInput.value = "";
+        initialInput.focus();
       };
     }
 
@@ -943,9 +985,7 @@
 
     function spawn(now) {
       const isSlow = now < game.slowUntil;
-      
       let baseSpawnRate = Math.max(330, 780 - game.score * 3); 
-      
       let activeSpawnRate = isSlow ? baseSpawnRate * 2.5 : baseSpawnRate;
 
       if (now - game.lastSpawn < activeSpawnRate) return;
