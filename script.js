@@ -283,6 +283,12 @@ const COLLABORATION_PROJECTS = [
         artist: "DATs X FUNTIME", 
         link: "/internet-art/collaboration/funtime", 
         desc: "Galaxy for FUNTIME World" 
+    },
+       { 
+        title: "IMADJI CUP COLLECTOR", 
+        artist: "IMADJI X DATS", 
+        link: "internet-art/collaboration/sponsorship/imadji", 
+        desc: "Collect the ice and bean as much as you can !" 
     }
 ];
 /* DATABASE DOKUMENTASI UNIVERSAL */
