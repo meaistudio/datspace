@@ -6,6 +6,7 @@
   <title>IMADJI - CUP COLLECTOR</title>
 
   <style>
+    /* === FIX GLOBAL HIDDEN === */
     [hidden] {
       display: none !important;
     }
@@ -26,6 +27,7 @@
       align-items: center;
     }
 
+    /* KONTAINER UTAMA 9:16 */
     #game-container {
       position: relative;
       width: 100%;
@@ -38,6 +40,7 @@
       container-name: game;
     }
 
+    /* OVERLAY PERINGATAN UKURAN LAYAR */
     #size-warning {
       display: none;
       position: fixed;
@@ -518,7 +521,6 @@
     let gameWidth = 0;
     let gameHeight = 0;
     let globalJsonpResolver = null;
-    let cachedOnlineScores = []; // Menyimpan data leaderboard online sementara untuk pengecekan duplikat
 
     const asset = {
       extBg: "asset/imadji_yos_ext.webp",
@@ -646,33 +648,6 @@
       }
     };
 
-    function fetchOnlineLeaderboard() {
-      return new Promise((resolve, reject) => {
-        globalJsonpResolver = resolve;
-
-        const dynamicScript = document.createElement("script");
-        dynamicScript.src = `${SHEET_ENDPOINT}?callback=processOnlineLeaderboard&_nocache=${Date.now()}`;
-        dynamicScript.id = "jsonp-leaderboard-core";
-
-        dynamicScript.onerror = () => {
-          cleanUpScript();
-          reject(new Error("Gagal load script"));
-        };
-
-        const cleanUpScript = () => {
-          const currentScript = document.getElementById("jsonp-leaderboard-core");
-          if (currentScript) currentScript.remove();
-        };
-
-        setTimeout(() => {
-          cleanUpScript();
-          reject(new Error("Timeout"));
-        }, 4000);
-
-        document.body.appendChild(dynamicScript);
-      });
-    }
-
     function renderNumber(target, value) {
       const text = String(Math.max(0, value));
       target.innerHTML = "";
@@ -777,23 +752,48 @@
 
       let scoresMarkup = "";
 
+      const fetchOnlineLeaderboard = () => {
+        return new Promise((resolve, reject) => {
+          globalJsonpResolver = resolve;
+
+          const dynamicScript = document.createElement("script");
+          dynamicScript.src = `${SHEET_ENDPOINT}?callback=processOnlineLeaderboard&_nocache=${Date.now()}`;
+          dynamicScript.id = "jsonp-leaderboard-core";
+
+          dynamicScript.onerror = () => {
+            cleanUpScript();
+            reject(new Error("Gagal load script"));
+          };
+
+          const cleanUpScript = () => {
+            const currentScript = document.getElementById("jsonp-leaderboard-core");
+            if (currentScript) currentScript.remove();
+          };
+
+          setTimeout(() => {
+            cleanUpScript();
+            reject(new Error("Timeout"));
+          }, 4000);
+
+          document.body.appendChild(dynamicScript);
+        });
+      };
+
       try {
         const rawScores = await fetchOnlineLeaderboard();
         if (rawScores && rawScores.length > 0) {
-          cachedOnlineScores = rawScores.map(item => ({
+          const formattedScores = rawScores.map(item => ({
             initials: item.initials ? String(item.initials).toUpperCase() : "???",
             instagram: item.instagram ? String(item.instagram).toLowerCase() : "-",
             score: item.score ? Number(item.score) : 0
           }));
-          scoresMarkup = buildScoresMarkup(cachedOnlineScores);
+          scoresMarkup = buildScoresMarkup(formattedScores);
         } else {
-          cachedOnlineScores = [];
           scoresMarkup = buildScoresMarkup([]);
         }
       } catch (err) {
         console.warn("Menggunakan data lokal browser karena timeout/CORS:", err);
-        cachedOnlineScores = getTopScoresLocal();
-        scoresMarkup = buildScoresMarkup(cachedOnlineScores);
+        scoresMarkup = buildScoresMarkup(getTopScoresLocal());
       }
 
       screen.innerHTML = `
@@ -809,7 +809,7 @@
       document.getElementById("backToHomeBtn").onclick = showHomeScreen;
     }
 
-    async function startGame() {
+    function startGame() {
       game.mode = "play";
       game.score = 0;
       game.lives = 3;
@@ -830,20 +830,6 @@
 
       container.classList.remove("slow-mode");
       updateHud();
-
-      // Ambil cache data leaderboard di awal permainan agar saat game over sudah siap
-      try {
-        const rawScores = await fetchOnlineLeaderboard();
-        if (rawScores && rawScores.length > 0) {
-          cachedOnlineScores = rawScores.map(item => ({
-            initials: item.initials ? String(item.initials).toUpperCase() : "???",
-            instagram: item.instagram ? String(item.instagram).toLowerCase() : "-",
-            score: item.score ? Number(item.score) : 0
-          }));
-        }
-      } catch (e) {
-        cachedOnlineScores = getTopScoresLocal();
-      }
     }
 
     async function processAndSaveScore(initials, instagram) {
@@ -921,9 +907,8 @@
         const inputInitials = initialInput.value.trim().toUpperCase();
         const inputIg = igInput.value.trim().toLowerCase();
 
-        // Cek duplikat dari data cached online maupun dari lokal
-        const checkSource = cachedOnlineScores.length > 0 ? cachedOnlineScores : getTopScoresLocal();
-        const isDuplicate = checkSource.some(item => item.initials === inputInitials);
+        const localScores = getTopScoresLocal();
+        const isDuplicate = localScores.some(item => item.initials === inputInitials);
 
         if (isDuplicate) {
           duplicateModal.style.display = "grid";
