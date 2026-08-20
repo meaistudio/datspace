@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>Immersive Brewscape</title>
 <meta name="description" content="Hi, you are invited &mdash; Immersive Brewscape, an IMADJI x DATs collaboration.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -25,6 +25,10 @@
     html, body {
         margin: 0;
         padding: 0;
+        height: 100%;
+        overflow: hidden;
+        overscroll-behavior: none;
+        touch-action: none;
         background: var(--bg);
         cursor: url('ASSET/cursor_crop_inv.png') 2 1, auto;
         scrollbar-width: none;
@@ -38,18 +42,29 @@
     body {
         font-family: 'Pixelify Sans', monospace;
         color: var(--ink);
-        display: flex;
-        justify-content: center;
         filter: invert(1);
     }
 
+    /* fixed viewport-sized stage: the card is scaled to fit inside it
+       (see fitStage() below) so the page never needs to scroll, even
+       though it's authored at a taller-than-one-screen design size */
+    #stage {
+        position: fixed;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        touch-action: none;
+    }
+
     .card {
-        width: 100%;
-        max-width: 480px;
-        min-height: 100vh;
+        width: 480px;
+        flex: none;
         position: relative;
         overflow: hidden;
         padding: 48px 34px 60px;
+        transform-origin: center center;
     }
 
     img.px {
@@ -292,14 +307,11 @@
         cursor: grabbing;
     }
 
-    @media (max-width: 360px) {
-        .card { padding: 40px 22px 50px; }
-        h1.headline { font-size: 38px; }
-    }
 </style>
 </head>
 <body>
 
+    <div id="stage">
     <div class="card">
         <div class="greet-row">
             <span class="hi">Hi</span>
@@ -345,6 +357,7 @@
             <div class="hint" id="hint"><kbd>SPACE</kbd> / <kbd>&#8593;</kbd> / TAP TO JUMP &middot; drag the cat to set it loose</div>
         </div>
     </div>
+    </div>
 
     <div id="playerSprite"></div>
 
@@ -356,6 +369,63 @@
     if (to) {
         document.getElementById("nameBlank").textContent = to;
     }
+</script>
+
+<script>
+    // Scale the whole card to fit inside the viewport (poster-style
+    // "contain" fit) so the page never needs to scroll, and hard-block
+    // every scroll/zoom gesture on both touch and desktop.
+    var card = document.querySelector(".card");
+
+    function fitStage() {
+        // offsetWidth/offsetHeight are always the untransformed layout
+        // size, so this is safe to read regardless of the scale already applied
+        var naturalW = card.offsetWidth;
+        var naturalH = card.offsetHeight;
+        var vv = window.visualViewport;
+        var vw = vv ? vv.width : window.innerWidth;
+        var vh = vv ? vv.height : window.innerHeight;
+        var scale = Math.min(vw / naturalW, vh / naturalH);
+        card.style.transform = "scale(" + scale + ")";
+    }
+    window.addEventListener("resize", fitStage);
+    window.addEventListener("orientationchange", fitStage);
+    if (window.visualViewport) {
+        window.visualViewport.addEventListener("resize", fitStage);
+    }
+    if (window.ResizeObserver) {
+        new ResizeObserver(fitStage).observe(card);
+    }
+    window.addEventListener("load", fitStage);
+    if (document.fonts && document.fonts.ready) {
+        document.fonts.ready.then(fitStage);
+    }
+    fitStage();
+    // short settle-in safety net in case metrics/fonts shift late
+    [50, 150, 400, 800, 1500].forEach(function (ms) { setTimeout(fitStage, ms); });
+
+    // block pinch-zoom, wheel-zoom/scroll and rubber-band scroll everywhere
+    document.addEventListener("touchmove", function (e) { e.preventDefault(); }, { passive: false });
+    document.addEventListener("wheel", function (e) { e.preventDefault(); }, { passive: false });
+    document.addEventListener("gesturestart", function (e) { e.preventDefault(); });
+    document.addEventListener("gesturechange", function (e) { e.preventDefault(); });
+
+    // block double-tap-to-zoom on iOS
+    var lastTouchEnd = 0;
+    document.addEventListener("touchend", function (e) {
+        var now = Date.now();
+        if (now - lastTouchEnd < 350) e.preventDefault();
+        lastTouchEnd = now;
+    }, { passive: false });
+
+    // block ctrl/cmd + wheel and keyboard zoom/scroll shortcuts
+    window.addEventListener("keydown", function (e) {
+        var blocked = ["PageUp", "PageDown", "Home", "End"];
+        if (blocked.indexOf(e.key) !== -1) e.preventDefault();
+        if ((e.ctrlKey || e.metaKey) && (e.key === "+" || e.key === "-" || e.key === "0" || e.key === "=")) {
+            e.preventDefault();
+        }
+    }, { passive: false });
 </script>
 
 <script>
