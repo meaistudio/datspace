@@ -102,9 +102,57 @@
 
     .flower-corner {
         position: absolute;
-        top: 4px;
-        right: -6px;
-        width: 46px;
+        top: 46px;
+        right: 100px;
+        width: 40px;
+    }
+
+    .coupon {
+        position: absolute;
+        top: 98px;
+        right: 26px;
+        width: 150px;
+        transform-origin: center center;
+        z-index: 3;
+        cursor: pointer;
+        filter: invert(1);
+        animation: couponPulse 1.6s ease-in-out infinite;
+    }
+
+    @keyframes couponPulse {
+        0%, 100% { transform: rotate(-6deg) scale(1); }
+        50% { transform: rotate(-6deg) scale(1.12); }
+    }
+
+    #couponOverlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(255, 255, 255, .78);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity .25s ease;
+        z-index: 200;
+        cursor: pointer;
+    }
+
+    #couponOverlay.show {
+        opacity: 1;
+        pointer-events: auto;
+    }
+
+    #couponOverlay img {
+        width: min(88vw, 460px);
+        image-rendering: pixelated;
+        transform: scale(.82) rotate(-4deg);
+        transition: transform .25s ease;
+        filter: invert(1);
+    }
+
+    #couponOverlay.show img {
+        transform: scale(1) rotate(0deg);
     }
 
     .invited {
@@ -319,6 +367,7 @@
             <div class="name-line"><span class="name-blank" id="nameBlank"></span></div>
         </div>
         <img class="flower-corner px" src="ASSET/flower_crop.png" alt="">
+        <img class="coupon px" src="ASSET/kupon_crop.png" alt="20% discount coupon">
 
         <p class="invited">You are Invited</p>
 
@@ -362,6 +411,10 @@
 
     <div id="playerSprite"></div>
 
+    <div id="couponOverlay">
+        <img src="ASSET/kupon_crop.png" alt="20% discount coupon">
+    </div>
+
 <script>
     // Personalized link support: index.html?to=Name fills the "Hi ___" blank,
     // so each guest's link can carry their own name without a separate page.
@@ -370,6 +423,23 @@
     if (to) {
         document.getElementById("nameBlank").textContent = to;
     }
+</script>
+
+<script>
+    // Tap the coupon to blow it up full-screen; tap anywhere while it's
+    // open (including the coupon itself again) to put it back.
+    var couponEl = document.querySelector(".coupon");
+    var couponOverlay = document.getElementById("couponOverlay");
+    couponEl.addEventListener("pointerdown", function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        couponOverlay.classList.add("show");
+    });
+    couponOverlay.addEventListener("pointerdown", function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        couponOverlay.classList.remove("show");
+    });
 </script>
 
 <script>
