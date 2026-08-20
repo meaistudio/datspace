@@ -154,7 +154,7 @@
 
     /* ---------- main event ---------- */
     .main-event {
-        margin-top: 74px;
+        margin-top: 28px;
         display: grid;
         grid-template-columns: auto 1fr;
         column-gap: 18px;
@@ -163,54 +163,16 @@
     }
 
     .event-date {
-        font-size: 30px;
+        font-size: 20px;
         font-weight: 600;
         text-align: left;
     }
 
     .main-right {
-        font-size: 15px;
+        font-size: 11px;
         font-weight: 500;
         line-height: 1.5;
-        padding-top: 4px;
-    }
-
-    .main-right .list {
-        margin-top: 16px;
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-    }
-
-    .main-right .list div {
-        display: flex;
-        align-items: baseline;
-        gap: 6px;
-    }
-
-    .tunes-row {
-        display: flex !important;
-        align-items: center !important;
-        gap: 8px;
-        flex-wrap: wrap;
-    }
-
-    .paradise-logo {
-        font-family: 'Anton', sans-serif;
-        font-size: 20px;
-        letter-spacing: .01em;
-        background: var(--ink);
-        color: var(--bg);
-        padding: 2px 8px 3px;
-        transform: skewX(-4deg) rotate(-1deg);
-        display: inline-block;
-    }
-
-    .paradise-sub {
-        font-size: 9px;
-        line-height: 1.25;
-        font-weight: 600;
-        letter-spacing: .03em;
+        padding-top: 2px;
     }
 
     /* ---------- ground scene, doubling as the live game ---------- */
@@ -360,6 +322,17 @@
             <p class="collab">IMADJI X DATs COLLABORATION</p>
         </div>
 
+        <section class="main-event">
+            <div class="main-left">
+                <div class="event-date">22 / 08 / 26</div>
+            </div>
+            <div class="main-right">
+                <div>19.00 &mdash; 22.00</div>
+                <div>AT IMADJI COFFEE &amp; SPACE</div>
+                <div>THE KERANJANG BALI</div>
+            </div>
+        </section>
+
         <div class="ground-wrap">
             <div class="frame">
                 <canvas id="game" width="800" height="300"></canvas>
@@ -371,23 +344,6 @@
             <div class="caption">COFFEE<br>CAPTURING<br>IMAGINATION</div>
             <div class="hint" id="hint"><kbd>SPACE</kbd> / <kbd>&#8593;</kbd> / TAP TO JUMP &middot; drag the cat to set it loose</div>
         </div>
-
-        <section class="main-event">
-            <div class="main-left">
-                <div class="event-date">22 / 08 / 26</div>
-            </div>
-            <div class="main-right">
-                <div>19.00 &mdash; 22.00</div>
-                <div>AT IMADJI COFFEE &amp; SPACE</div>
-                <div>THE KERANJANG BALI</div>
-                <div class="list">
-                    <div>&ndash; VISUAL MAPPING</div>
-                    <div>&ndash; DISPLAY MERCH</div>
-                    <div>&ndash; COLLABORATION GAME</div>
-                    <div class="tunes-row">&ndash; TUNES BY <span class="paradise-logo">PARADISE</span><span class="paradise-sub">RADIO<br>UNDER<br>THE SUN</span></div>
-                </div>
-            </div>
-        </section>
     </div>
 
     <div id="playerSprite"></div>
