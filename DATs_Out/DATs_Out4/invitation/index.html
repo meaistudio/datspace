@@ -1,0 +1,891 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Immersive Brewscape</title>
+<meta name="description" content="Hi, you are invited &mdash; Immersive Brewscape, an IMADJI x DATs collaboration.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Pixelify+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+    :root {
+        /* authored as dark-on-light; body{filter:invert(1)} below flips
+           the whole page (and the canvas, which is drawn in these same
+           tones) to the white-line-on-black look the invitation uses */
+        --bg: #ffffff;
+        --ink: #202124;
+        --ink-soft: rgba(32, 33, 36, .8);
+    }
+
+    * {
+        box-sizing: border-box;
+    }
+
+    html, body {
+        margin: 0;
+        padding: 0;
+        background: var(--bg);
+        cursor: url('ASSET/cursor_crop_inv.png') 2 1, auto;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+    }
+
+    html::-webkit-scrollbar, body::-webkit-scrollbar {
+        display: none;
+    }
+
+    body {
+        font-family: 'Pixelify Sans', monospace;
+        color: var(--ink);
+        display: flex;
+        justify-content: center;
+        filter: invert(1);
+    }
+
+    .card {
+        width: 100%;
+        max-width: 480px;
+        min-height: 100vh;
+        position: relative;
+        overflow: hidden;
+        padding: 48px 34px 60px;
+    }
+
+    img.px {
+        image-rendering: pixelated;
+        display: block;
+    }
+
+    /* ---------- greeting ---------- */
+    .greet-row {
+        display: flex;
+        align-items: flex-end;
+        gap: 10px;
+    }
+
+    .greet-row .hi {
+        font-weight: 700;
+        font-size: 34px;
+        flex: none;
+    }
+
+    .name-line {
+        flex: 1;
+        border-bottom: 2px solid var(--ink);
+        padding-bottom: 8px;
+        min-height: 1px;
+        position: relative;
+    }
+
+    .name-blank {
+        font-size: 18px;
+        font-weight: 500;
+        letter-spacing: .02em;
+    }
+
+    .flower-corner {
+        position: absolute;
+        top: 4px;
+        right: -6px;
+        width: 46px;
+    }
+
+    .invited {
+        margin-top: 26px;
+        font-size: 22px;
+        font-weight: 500;
+    }
+
+    /* ---------- headline ---------- */
+    .headline-block {
+        margin-top: 46px;
+        position: relative;
+    }
+
+    .flower-headline {
+        width: 42px;
+        margin-left: 4px;
+        margin-bottom: -6px;
+    }
+
+    h1.headline {
+        margin: 0;
+        font-weight: 700;
+        font-size: clamp(40px, 11vw, 54px);
+        line-height: .92;
+        letter-spacing: -.01em;
+        text-transform: uppercase;
+    }
+
+    h1.headline span {
+        display: block;
+    }
+
+    .bugs {
+        position: absolute;
+        top: 4px;
+        right: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        align-items: flex-end;
+    }
+
+    .bugs img {
+        width: 34px;
+    }
+
+    .sparkle-inline {
+        position: relative;
+        display: inline-block;
+        width: 26px;
+        margin-right: 4px;
+        margin-bottom: -8px;
+    }
+
+    .collab {
+        margin-top: 18px;
+        font-size: 15px;
+        font-weight: 600;
+        letter-spacing: .06em;
+        color: var(--ink-soft);
+    }
+
+    /* ---------- main event ---------- */
+    .main-event {
+        margin-top: 74px;
+        display: grid;
+        grid-template-columns: auto 1fr;
+        column-gap: 18px;
+        row-gap: 4px;
+        align-items: start;
+    }
+
+    .event-date {
+        font-size: 30px;
+        font-weight: 600;
+        text-align: left;
+    }
+
+    .main-right {
+        font-size: 15px;
+        font-weight: 500;
+        line-height: 1.5;
+        padding-top: 4px;
+    }
+
+    .main-right .list {
+        margin-top: 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .main-right .list div {
+        display: flex;
+        align-items: baseline;
+        gap: 6px;
+    }
+
+    .tunes-row {
+        display: flex !important;
+        align-items: center !important;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    .paradise-logo {
+        font-family: 'Anton', sans-serif;
+        font-size: 20px;
+        letter-spacing: .01em;
+        background: var(--ink);
+        color: var(--bg);
+        padding: 2px 8px 3px;
+        transform: skewX(-4deg) rotate(-1deg);
+        display: inline-block;
+    }
+
+    .paradise-sub {
+        font-size: 9px;
+        line-height: 1.25;
+        font-weight: 600;
+        letter-spacing: .03em;
+    }
+
+    /* ---------- ground scene, doubling as the live game ---------- */
+    .ground-wrap {
+        margin-top: 90px;
+        position: relative;
+    }
+
+    .frame {
+        position: relative;
+        width: 100%;
+        touch-action: manipulation;
+        user-select: none;
+        -webkit-user-select: none;
+    }
+
+    canvas {
+        display: block;
+        width: 100%;
+        height: auto;
+        image-rendering: pixelated;
+        image-rendering: -moz-crisp-edges;
+        image-rendering: crisp-edges;
+    }
+
+    .loading-screen {
+        position: absolute;
+        inset: 0;
+        background: var(--bg);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 16px;
+        z-index: 5;
+        transition: opacity .4s ease;
+    }
+
+    .loading-screen.hide {
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    .pbar {
+        display: flex;
+        align-items: stretch;
+        gap: 4px;
+        width: min(70%, 340px);
+        height: 30px;
+        padding: 5px;
+        border: 3px solid var(--ink);
+        box-sizing: border-box;
+    }
+
+    .pbar-seg {
+        flex: 1;
+        background: transparent;
+        transition: background .08s steps(1);
+    }
+
+    .pbar-seg.on {
+        background: var(--ink);
+    }
+
+    .pbar-label {
+        font-family: 'Courier New', Consolas, monospace;
+        font-size: clamp(22px, 6vw, 32px);
+        font-weight: bold;
+        letter-spacing: .1em;
+        color: var(--ink);
+        image-rendering: pixelated;
+    }
+
+    .caption {
+        margin-top: 8px;
+        text-align: right;
+        font-size: 10px;
+        font-weight: 600;
+        letter-spacing: .04em;
+        line-height: 1.5;
+    }
+
+    .hint {
+        margin-top: 12px;
+        font-size: 11px;
+        color: var(--ink-soft);
+        letter-spacing: .02em;
+        text-align: center;
+        min-height: 14px;
+    }
+
+    kbd {
+        display: inline-block;
+        border: 1px solid var(--ink-soft);
+        border-bottom-width: 2px;
+        border-radius: 3px;
+        padding: 1px 6px;
+        font-family: inherit;
+        font-size: 10px;
+        margin: 0 2px;
+        color: var(--ink);
+    }
+
+    #playerSprite {
+        position: fixed;
+        left: 0;
+        top: 0;
+        background-image: url('ASSET/player.png');
+        background-repeat: no-repeat;
+        image-rendering: pixelated;
+        cursor: grab;
+        touch-action: none;
+        z-index: 50;
+    }
+
+    #playerSprite.dragging {
+        cursor: grabbing;
+    }
+
+    @media (max-width: 360px) {
+        .card { padding: 40px 22px 50px; }
+        h1.headline { font-size: 38px; }
+    }
+</style>
+</head>
+<body>
+
+    <div class="card">
+        <div class="greet-row">
+            <span class="hi">Hi</span>
+            <div class="name-line"><span class="name-blank" id="nameBlank"></span></div>
+        </div>
+        <img class="flower-corner px" src="ASSET/flower_crop.png" alt="">
+
+        <p class="invited">You are Invited</p>
+
+        <div class="headline-block">
+            <img class="flower-headline px" src="ASSET/flower_crop.png" alt="">
+            <h1 class="headline">
+                <span>Immersive</span>
+                <span><span class="sparkle-inline"><img class="px" src="ASSET/blink1_crop.png" alt="" style="width:100%"></span>Brewscape</span>
+            </h1>
+            <div class="bugs">
+                <img class="px" src="ASSET/obstacle_crop.png" alt="">
+                <img class="px" src="ASSET/d8_crop.png" alt="">
+            </div>
+            <p class="collab">IMADJI X DATs COLLABORATION</p>
+        </div>
+
+        <div class="ground-wrap">
+            <div class="frame">
+                <canvas id="game" width="800" height="300"></canvas>
+                <div class="loading-screen" id="loadingScreen">
+                    <div class="pbar" id="pbar"></div>
+                    <div class="pbar-label">LOADING</div>
+                </div>
+            </div>
+            <div class="caption">COFFEE<br>CAPTURING<br>IMAGINATION</div>
+            <div class="hint" id="hint"><kbd>SPACE</kbd> / <kbd>&#8593;</kbd> / TAP TO JUMP &middot; drag the cat to set it loose</div>
+        </div>
+
+        <section class="main-event">
+            <div class="main-left">
+                <div class="event-date">22 / 08 / 26</div>
+            </div>
+            <div class="main-right">
+                <div>19.00 &mdash; 22.00</div>
+                <div>AT IMADJI COFFEE &amp; SPACE</div>
+                <div>THE KERANJANG BALI</div>
+                <div class="list">
+                    <div>&ndash; VISUAL MAPPING</div>
+                    <div>&ndash; DISPLAY MERCH</div>
+                    <div>&ndash; COLLABORATION GAME</div>
+                    <div class="tunes-row">&ndash; TUNES BY <span class="paradise-logo">PARADISE</span><span class="paradise-sub">RADIO<br>UNDER<br>THE SUN</span></div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <div id="playerSprite"></div>
+
+<script>
+    // Personalized link support: index.html?to=Name fills the "Hi ___" blank,
+    // so each guest's link can carry their own name without a separate page.
+    var params = new URLSearchParams(location.search);
+    var to = params.get("to");
+    if (to) {
+        document.getElementById("nameBlank").textContent = to;
+    }
+</script>
+
+<script>
+(function () {
+    "use strict";
+
+    var canvas = document.getElementById("game");
+    var ctx = canvas.getContext("2d");
+    ctx.imageSmoothingEnabled = false;
+
+    var W = canvas.width, H = canvas.height;
+    var SCALE = 3;
+
+    // ---------------------------------------------------------------
+    // Sprite atlas: every art asset lives on a 200x200 (or 499x500)
+    // transparent canvas with the actual drawing tucked in a corner.
+    // These are the exact non-transparent bounding boxes, measured
+    // once, so drawImage can pull just the artwork out of each file.
+    // ---------------------------------------------------------------
+    var SPRITES = {
+        player:      { src: "ASSET/player.png",      x: 16,  y: 142, w: 24,  h: 43 },
+        playerFall:  { src: "ASSET/player_fall.png",  x: 114, y: 88,  w: 37,  h: 16 },
+        ground:      { src: "ASSET/ground.png",       x: 12,  y: 189, w: 121, h: 7  },
+        obstacle:    { src: "ASSET/obstacle.png",     x: 180, y: 156, w: 11,  h: 9  },
+        bug2:        { src: "ASSET/d8.png",           x: 167, y: 156, w: 11,  h: 9  },
+        flower:      { src: "ASSET/flower.png",       x: 96,  y: 161, w: 15,  h: 24 },
+        blink1:      { src: "ASSET/blink1.png",       x: 125, y: 103, w: 5,   h: 5  },
+        blink2:      { src: "ASSET/blink2.png",       x: 137, y: 108, w: 7,   h: 10 },
+        pressStart:  { src: "ASSET/press_start.png",  x: 121, y: 60,  w: 61,  h: 7  }
+    };
+
+    var loaded = 0, toLoad = 0;
+    Object.keys(SPRITES).forEach(function (key) {
+        var s = SPRITES[key];
+        s.img = new Image();
+        toLoad++;
+        s.img.onload = function () { loaded++; };
+        s.img.onerror = function () { loaded++; };
+        s.img.src = s.src;
+    });
+
+    function draw(sprite, dx, dy, scale) {
+        var sc = scale || SCALE;
+        ctx.drawImage(sprite.img, sprite.x, sprite.y, sprite.w, sprite.h,
+            Math.round(dx), Math.round(dy), sprite.w * sc, sprite.h * sc);
+    }
+
+    // ---------------------------------------------------------------
+    // Ground
+    // ---------------------------------------------------------------
+    var groundY = H - 64;
+    var groundTileW = SPRITES.ground.w * SCALE;
+    var groundScrollX = 0;
+
+    // ---------------------------------------------------------------
+    // Player
+    // ---------------------------------------------------------------
+    var player = {
+        x: 70,
+        w: SPRITES.player.w * SCALE,
+        h: SPRITES.player.h * SCALE,
+        y: 0,
+        vy: 0,
+        grounded: true
+    };
+    player.y = groundY - player.h;
+
+    var GRAVITY_UP = 0.5;
+    var GRAVITY_DOWN = 0.22;
+    var JUMP_V = -11.5;
+
+    function resetPlayer() {
+        player.y = groundY - player.h;
+        player.vy = 0;
+        player.grounded = true;
+        hit = false;
+        freeMode = false;
+        dragging = false;
+    }
+
+    // ---------------------------------------------------------------
+    // Drag-and-release: the cat can be pulled clean off the game
+    // track with the mouse/finger, wander the whole page on its
+    // balloon, and be dropped back onto the frame to resume the run.
+    // ---------------------------------------------------------------
+    var playerEl = document.getElementById("playerSprite");
+    var frameEl = document.querySelector(".frame");
+    var freeMode = false;
+    var dragging = false;
+    var freeX = 0, freeY = 0, freeVX = 0, freeVY = 0;
+    var fallFrames = 0;
+    var dragOffX = 0, dragOffY = 0;
+
+    function canvasScale() {
+        var r = canvas.getBoundingClientRect();
+        return r.width / W;
+    }
+
+    function updatePlayerSprite() {
+        if (hit) {
+            playerEl.style.display = "none";
+            return;
+        }
+        playerEl.style.display = "block";
+        var s = canvasScale();
+        var w = player.w * s, h = player.h * s;
+        playerEl.style.width = w + "px";
+        playerEl.style.height = h + "px";
+        playerEl.style.backgroundSize = (200 * SCALE * s) + "px " + (200 * SCALE * s) + "px";
+        playerEl.style.backgroundPosition = (-SPRITES.player.x * SCALE * s) + "px " + (-SPRITES.player.y * SCALE * s) + "px";
+
+        if (freeMode) {
+            playerEl.style.transform = "translate(" + (freeX - w / 2) + "px," + (freeY - h / 2) + "px)";
+        } else {
+            var r = canvas.getBoundingClientRect();
+            var bob = Math.sin(frame * 0.09) * 5;
+            var px = r.left + player.x * s;
+            var py = r.top + (player.y + bob) * s;
+            playerEl.style.transform = "translate(" + px + "px," + py + "px)";
+        }
+    }
+
+    function updateFreePlayer() {
+        if (!freeMode || dragging) return;
+        fallFrames++;
+        if (fallFrames < 30) {
+            freeVY += 0.55;
+        } else {
+            // the balloon takes back over: ease into a gentle upward drift
+            freeVY += (-0.18 - freeVY) * 0.04;
+            freeX += Math.sin(frame * 0.05) * 0.7;
+        }
+        freeX += freeVX;
+        freeY += freeVY;
+        freeVX *= 0.99;
+
+        var margin = 24;
+        if (freeX < margin) { freeX = margin; freeVX = Math.abs(freeVX) * 0.4 + 0.2; }
+        if (freeX > window.innerWidth - margin) { freeX = window.innerWidth - margin; freeVX = -Math.abs(freeVX) * 0.4 - 0.2; }
+        if (freeY < margin) { freeY = margin; freeVY *= -0.3; }
+        if (freeY > window.innerHeight - margin) { freeY = window.innerHeight - margin; freeVY = -2.2; fallFrames = 30; }
+    }
+
+    playerEl.addEventListener("pointerdown", function (e) {
+        if (hit) return;
+        e.preventDefault();
+        e.stopPropagation();
+        dragging = true;
+        freeMode = true;
+        try { playerEl.setPointerCapture(e.pointerId); } catch (err) {}
+        var rect = playerEl.getBoundingClientRect();
+        freeX = rect.left + rect.width / 2;
+        freeY = rect.top + rect.height / 2;
+        dragOffX = e.clientX - freeX;
+        dragOffY = e.clientY - freeY;
+        freeVX = 0;
+        freeVY = 0;
+        playerEl.classList.add("dragging");
+    });
+    playerEl.addEventListener("pointermove", function (e) {
+        if (!dragging) return;
+        freeX = e.clientX - dragOffX;
+        freeY = e.clientY - dragOffY;
+    });
+    function endDrag(e) {
+        if (!dragging) return;
+        dragging = false;
+        playerEl.classList.remove("dragging");
+        var fr = frameEl.getBoundingClientRect();
+        if (e.clientX >= fr.left && e.clientX <= fr.right && e.clientY >= fr.top && e.clientY <= fr.bottom) {
+            freeMode = false;
+            player.grounded = true;
+            player.vy = 0;
+            player.y = groundY - player.h;
+        } else {
+            fallFrames = 0;
+            freeVY = 0;
+            freeVX = (Math.random() - 0.5) * 3;
+        }
+    }
+    playerEl.addEventListener("pointerup", endDrag);
+    playerEl.addEventListener("pointercancel", endDrag);
+
+    // ---------------------------------------------------------------
+    // Obstacles
+    // ---------------------------------------------------------------
+    var OBSTACLE_KEYS = ["flower", "flower", "flower", "obstacle", "bug2"];
+    var FLYING = { obstacle: true, bug2: true, flower: false };
+    var FLY_GAP_MIN = 140, FLY_GAP_MAX = 185;
+    var obstacles = [];
+    var spawnTimer = 0;
+    var nextSpawnIn = 90;
+
+    function spawnObstacle() {
+        var key = OBSTACLE_KEYS[Math.floor(Math.random() * OBSTACLE_KEYS.length)];
+        var s = SPRITES[key];
+        var fly = FLYING[key];
+        obstacles.push({
+            key: key,
+            w: s.w * SCALE,
+            h: s.h * SCALE,
+            x: W + 20,
+            fly: fly,
+            flyGap: fly ? (FLY_GAP_MIN + Math.random() * (FLY_GAP_MAX - FLY_GAP_MIN)) : 0
+        });
+    }
+
+    // ---------------------------------------------------------------
+    // Twinkling ambient stars, purely decorative
+    // ---------------------------------------------------------------
+    var stars = [];
+    for (var i = 0; i < 9; i++) {
+        stars.push({
+            x: Math.random() * W,
+            y: 14 + Math.random() * (groundY - 90),
+            frame: Math.random() < 0.5 ? "blink1" : "blink2",
+            t: Math.random() * 100
+        });
+    }
+
+    // ---------------------------------------------------------------
+    // Game state
+    // ---------------------------------------------------------------
+    var STATE_READY = "ready", STATE_PLAY = "play", STATE_OVER = "over";
+    var state = STATE_READY;
+    var speed = 2.6;
+    var baseSpeed = 2.6;
+    var score = 0;
+    var hiScore = parseInt(localStorage.getItem("dats_hiscore") || "0", 10);
+    var hit = false;
+    var frame = 0;
+
+    var hintEl = document.getElementById("hint");
+
+    function setHint(text) {
+        hintEl.innerHTML = text;
+    }
+
+    function startGame() {
+        state = STATE_PLAY;
+        obstacles = [];
+        spawnTimer = 0;
+        nextSpawnIn = 90;
+        speed = baseSpeed;
+        score = 0;
+        resetPlayer();
+        setHint("<kbd>SPACE</kbd> / <kbd>&#8593;</kbd> / TAP TO JUMP");
+    }
+
+    function jump() {
+        if (state === STATE_READY) {
+            startGame();
+            return;
+        }
+        if (state === STATE_OVER) {
+            startGame();
+            return;
+        }
+        if (state === STATE_PLAY && player.grounded) {
+            player.vy = JUMP_V;
+            player.grounded = false;
+        }
+    }
+
+    function gameOver() {
+        state = STATE_OVER;
+        hit = true;
+        if (score > hiScore) {
+            hiScore = score;
+            localStorage.setItem("dats_hiscore", String(hiScore));
+        }
+        setHint("GAME OVER &middot; <kbd>SPACE</kbd> / TAP TO RETRY");
+    }
+
+    // ---------------------------------------------------------------
+    // Input
+    // ---------------------------------------------------------------
+    window.addEventListener("keydown", function (e) {
+        if (e.code === "Space" || e.code === "ArrowUp") {
+            e.preventDefault();
+            jump();
+        }
+    });
+    canvas.addEventListener("pointerdown", function (e) {
+        e.preventDefault();
+        jump();
+    });
+    document.querySelector(".frame").addEventListener("pointerdown", function (e) {
+        e.preventDefault();
+        jump();
+    });
+
+    // ---------------------------------------------------------------
+    // Update + render
+    // ---------------------------------------------------------------
+    function update() {
+        frame++;
+
+        if (state === STATE_PLAY) {
+            if (!freeMode) {
+                // physics - rises quickly, floats back down slower (asymmetric gravity)
+                player.vy += (player.vy < 0 ? GRAVITY_UP : GRAVITY_DOWN);
+                player.y += player.vy;
+                if (player.y >= groundY - player.h) {
+                    player.y = groundY - player.h;
+                    player.vy = 0;
+                    player.grounded = true;
+                }
+            }
+
+            // difficulty ramp (very easy: barely speeds up)
+            speed = baseSpeed + Math.min(score, 500) / 320;
+
+            // ground scroll
+            groundScrollX -= speed;
+            if (groundScrollX <= -groundTileW) groundScrollX += groundTileW;
+
+            // spawn
+            spawnTimer++;
+            if (spawnTimer >= nextSpawnIn) {
+                spawnObstacle();
+                spawnTimer = 0;
+                var minGap = Math.max(55, 95 - score / 40);
+                nextSpawnIn = minGap + Math.random() * 45;
+            }
+
+            // move + collide + cull
+            for (var i = obstacles.length - 1; i >= 0; i--) {
+                var o = obstacles[i];
+                o.x -= speed;
+                if (o.x + o.w < 0) {
+                    obstacles.splice(i, 1);
+                    continue;
+                }
+                if (!freeMode) {
+                    var ox = o.x + o.w * 0.15, ow = o.w * 0.7;
+                    var oy = (o.fly ? groundY - o.flyGap - o.h : groundY - o.h), oh = o.h;
+                    var px = player.x + player.w * 0.28, pw = player.w * 0.44;
+                    var py = player.y + player.h * 0.32, ph = player.h * 0.66;
+                    if (px < ox + ow && px + pw > ox && py < oy + oh && py + ph > oy) {
+                        gameOver();
+                    }
+                }
+            }
+
+            score += speed * 0.045;
+        }
+
+        // twinkle stars always animate, even on the ready screen
+        stars.forEach(function (s) {
+            s.t += 1;
+            if (s.t > 26 + (s.x % 30)) {
+                s.t = 0;
+                s.frame = s.frame === "blink1" ? "blink2" : "blink1";
+            }
+        });
+
+        updateFreePlayer();
+    }
+
+    function render() {
+        ctx.clearRect(0, 0, W, H);
+
+        // sky decoration
+        stars.forEach(function (s) {
+            draw(SPRITES[s.frame], s.x, s.y, 2);
+        });
+
+        // ground: two tiles wide so it always covers the canvas while scrolling
+        var gx = groundScrollX;
+        while (gx < W) {
+            draw(SPRITES.ground, gx, groundY, SCALE);
+            gx += groundTileW;
+        }
+
+        // obstacles
+        obstacles.forEach(function (o) {
+            var oy = o.fly ? groundY - o.flyGap - o.h : groundY - o.h;
+            draw(SPRITES[o.key], o.x, oy, SCALE);
+        });
+
+        // player: the running/free-floating cat is a real DOM sprite (see
+        // updatePlayerSprite) so it can wander clear off the canvas; the
+        // canvas only ever draws the hit/fall pose, which stays on-track
+        if (hit) {
+            var fw = SPRITES.playerFall.w * SCALE, fh = SPRITES.playerFall.h * SCALE;
+            draw(SPRITES.playerFall, player.x - (fw - player.w) / 2, groundY - fh, SCALE);
+        }
+        updatePlayerSprite();
+
+        // score (top right, dino-game style) - sized to match the press-start graphic
+        ctx.font = "bold 28px 'Courier New', monospace";
+        ctx.fillStyle = "#202124";
+        ctx.textAlign = "right";
+        var scoreStr = String(Math.floor(score)).padStart(5, "0");
+        var hiStr = String(Math.floor(hiScore)).padStart(5, "0");
+        ctx.fillText("HI " + hiStr + "   " + scoreStr, W - 16, 34);
+
+        // ready state: press-start prompt + idle player already drawn above
+        if (state === STATE_READY) {
+            var ps = SPRITES.pressStart;
+            var pw = ps.w * SCALE * 1.4, ph = ps.h * SCALE * 1.4;
+            var blink = Math.floor(frame / 30) % 2 === 0;
+            if (blink) {
+                draw(ps, W / 2 - pw / 2, H / 2 - ph / 2, SCALE * 1.4);
+            }
+        }
+
+        if (state === STATE_OVER) {
+            ctx.textAlign = "center";
+            ctx.font = "bold 22px 'Courier New', monospace";
+            ctx.fillStyle = "#202124";
+            ctx.fillText("GAME OVER", W / 2, H / 2 - 20);
+            var ps2 = SPRITES.pressStart;
+            var pw2 = ps2.w * SCALE, ph2 = ps2.h * SCALE;
+            var blink2 = Math.floor(frame / 30) % 2 === 0;
+            if (blink2) {
+                draw(ps2, W / 2 - pw2 / 2, H / 2, SCALE);
+            }
+        }
+    }
+
+    function loop() {
+        update();
+        render();
+        requestAnimationFrame(loop);
+    }
+
+    // ---------------------------------------------------------------
+    // Fake "connecting..." splash before the game reveals itself,
+    // in the spirit of the thing you're meant to be looking at
+    // instead of a live connection.
+    // ---------------------------------------------------------------
+    var loadingScreen = document.getElementById("loadingScreen");
+    var pbar = document.getElementById("pbar");
+    var pct = 0;
+    var PBAR_SEGMENTS = 10;
+    var pbarSegs = [];
+    for (var pi = 0; pi < PBAR_SEGMENTS; pi++) {
+        var seg = document.createElement("div");
+        seg.className = "pbar-seg";
+        pbar.appendChild(seg);
+        pbarSegs.push(seg);
+    }
+
+    function paintLoadingBar() {
+        var filled = Math.round(pct / 100 * PBAR_SEGMENTS);
+        pbarSegs.forEach(function (seg, idx) {
+            seg.classList.toggle("on", idx < filled);
+        });
+    }
+
+    function tickLoading() {
+        pct += 4 + Math.random() * 10;
+        if (pct >= 100) {
+            pct = 100;
+            paintLoadingBar();
+            setTimeout(function () {
+                loadingScreen.classList.add("hide");
+                setHint("<kbd>SPACE</kbd> / <kbd>&#8593;</kbd> / TAP TO START");
+            }, 250);
+            return;
+        }
+        paintLoadingBar();
+        setTimeout(tickLoading, 90);
+    }
+
+    function begin() {
+        resetPlayer();
+        setHint("loading&hellip;");
+        setTimeout(tickLoading, 200);
+        loop();
+    }
+
+    // wait for sprites (or a short timeout ceiling so a slow/broken
+    // asset never blocks the page forever)
+    var waited = 0;
+    (function waitForSprites() {
+        if (loaded >= toLoad || waited > 2000) {
+            begin();
+        } else {
+            waited += 30;
+            setTimeout(waitForSprites, 30);
+        }
+    })();
+})();
+</script>
+</body>
+</html>
