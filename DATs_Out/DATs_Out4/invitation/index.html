@@ -91,11 +91,12 @@
         padding-bottom: 8px;
         min-height: 1px;
         position: relative;
+        text-align: center;
     }
 
     .name-blank {
-        font-size: 18px;
-        font-weight: 500;
+        font-size: 28px;
+        font-weight: 600;
         letter-spacing: .02em;
     }
 
@@ -709,11 +710,9 @@
             jump();
         }
     });
-    canvas.addEventListener("pointerdown", function (e) {
-        e.preventDefault();
-        jump();
-    });
-    document.querySelector(".frame").addEventListener("pointerdown", function (e) {
+    // tap anywhere on the page to jump (the cat's own drag handler calls
+    // stopPropagation, so dragging it doesn't also trigger a jump here)
+    document.addEventListener("pointerdown", function (e) {
         e.preventDefault();
         jump();
     });
