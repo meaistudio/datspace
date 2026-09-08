@@ -501,6 +501,39 @@ const DOCUMENTATION_ARCHIVE = {
             "DATs_To/DATs_To001/Documentation/img7.jpg",
             "DATs_To/DATs_To001/Documentation/img8.jpg"
         ]
+    },
+    "dats_to002": {
+        parentProgram: "DATS_TO",
+        title: "DATs_To002 — Touchdesigner Workshop <br>040426",
+        date: "September 6, 2026",
+        location: "At06, Canggu",
+        manifesto: "A touchdesigner workshop to share work, processes, and ideas through basic CHOPs and TOPs by Divabhwn.",
+        media: [
+            "DATs_To/DATs_To002/Documentation/img1.jpg",
+            "DATs_To/DATs_To002/Documentation/img2.jpg",
+            "DATs_To/DATs_To002/Documentation/img3.jpg",
+            "DATs_To/DATs_To002/Documentation/img4.jpg",
+            "DATs_To/DATs_To002/Documentation/img5.jpg",
+            "DATs_To/DATs_To002/Documentation/img6.jpg",
+            "DATs_To/DATs_To002/Documentation/img7.jpg",
+            "DATs_To/DATs_To002/Documentation/img8.jpg",
+            "DATs_To/DATs_To002/Documentation/img9.jpg",
+            "DATs_To/DATs_To002/Documentation/img10.jpg",
+            "DATs_To/DATs_To002/Documentation/img11.jpg",
+            "DATs_To/DATs_To002/Documentation/img12.jpg",
+            "DATs_To/DATs_To002/Documentation/img13.jpg",
+            "DATs_To/DATs_To002/Documentation/img14.jpg",
+            "DATs_To/DATs_To002/Documentation/img15.jpg",
+            "DATs_To/DATs_To002/Documentation/img16.jpg",
+            "DATs_To/DATs_To002/Documentation/img17.jpg",
+            "DATs_To/DATs_To002/Documentation/img18.jpg",
+            "DATs_To/DATs_To002/Documentation/img19.jpg",
+            "DATs_To/DATs_To002/Documentation/img20.jpg",
+            "DATs_To/DATs_To002/Documentation/img21.jpg",
+            "DATs_To/DATs_To002/Documentation/img22.jpg",
+            "DATs_To/DATs_To002/Documentation/img23.jpg",
+            "DATs_To/DATs_To002/Documentation/img24.jpg"
+        ]
     }
 };
 
