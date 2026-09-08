@@ -899,6 +899,7 @@ if (currentTab === "HOME") {
 
                     <div class="sub-prog-list">
                         <span class="sub-prog-link" onclick="viewDocumentation('dats_to001')">DATs_To001 — Visual Talks</span>
+                        <span class="sub-prog-link" onclick="viewDocumentation('dats_to002')">DATs_To002 — Touchdesigner Workshop</span>
                     </div>
                 </div>
             </div>
