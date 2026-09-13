@@ -24,13 +24,13 @@ const GOOGLE_SHEET_CSV_URL = GOOGLE_SHEET_PUBLISHED_URL.replace("/pubhtml", "/pu
 
 // Fallback jika Google Sheet gagal terbaca
 let EVENT_DATA = {
-    title: "COMING SOON",
+    title: "NO SIGNAL",
     flyerImage: "dats.png",
     description: "DATSPACE.CLUB",
     details: [
-        "// SOON",
-        "// SOON",
-        "// SOON"
+        "// OFFLINE MODE",
+        "// STAND BY",
+        "// RECALIBRATING FREQUENCIES"
     ],
     footerNote: "DAT SPACE operates in <br> irregular frequencies.",
     registrationLink: "https:datspace.club",
