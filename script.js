@@ -739,7 +739,7 @@ if (currentTab === "HOME") {
         </div>
         `;
     }
-        if (currentTab === "EVENT") {
+        if (currentTab === "INFO") {
         showTitle = false;
         content.classList.add("content-event");
 
