@@ -3,40 +3,97 @@
 <head>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
-    body{font-family:sans-serif;text-align:center;padding:2em}
-    label{display:inline-block;padding:1em 2em;background:#111;color:#fff;border-radius:12px;font-size:1.2em}
-    input{display:none}
+    body{font-family:sans-serif;background:#111;color:#eee;margin:0;padding:1em}
+    video{width:100%;max-width:480px;background:#000;border-radius:10px}
+    button{padding:.8em 1.4em;font-size:1em;border:0;border-radius:10px;margin:.3em}
+    pre{background:#000;padding:.6em;border-radius:8px;height:9em;overflow:auto;font-size:.8em}
   </style>
 </head>
 <body>
-  <h2>Ambil Fotomu</h2>
-  <label>📷 Buka Kamera
-    <input type="file" id="f" accept="image/*" capture="user">
-  </label>
-  <p id="s"></p>
+  <h2>Tester Video Stream</h2>
+  <label><input type="checkbox" id="cam"> Kirim kamera juga (butuh HTTPS atau localhost)</label><br>
+  <button id="go">▶ Sambung</button>
+  <button id="stop">■ Putus</button>
+
+  <h3>⬇ Diterima dari TouchDesigner <span id="res"></span></h3>
+  <video id="rx" autoplay playsinline muted controls></video>
+
+  <h3>⬆ Dikirim ke TouchDesigner</h3>
+  <video id="tx" autoplay playsinline muted></video>
+
+  <h3>Log</h3>
+  <pre id="log"></pre>
+
   <script>
-    const MAX = 1280;
-    document.getElementById('f').onchange = async e => {
-      const s = document.getElementById('s');
-      const file = e.target.files[0];
-      if (!file) return;
-      s.textContent = 'Mengirim...';
-      try {
-        const img = new Image();
-        img.src = URL.createObjectURL(file);
-        await img.decode();
-        const k = Math.min(1, MAX / Math.max(img.naturalWidth, img.naturalHeight));
-        const c = document.createElement('canvas');
-        c.width = img.naturalWidth * k;
-        c.height = img.naturalHeight * k;
-        c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
-        const blob = await new Promise(r => c.toBlob(r, 'image/jpeg', 0.85));
-        const r = await fetch('/upload', {method: 'POST', body: blob});
-        s.textContent = r.ok ? 'Terkirim ✔ Lihat layar!' : 'Gagal, coba lagi';
-      } catch (err) {
-        s.textContent = 'Gagal, coba lagi';
-      }
+    const $ = id => document.getElementById(id);
+    const log = t => {
+      const l = $('log');
+      l.textContent += new Date().toLocaleTimeString() + '  ' + t + '\n';
+      l.scrollTop = l.scrollHeight;
     };
+    let pc, ws, cam;
+
+    $('rx').onresize = () => $('res').textContent = $('rx').videoWidth + '×' + $('rx').videoHeight;
+
+    function hangup() {
+      if (pc) pc.close();
+      if (ws) ws.close();
+      if (cam) cam.getTracks().forEach(t => t.stop());
+      pc = ws = cam = null;
+      $('rx').srcObject = null;
+      $('tx').srcObject = null;
+    }
+
+    async function connect() {
+      hangup();
+      pc = new RTCPeerConnection({iceServers: [{urls: 'stun:stun.l.google.com:19302'}]});
+
+      if ($('cam').checked) {
+        try {
+          cam = await navigator.mediaDevices.getUserMedia({
+            video: {width: {ideal: 1280}, height: {ideal: 720}}, audio: false});
+        } catch (e) { log('kamera gagal: ' + e.message); return; }
+        $('tx').srcObject = cam;
+        cam.getVideoTracks().forEach(t => pc.addTrack(t, cam));      // kirim + terima
+      } else {
+        pc.addTransceiver('video', {direction: 'recvonly'});          // terima saja
+      }
+
+      pc.ontrack = e => {
+        log('track diterima: ' + e.track.kind);
+        $('rx').srcObject = e.streams[0] || new MediaStream([e.track]);
+        $('rx').play().catch(() => {});
+      };
+      pc.onicecandidate = e => e.candidate && ws.send(JSON.stringify({
+        type: 'candidate', candidate: e.candidate.candidate,
+        sdpMLineIndex: e.candidate.sdpMLineIndex, sdpMid: e.candidate.sdpMid}));
+      pc.onconnectionstatechange = () => log('connection: ' + pc.connectionState);
+      pc.oniceconnectionstatechange = () => log('ice: ' + pc.iceConnectionState);
+
+      ws = new WebSocket((location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host + '/ws');
+      ws.onerror = () => log('WebSocket gagal');
+      ws.onclose = () => log('WebSocket tertutup');
+      ws.onopen = async () => {
+        log('WebSocket terhubung');
+        const offer = await pc.createOffer();
+        await pc.setLocalDescription(offer);
+        ws.send(JSON.stringify({type: 'offer', sdp: offer.sdp}));
+        log('offer dikirim');
+      };
+      ws.onmessage = async e => {
+        const m = JSON.parse(e.data);
+        if (m.type === 'answer') {
+          await pc.setRemoteDescription({type: 'answer', sdp: m.sdp});
+          log('answer diterima');
+        }
+        if (m.type === 'candidate') {
+          await pc.addIceCandidate({candidate: m.candidate, sdpMLineIndex: m.sdpMLineIndex, sdpMid: m.sdpMid});
+        }
+      };
+    }
+
+    $('go').onclick = connect;
+    $('stop').onclick = () => { hangup(); log('diputus'); };
   </script>
 </body>
 </html>
