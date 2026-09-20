@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body{font-family:sans-serif;text-align:center;padding:2em}
+    label{display:inline-block;padding:1em 2em;background:#111;color:#fff;border-radius:12px;font-size:1.2em}
+    input{display:none}
+  </style>
+</head>
+<body>
+  <h2>Ambil Fotomu</h2>
+  <label>📷 Buka Kamera
+    <input type="file" id="f" accept="image/*" capture="user">
+  </label>
+  <p id="s"></p>
+  <script>
+    const MAX = 1280;
+    document.getElementById('f').onchange = async e => {
+      const s = document.getElementById('s');
+      const file = e.target.files[0];
+      if (!file) return;
+      s.textContent = 'Mengirim...';
+      try {
+        const img = new Image();
+        img.src = URL.createObjectURL(file);
+        await img.decode();
+        const k = Math.min(1, MAX / Math.max(img.naturalWidth, img.naturalHeight));
+        const c = document.createElement('canvas');
+        c.width = img.naturalWidth * k;
+        c.height = img.naturalHeight * k;
+        c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+        const blob = await new Promise(r => c.toBlob(r, 'image/jpeg', 0.85));
+        const r = await fetch('/upload', {method: 'POST', body: blob});
+        s.textContent = r.ok ? 'Terkirim ✔ Lihat layar!' : 'Gagal, coba lagi';
+      } catch (err) {
+        s.textContent = 'Gagal, coba lagi';
+      }
+    };
+  </script>
+</body>
+</html>
