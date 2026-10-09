@@ -685,46 +685,16 @@ const DOCUMENTATION_ARCHIVE = {
                 "DATs_Out/DATs_Out3/Documentation/img56.jpg"
             ]
     },
-   "dats_out4": {
+
+    "dats_out4": {
         parentProgram: "DATS_OUT",
         title: "DATs_Out4 — BYOB 220826",
         date: "August 22, 2026",
         location: "Imadji Coffee at The Keranjang Bali, Denpasar",
         manifesto: "DATs_Out4 was born from the collaboration with Imadji Coffee, desire to step outside the safe room and ignite the city in its rawest form. <br><br>For one night, an outdoor space in Denpasar was hacked into a projection field, no stage, no hierarchy. <br><br>Everyone arrived carrying their own projector, colliding visuals, light, and ideas directly into space. The format adopted the BYOB (Bring Your Own Beamer) concept a collective exhibition practice initiated by Rafaël Rozendaal where large scale exhibitions can emerge from the courage to share tools and territory.",
-        media: [
-			"DATs_Out/DATs_Out4/documentation/1.webp",
-			"DATs_Out/DATs_Out4/documentation/2.webp",
-			"DATs_Out/DATs_Out4/documentation/3.webp",
-			"DATs_Out/DATs_Out4/documentation/4.webp",
-			"DATs_Out/DATs_Out4/documentation/5.webp",
-			"DATs_Out/DATs_Out4/documentation/6.webp",
-			"DATs_Out/DATs_Out4/documentation/7.webp",
-			"DATs_Out/DATs_Out4/documentation/8.webp",
-			"DATs_Out/DATs_Out4/documentation/9.webp",
-			"DATs_Out/DATs_Out4/documentation/10.webp",
-			"DATs_Out/DATs_Out4/documentation/11.webp",
-			"DATs_Out/DATs_Out4/documentation/12.webp",
-			"DATs_Out/DATs_Out4/documentation/13.webp",
-			"DATs_Out/DATs_Out4/documentation/14.webp",
-			"DATs_Out/DATs_Out4/documentation/15.webp",
-			"DATs_Out/DATs_Out4/documentation/16.webp",
-			"DATs_Out/DATs_Out4/documentation/17.webp",
-			"DATs_Out/DATs_Out4/documentation/18.webp",
-			"DATs_Out/DATs_Out4/documentation/19.webp",
-			"DATs_Out/DATs_Out4/documentation/20.webp",
-			"DATs_Out/DATs_Out4/documentation/21.webp",
-			"DATs_Out/DATs_Out4/documentation/22.webp",
-			"DATs_Out/DATs_Out4/documentation/23.webp",
-			"DATs_Out/DATs_Out4/documentation/24.webp",
-			"DATs_Out/DATs_Out4/documentation/25.webp",
-			"DATs_Out/DATs_Out4/documentation/26.webp",
-			"DATs_Out/DATs_Out4/documentation/27.webp",
-			"DATs_Out/DATs_Out4/documentation/28.webp",
-			"DATs_Out/DATs_Out4/documentation/29.webp",
-			"DATs_Out/DATs_Out4/documentation/30.webp",
-			"DATs_Out/DATs_Out4/documentation/31.webp"
-        ] 
+        media: Array.from({ length: 31 }, (_, i) => `DATs_Out/DATs_Out4/documentation/${i + 1}.webp`)
     },
+
     "dats_to001": {
         parentProgram: "DATS_TO",
         title: "DATs_To001 — Visual Talks <br>040426",
@@ -1240,11 +1210,32 @@ if (currentTab === "HOME") {
         renderDocumentationPage(currentActiveDocId);
     }
 
-    /* Judul jendela (title bar tema retro), contoh: C:\DATS\EVENT */
-    content.dataset.title = "C:\\DATS\\" + (currentActiveDocId ? currentActiveDocId.toUpperCase() : currentTab);
+    /* Judul jendela (title bar tema retro) */
+    content.dataset.title = windowPath();
 
     updateProgramBack();
     playDitherTransition();
+}
+
+/* Jalur folder untuk title bar, contoh:
+   C:\DATS\EVENT
+   C:\DATS\PROGRAM\DATS_OUT
+   C:\DATS\PROGRAM\DATS_OUT\DATS_OUT1
+   C:\DATS\INTERNET-ART\COLLABORATION */
+function windowPath() {
+    const parts = ["C:", "DATS"];
+
+    if (currentActiveDocId && DOCUMENTATION_ARCHIVE[currentActiveDocId]) {
+        parts.push("PROGRAM", DOCUMENTATION_ARCHIVE[currentActiveDocId].parentProgram, currentActiveDocId.toUpperCase());
+    } else if (PROGRAM_DETAIL_TABS.includes(currentTab)) {
+        parts.push("PROGRAM", currentTab);
+    } else if (INTERNET_ART_DETAIL_TABS.includes(currentTab)) {
+        parts.push("INTERNET-ART", currentTab);
+    } else {
+        parts.push(currentTab);
+    }
+
+    return parts.join("\\");
 }
 
 /* Putar ulang animasi dither (CSS: dither-in) setiap konten berganti */
