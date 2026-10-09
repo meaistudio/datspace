@@ -3,15 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    
-    <!-- Judul Halaman -->
     <title>DATSPACE</title>
-    
-    <!-- Deskripsi untuk Google Search -->
-    <meta name="description" content="DATs (Data Space) is a creative exploration space under Meai Studio, born from the need for a playground and a testing ground. ">
-    
-    <link rel="icon" type="image/png" href="/dats.png">
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style-retro.css">
 </head>
 <body>
     <canvas id="canvas"></canvas>
@@ -26,14 +19,16 @@
         <span class="tab">CONTACT</span>
     </div>
 
-    <div id="content" class="content"></div>
-<!-- Lightbox Overlay -->
-<div class="lightbox" id="lightbox" onclick="closeLightbox()">
-    <span class="lightbox-nav lightbox-prev" onclick="prevLightboxImage(event)">&#10094;</span>
-    <img id="lightbox-img" src="" alt="Documentation" onclick="event.stopPropagation()">
-    <span class="lightbox-nav lightbox-next" onclick="nextLightboxImage(event)">&#10095;</span>
-</div>
+    <div id="programBack" class="back" hidden>// BACK</div>
 
-<script src="script.js"></script>
+    <div id="content" class="content"></div>
+
+    <div class="lightbox" id="lightbox" onclick="closeLightbox()">
+        <span class="lightbox-nav lightbox-prev" onclick="prevLightboxImage(event)">&#10094;</span>
+        <img id="lightbox-img" src="" alt="Documentation" onclick="event.stopPropagation()">
+        <span class="lightbox-nav lightbox-next" onclick="nextLightboxImage(event)">&#10095;</span>
+    </div>
+
+    <script src="script.js"></script>
 </body>
 </html>
