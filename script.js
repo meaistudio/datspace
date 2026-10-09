@@ -1057,7 +1057,7 @@ if (currentTab === "HOME") {
                     <a href="${EVENT_DATA.ticketLink}" target="_blank" class="clickable" style="font-weight:bold;">
                         // TICKET HERE
                     </a>
-                    <br>
+                    <br><br>
                     <a href="${EVENT_DATA.registrationLink}" target="_blank" class="clickable" style="font-weight:bold;">
                         // REGISTER HERE
                     </a>
