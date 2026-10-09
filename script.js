@@ -471,9 +471,16 @@ function collectStripButtons() {
     ];
 }
 
+/* Cadangan: kalau file gambar tombol (buttons/*.svg) gagal dimuat,
+   ganti dengan tombol yang dibuat script dari teks alt-nya */
+function fallbackButtonSrc(i) {
+    const btn = STRIP_BUTTONS[i] || {};
+    return makeProjectButton({ title: btn.alt || "DATSPACE", artist: "" }, "DATSPACE.CLUB");
+}
+
 function buttonHTML(btn, i) {
     const alt = escapeXML(btn.alt);
-    const img = `<img src="${btn.src}" width="88" height="31" alt="${alt}">`;
+    const img = `<img src="${btn.src}" width="88" height="31" alt="${alt}" onerror="this.onerror=null;this.src=fallbackButtonSrc(${i})">`;
 
     if (btn.href) {
         const target = isExternalLink(btn.href) ? ' target="_blank" rel="noopener"' : "";
