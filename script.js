@@ -685,7 +685,46 @@ const DOCUMENTATION_ARCHIVE = {
                 "DATs_Out/DATs_Out3/Documentation/img56.jpg"
             ]
     },
-
+   "dats_out4": {
+        parentProgram: "DATS_OUT",
+        title: "DATs_Out4 — BYOB 220826",
+        date: "August 22, 2026",
+        location: "Imadji Coffee at The Keranjang Bali, Denpasar",
+        manifesto: "DATs_Out4 was born from the colloaboration with Imadji Coffee, desire to step outside the safe room and ignite the city in its rawest form. <br><br>For one night, an outdoor space in Denpasar was hacked into a projection field, no stage, no hierarchy. <br><br>Everyone arrived carrying their own projector, colliding visuals, light, and ideas directly into space. The format adopted the BYOB (Bring Your Own Beamer) concept a collective exhibition practice initiated by Rafaël Rozendaal where large scale exhibitions can emerge from the courage to share tools and territory.",
+        media: [
+            "DATs_Out/DATs_Out4/DOCUMENTATION/1.webp",
+            "DATs_Out/DATs_Out4/DOCUMENTATION/2.webp",
+            "DATs_Out/DATs_Out4/DOCUMENTATION/3.webp",
+            "DATs_Out/DATs_Out4/DOCUMENTATION/4.webp",
+            "DATs_Out/DATs_Out4/DOCUMENTATION/5.webp",
+            "DATs_Out/DATs_Out4/DOCUMENTATION/6.webp",
+            "DATs_Out/DATs_Out4/DOCUMENTATION/7.webp",
+            "DATs_Out/DATs_Out4/DOCUMENTATION/8.webp",
+            "DATs_Out/DATs_Out4/DOCUMENTATION/9.webp",
+            "DATs_Out/DATs_Out4/DOCUMENTATION/10.webp",
+            "DATs_Out/DATs_Out4/DOCUMENTATION/11.webp",
+            "DATs_Out/DATs_Out4/DOCUMENTATION/12.webp",
+            "DATs_Out/DATs_Out4/DOCUMENTATION/13.webp",
+            "DATs_Out/DATs_Out4/DOCUMENTATION/14.webp",
+            "DATs_Out/DATs_Out4/DOCUMENTATION/15.webp",
+            "DATs_Out/DATs_Out4/DOCUMENTATION/16.webp",
+            "DATs_Out/DATs_Out4/DOCUMENTATION/17.webp",
+            "DATs_Out/DATs_Out4/DOCUMENTATION/18.webp",
+            "DATs_Out/DATs_Out4/DOCUMENTATION/19.webp",
+            "DATs_Out/DATs_Out4/DOCUMENTATION/20.webp",
+            "DATs_Out/DATs_Out4/DOCUMENTATION/21.webp",
+            "DATs_Out/DATs_Out4/DOCUMENTATION/22.webp",
+            "DATs_Out/DATs_Out4/DOCUMENTATION/23.webp",
+            "DATs_Out/DATs_Out4/DOCUMENTATION/24.webp",
+            "DATs_Out/DATs_Out4/DOCUMENTATION/25.webp",
+            "DATs_Out/DATs_Out4/DOCUMENTATION/26.webp",
+            "DATs_Out/DATs_Out4/DOCUMENTATION/27.webp",
+            "DATs_Out/DATs_Out4/DOCUMENTATION/28.webp",
+            "DATs_Out/DATs_Out4/DOCUMENTATION/29.webp",
+            "DATs_Out/DATs_Out4/DOCUMENTATION/30.webp",
+            "DATs_Out/DATs_Out4/DOCUMENTATION/31.webp"
+        ] 
+    },
     "dats_to001": {
         parentProgram: "DATS_TO",
         title: "DATs_To001 — Visual Talks <br>040426",
@@ -1142,6 +1181,7 @@ if (currentTab === "HOME") {
                         <span class="sub-prog-link" onclick="viewDocumentation('dats_out1')">DATs_Out1 — BYOB 140226</span>
                         <span class="sub-prog-link" onclick="viewDocumentation('dats_out2')">DATs_Out2 — TU'TUR'ANG'RING' 060626</span>
                         <span class="sub-prog-link" onclick="viewDocumentation('dats_out3')">DATs_Out3 — The Voyager 130626</span>
+                        <span class="sub-prog-link" onclick="viewDocumentation('dats_out4')">DATs_Out4 — BYOB 220826</span>
                     </div>
                 </div>
             </div>
