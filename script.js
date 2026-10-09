@@ -291,6 +291,200 @@ const COLLABORATION_PROJECTS = [
         desc: "Collect the ice and bean as much as you can !" 
     }
 ];
+/* ======================================================== */
+/* 88x31 BUTTONS                                            */
+/* ======================================================== */
+/* Tombol untuk event program (DOCUMENTATION_ARCHIVE) dan karya
+   (ARCHIVE_PROJECTS, COLLABORATION_PROJECTS) DIBUAT OTOMATIS.
+   Cukup tambah data seperti biasa → tombolnya muncul sendiri di strip.
+
+   Mau pakai gambar tombol buatan sendiri untuk satu entri?
+   Tambahkan  button: "buttons/nama-file.svg"  di datanya,
+   atau daftarkan di CUSTOM_BUTTONS di bawah.
+
+   Tombol tetap (identitas, slogan, kontak):
+   go: tab tujuan | href: link luar */
+const BUTTON_WALL_START = [
+    { src: "buttons/datspace.svg",         alt: "DATSPACE",                  go: "HOME" },
+    { src: "buttons/dats-glitch.svg",      alt: "DATs",                      go: "HOME" },
+    { src: "buttons/dats-in.svg",          alt: "DATs_In",                   go: "DATS_IN" },
+    { src: "buttons/dats-out.svg",         alt: "DATs_Out",                  go: "DATS_OUT" },
+    { src: "buttons/dats-to.svg",          alt: "DATs_To",                   go: "DATS_TO" }
+];
+
+const BUTTON_WALL_INTERNET_ART = { src: "buttons/internet-art.svg", alt: "INTERNET ART ARCHIVE", go: "INTERNET-ART" };
+
+const BUTTON_WALL_END = [
+    { src: "buttons/meai-studio.svg",      alt: "MEAI STUDIO",               go: "LOCATION" },
+    { src: "buttons/denpasar-bali.svg",    alt: "DENPASAR BALI",             go: "LOCATION" },
+    { src: "buttons/noise-is-data.svg",    alt: "NOISE IS DATA" },
+    { src: "buttons/trial-error.svg",      alt: "TRIAL & ERROR" },
+    { src: "buttons/irregular-freq.svg",   alt: "IRREGULAR FREQUENCIES" },
+    { src: "buttons/no-stage.svg",         alt: "NO STAGE NO HIERARCHY" },
+    { src: "buttons/best-viewed-1bit.svg", alt: "BEST VIEWED IN 1-BIT MODE" },
+    { src: "buttons/ig-dats.svg",          alt: "@_____dats",                href: "https://instagram.com/_____dats" },
+    { src: "buttons/mail-dats.svg",        alt: "info@datspace.club",        href: "mailto:info@datspace.club" }
+];
+
+/* Gambar tombol buatan tangan: kunci = id dokumentasi atau judul karya */
+const CUSTOM_BUTTONS = {
+    "dats_out1": "buttons/byob.svg",
+    "dats_out2": "buttons/tuturangring.svg",
+    "dats_out3": "buttons/the-dome.svg",
+    "FUNTIME EP": "buttons/dats-x-funtime.svg",
+    "IMADJI CUP COLLECTOR": "buttons/imadji-x-dats.svg"
+};
+
+/* ---------- Generator SVG 88x31 (1-bit + dither) ---------- */
+function cleanText(html) {
+    return String(html || "")
+        .replace(/<br\s*\/?>/gi, " ")
+        .replace(/<[^>]*>/g, "")
+        .replace(/\s+/g, " ")
+        .trim();
+}
+
+function escapeXML(text) {
+    return String(text)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&apos;");
+}
+
+function hashString(text) {
+    let h = 0;
+    for (let i = 0; i < text.length; i++) h = (h * 31 + text.charCodeAt(i)) | 0;
+    return Math.abs(h);
+}
+
+/* Teks dipadatkan agar selalu muat di lebar tertentu */
+function svgText(text, { x, y, size, max, perChar, fill = "#fff", bold = false, anchor = "start" }) {
+    const width = Math.min(max, Math.max(4, text.length * perChar));
+    return `<text x="${x}" y="${y}" font-size="${size}"${bold ? ' font-weight="bold"' : ""} fill="${fill}" text-anchor="${anchor}" lengthAdjust="spacingAndGlyphs" textLength="${width}">${escapeXML(text)}</text>`;
+}
+
+const SVG_BLINK = '<animate attributeName="opacity" values="1;0" dur="1s" calcMode="discrete" repeatCount="indefinite"/>';
+
+function svgButton(body) {
+    const svg =
+        `<svg xmlns="http://www.w3.org/2000/svg" width="88" height="31" viewBox="0 0 88 31" shape-rendering="crispEdges" font-family="Consolas, 'Courier New', monospace">` +
+        `<defs><pattern id="d50" width="2" height="2" patternUnits="userSpaceOnUse"><rect width="1" height="1" fill="#fff"/><rect x="1" y="1" width="1" height="1" fill="#fff"/></pattern>` +
+        `<pattern id="d25" width="2" height="2" patternUnits="userSpaceOnUse"><rect width="1" height="1" fill="#fff"/></pattern></defs>` +
+        `<rect width="88" height="31" fill="#000"/>${body}` +
+        `<rect x="0.5" y="0.5" width="87" height="30" fill="none" stroke="#fff"/></svg>`;
+    return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg).replace(/'/g, "%27");
+}
+
+/* Event program: [IN/OUT/TO] + kode event + judul */
+function makeDocButton(id, doc) {
+    const title = cleanText(doc.title);
+    const parts = title.split(/\s+[—–-]\s+/);
+    const code = parts[0] || id.toUpperCase();
+    const rest = (parts.slice(1).join(" ") || doc.date || "").toUpperCase().slice(0, 26);
+    const label = String(doc.parentProgram || "").replace("DATS_", "") || "DATs";
+
+    const accent = hashString(id) % 2 === 0
+        ? `<rect x="80" y="4" width="4" height="7" fill="#fff">${SVG_BLINK}</rect>`
+        : `<rect x="2" y="2" width="2" height="27" fill="url(#d50)"><animate attributeName="x" from="2" to="84" dur="2.4s" repeatCount="indefinite"/></rect>`;
+
+    return svgButton(
+        `<rect x="2" y="2" width="26" height="27" fill="#fff"/>` +
+        svgText(label, { x: 15, y: 19.5, size: 10, max: 22, perChar: 7, fill: "#000", bold: true, anchor: "middle" }) +
+        svgText(code, { x: 32, y: 12, size: 9, max: 46, perChar: 5.4, bold: true }) +
+        `<rect x="32" y="15" width="52" height="1" fill="url(#d50)"/>` +
+        svgText(rest, { x: 32, y: 25, size: 6, max: 52, perChar: 3.6 }) +
+        accent
+    );
+}
+
+/* Karya Internet Art: "BY ARTIST" + judul di kotak putih */
+function makeProjectButton(project, header) {
+    const title = cleanText(project.title).toUpperCase();
+    const top = (header || "BY " + cleanText(project.artist)).toUpperCase().slice(0, 26);
+    const variant = hashString(title) % 3;
+
+    let box;
+    if (title.length > 15) {
+        /* Judul panjang: teks berjalan di dalam kotak */
+        box =
+            `<clipPath id="c"><rect x="4" y="14" width="80" height="13"/></clipPath>` +
+            `<rect x="4" y="14" width="80" height="13" fill="#fff"/>` +
+            `<g clip-path="url(#c)"><text y="24" font-size="9" font-weight="bold" fill="#000">${escapeXML(title + "  *  " + title)}` +
+            `<animate attributeName="x" from="6" to="${-(title.length + 5) * 5.5 + 6}" dur="${Math.max(4, title.length * 0.35)}s" repeatCount="indefinite"/></text></g>`;
+    } else if (variant === 1) {
+        /* Latar dither, kotak hitam, teks putih */
+        box =
+            `<rect x="2" y="14" width="84" height="13" fill="url(#d50)"/>` +
+            `<rect x="8" y="15" width="72" height="11" fill="#000"/>` +
+            svgText(title, { x: 44, y: 23.5, size: 9, max: 68, perChar: 5.6, bold: true, anchor: "middle" });
+    } else {
+        box =
+            `<rect x="4" y="14" width="80" height="13" fill="#fff"/>` +
+            svgText(title, { x: 44, y: 24, size: 9, max: 74, perChar: 5.6, fill: "#000", bold: true, anchor: "middle" });
+    }
+
+    const accent = variant === 2
+        ? `<rect x="2" y="14" width="2" height="13" fill="url(#d50)">${SVG_BLINK}</rect><rect x="84" y="14" width="2" height="13" fill="url(#d50)">${SVG_BLINK}</rect>`
+        : "";
+
+    return svgButton(
+        svgText(top, { x: 44, y: 10.5, size: 6, max: 78, perChar: 3.6, anchor: "middle" }) +
+        box + accent
+    );
+}
+
+function isExternalLink(href) {
+    return /^(https?:|mailto:)/i.test(href) && !/datspace\.club/i.test(href);
+}
+
+/* Gabungan semua tombol untuk strip (dihitung saat strip dibuat) */
+let STRIP_BUTTONS = [];
+
+function collectStripButtons() {
+    const docButtons = Object.entries(DOCUMENTATION_ARCHIVE).map(([id, doc]) => ({
+        src: doc.button || CUSTOM_BUTTONS[id] || makeDocButton(id, doc),
+        alt: cleanText(doc.title),
+        doc: id
+    }));
+
+    const projectButtons = ARCHIVE_PROJECTS.map(project => ({
+        src: project.button || CUSTOM_BUTTONS[project.title] || makeProjectButton(project),
+        alt: `${cleanText(project.title)} by ${cleanText(project.artist)}`,
+        href: project.link
+    }));
+
+    const collabButtons = COLLABORATION_PROJECTS.map(project => ({
+        src: project.button || CUSTOM_BUTTONS[project.title] || makeProjectButton(project, "COLLAB * " + cleanText(project.artist)),
+        alt: `${cleanText(project.title)} by ${cleanText(project.artist)}`,
+        href: project.link
+    }));
+
+    return [
+        ...BUTTON_WALL_START,
+        ...docButtons,
+        BUTTON_WALL_INTERNET_ART,
+        ...projectButtons,
+        ...collabButtons,
+        ...BUTTON_WALL_END
+    ];
+}
+
+function buttonHTML(btn, i) {
+    const alt = escapeXML(btn.alt);
+    const img = `<img src="${btn.src}" width="88" height="31" alt="${alt}">`;
+
+    if (btn.href) {
+        const target = isExternalLink(btn.href) ? ' target="_blank" rel="noopener"' : "";
+        return `<a class="btn88" href="${btn.href}"${target} title="${alt}">${img}</a>`;
+    }
+    if (btn.go || btn.doc) {
+        return `<span class="btn88" onclick="openButton(${i})" title="${alt}">${img}</span>`;
+    }
+    return `<span class="btn88 btn88-static" title="${alt}">${img}</span>`;
+}
+
 /* DATABASE DOKUMENTASI UNIVERSAL */
 const DOCUMENTATION_ARCHIVE = {
     "dats_in1": {
@@ -555,6 +749,20 @@ function resizeCanvas() {
 window.addEventListener("resize", resizeCanvas);
 resizeCanvas();
 
+/* Pola dither 2x2 (checker putih-hitam) untuk kotak glitch saat transisi */
+function makeDitherPattern() {
+    const tile = document.createElement("canvas");
+    tile.width = 2;
+    tile.height = 2;
+    const t = tile.getContext("2d");
+    t.fillStyle = "white";
+    t.fillRect(0, 0, 1, 1);
+    t.fillRect(1, 1, 1, 1);
+    return ctx.createPattern(tile, "repeat");
+}
+
+const DITHER_PATTERN = makeDitherPattern();
+
 let dragging = false;
 let glitchFrames = 0;
 let frequency = 300;
@@ -567,6 +775,72 @@ let currentActiveDocId = null;
 const tabs = document.querySelectorAll(".tab");
 const content = document.getElementById("content");
 const internetArtTab = document.getElementById("internetArtTab");
+const programBack = document.getElementById("programBack");
+
+/* Halaman detail yang punya tombol BACK */
+const PROGRAM_DETAIL_TABS = ["DATS_IN", "DATS_OUT", "DATS_TO"];
+const INTERNET_ART_DETAIL_TABS = ["COLLABORATION"];
+
+function isDetailPage() {
+    return !!currentActiveDocId
+        || PROGRAM_DETAIL_TABS.includes(currentTab)
+        || INTERNET_ART_DETAIL_TABS.includes(currentTab);
+}
+
+/* Tombol BACK hanya tampil di halaman detail */
+function updateProgramBack() {
+    const show = isDetailPage();
+    if (programBack) programBack.hidden = !show;
+    document.body.classList.toggle("has-back", show);
+}
+
+/* Satu fungsi kembali, dipakai tombol BACK dan tombol × di jendela */
+function goBack() {
+    if (currentActiveDocId) {
+        returnToSubProgram(DOCUMENTATION_ARCHIVE[currentActiveDocId].parentProgram);
+    } else if (INTERNET_ART_DETAIL_TABS.includes(currentTab)) {
+        switchInternetArtSubTab("INTERNET-ART");
+    } else if (PROGRAM_DETAIL_TABS.includes(currentTab)) {
+        returnToProgram();
+    } else if (currentTab === "HOME") {
+        /* Tutup jendela README → kembali ke tampilan awal HOME */
+        content.className = "content";
+        updateContent();
+        glitchFrames = 10;
+        triggerSound();
+    } else {
+        /* Jendela halaman utama (EVENT, INTERNET ART, PROGRAM) ditutup → ke HOME */
+        const homeTab = [...tabs].find(t => t.innerText.trim() === "HOME");
+        if (homeTab) homeTab.click();
+    }
+}
+
+if (programBack) programBack.addEventListener("click", goBack);
+
+/* Tombol × di title bar jendela (dibuat lewat ::before di CSS tema retro) */
+function isOnWindowClose(e) {
+    const el = e.target;
+    if (el !== content && !el.classList.contains("program-menu")) return false;
+
+    const bar = getComputedStyle(el, "::before");
+    if (!bar.content || bar.content === "none") return false;
+
+    const rect = el.getBoundingClientRect();
+    const x = e.clientX - rect.left - el.clientLeft;
+    const y = e.clientY - rect.top - el.clientTop;
+    const barHeight = parseFloat(bar.height) || 24;
+
+    /* × adalah tombol paling kanan pada title bar (±24px) */
+    return y >= 0 && y <= barHeight && x >= el.clientWidth - 24 && x <= el.clientWidth;
+}
+
+content.addEventListener("click", (e) => {
+    if (isOnWindowClose(e)) goBack();
+});
+
+content.addEventListener("mousemove", (e) => {
+    e.target.style.cursor = isOnWindowClose(e) ? "pointer" : "";
+});
 
 tabs.forEach(tab => { 
     tab.addEventListener("click", () => {
@@ -643,6 +917,7 @@ if (currentTab === "HOME") {
                 
                 // Langsung ubah class dan isi teks tanpa timeout / delay
                 content.className = "content home-desc";
+                playDitherTransition();
                 content.innerHTML = `
                 DATs (Data Space) is a creative exploration space under Meai Studio, 
                 born from the need for a playground and a testing ground. 
@@ -726,7 +1001,6 @@ if (currentTab === "HOME") {
         <div class="container">
             <div class="title-row">
                 <div class="title">INTERNET ART COLLABORATION ARCHIVE</div>
-                <div class="sub-prog-back" onclick="switchInternetArtSubTab('INTERNET-ART')">// BACK</div>
             </div>
 
             <div class="description-text">
@@ -739,6 +1013,7 @@ if (currentTab === "HOME") {
         </div>
         `;
     }
+
         if (currentTab === "EVENT") {
         showTitle = false;
         content.classList.add("content-event");
@@ -804,7 +1079,6 @@ if (currentTab === "HOME") {
 
         content.innerHTML = `
             <div class="sub-prog-wrap">
-                <div class="sub-prog-back" onclick="returnToProgram()">// BACK</div>
 
                 <div class="sub-prog-hero">
                     <h1 class="sub-prog-title">DATs_In</h1>
@@ -838,7 +1112,6 @@ if (currentTab === "HOME") {
 
         content.innerHTML = `
             <div class="sub-prog-wrap">
-                <div class="sub-prog-back" onclick="returnToProgram()">// BACK</div>
 
                 <div class="sub-prog-hero">
                     <h1 class="sub-prog-title">DATs_Out</h1>
@@ -874,7 +1147,6 @@ if (currentTab === "HOME") {
 
         content.innerHTML = `
             <div class="sub-prog-wrap">
-                <div class="sub-prog-back" onclick="returnToProgram()">// BACK</div>
 
                 <div class="sub-prog-hero">
                     <h1 class="sub-prog-title">DATs_To</h1>
@@ -920,6 +1192,19 @@ if (currentTab === "HOME") {
     if (currentActiveDocId && DOCUMENTATION_ARCHIVE[currentActiveDocId]) {
         renderDocumentationPage(currentActiveDocId);
     }
+
+    /* Judul jendela (title bar tema retro), contoh: C:\DATS\EVENT */
+    content.dataset.title = "C:\\DATS\\" + (currentActiveDocId ? currentActiveDocId.toUpperCase() : currentTab);
+
+    updateProgramBack();
+    playDitherTransition();
+}
+
+/* Putar ulang animasi dither (CSS: dither-in) setiap konten berganti */
+function playDitherTransition() {
+    content.style.animation = "none";
+    void content.offsetWidth;
+    content.style.animation = "";
 }
 
 /* ======================================================== */
@@ -935,6 +1220,51 @@ function switchSubProgram(subState) {
 
     glitchFrames = 15;
     triggerSound();
+}
+
+/* Navigasi dari tombol 88x31 */
+function setActiveTab(name) {
+    tabs.forEach(t => t.classList.toggle("active", t.innerText.trim() === name));
+    if (internetArtTab) internetArtTab.classList.toggle("active", name === "INTERNET-ART");
+}
+
+function openButton(i) {
+    const btn = STRIP_BUTTONS[i];
+    if (!btn) return;
+
+    const topTab = [...tabs].find(t => t.innerText.trim() === btn.go);
+    if (topTab) {
+        topTab.click();
+        return;
+    }
+
+    if (btn.doc) {
+        setActiveTab("PROGRAM");
+        currentTab = DOCUMENTATION_ARCHIVE[btn.doc].parentProgram;
+        viewDocumentation(btn.doc);
+        return;
+    }
+
+    if (["DATS_IN", "DATS_OUT", "DATS_TO"].includes(btn.go)) {
+        setActiveTab("PROGRAM");
+        switchSubProgram(btn.go);
+    } else {
+        setActiveTab("INTERNET-ART");
+        switchInternetArtSubTab(btn.go);
+    }
+}
+
+/* Strip tombol 88x31 berjalan di bawah layar (tampil di semua halaman) */
+function buildButtonStrip() {
+    STRIP_BUTTONS = collectStripButtons();
+    const items = STRIP_BUTTONS.map(buttonHTML).join("");
+    const strip = document.createElement("div");
+    strip.className = "btn-strip";
+    /* Isi digandakan supaya loop marquee mulus */
+    strip.innerHTML = `<div class="btn-strip-track">${items}${items}</div>`;
+    /* Kecepatan tetap konstan walau jumlah tombol bertambah */
+    strip.firstElementChild.style.animationDuration = (STRIP_BUTTONS.length * 2.6) + "s";
+    document.body.appendChild(strip);
 }
 
 function returnToProgram() {
@@ -988,7 +1318,6 @@ function renderDocumentationPage(id) {
 
     content.innerHTML = `
         <div class="sub-prog-wrap">
-            <div class="sub-prog-back" onclick="returnToSubProgram('${docData.parentProgram}')">// BACK</div>
             
             <div class="doc-header">
                 <h1 class="sub-prog-title">${docData.title}</h1>
@@ -1094,7 +1423,8 @@ function draw() {
 
     if (glitchFrames > 0) {
         for (let i = 0; i < 120; i++) {
-            ctx.fillStyle = Math.random() > 0.5 ? "white" : "black";
+            const roll = Math.random();
+            ctx.fillStyle = roll < 0.4 ? DITHER_PATTERN : (roll > 0.7 ? "white" : "black");
 
             ctx.fillRect(
                 Math.random() * window.innerWidth,
@@ -1244,6 +1574,7 @@ document.addEventListener("touchend", (e) => {
 }, { passive: false });
 
 document.addEventListener("DOMContentLoaded", () => {
+    buildButtonStrip();
     fetchEventDataFromSheet();
     updateContent();
 });
