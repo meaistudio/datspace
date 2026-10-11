@@ -281,6 +281,12 @@ const ARCHIVE_PROJECTS = [
         artist: "DATs", 
         link: "/internet-art/cursor/", 
         desc: "Interactive web piece. A screen full of glowing arrows turns to follow your cursor wherever it goes." 
+    },
+    {   
+        title: "POWER SOCKET", 
+        artist: "DATs", 
+        link: "/internet-art/powersocket/", 
+        desc: "An endless swarm of CMY power sockets drifts through black space, reshaping into helixes, tunnels and arches while the camera glides around them." 
     }
 ];
 
