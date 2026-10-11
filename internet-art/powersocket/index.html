@@ -641,6 +641,7 @@
   const hideMenu = () => menu.classList.add('hide');
 
   function clearTarget() {
+    if (G.dock) G.dock.u.children[0].scale.setScalar(G.dock.u.userData.s);
     if (G.target) { G.target.userData.forced = false; cage.parent && cage.parent.remove(cage); ring.parent && ring.parent.remove(ring); }
     G.target = null; G.dock = null;
   }
@@ -728,34 +729,60 @@
   const proj = new THREE.Vector3();
 
   const dockPos = new THREE.Vector3(), nrm = new THREE.Vector3();
+  // plug-in animation: line up -> push in -> click -> buzz -> pull out
+  const easeIn = t => t * t * t, easeOut = t => 1 - Math.pow(1 - t, 3);
+  const ALIGN = 0.4, PUSH = 0.28, SEAT = 0.75, PULL = 0.3;
   function updateDock(dt) {
-    const D = G.dock, u = D.u, d = u.userData;
+    const D = G.dock, u = D.u, d = u.userData, sock = u.children[0];
     D.t += dt;
     nrm.set(0, 0, 1).applyQuaternion(u.quaternion);
     dockPos.copy(u.position).addScaledVector(nrm, d.s / 2);
-    const k = D.t < 0.35 ? 0.3 : 1;
-    player.position.lerp(dockPos, k);
-    player.quaternion.slerp(u.quaternion, k);   // pins point straight into the socket
-    player.scale.setScalar(THREE.MathUtils.lerp(player.scale.x, d.s, k));
-    fwd.copy(nrm).negate();
-    if (!D.paid && player.position.distanceTo(dockPos) < 0.05) {
-      // seated: now it counts
-      D.paid = true; G.score++; G.time += BONUS;
-      sfx.plug();
-      burst(dockPos);
-      flash.classList.remove('go'); void flash.offsetWidth; flash.classList.add('go');
-      bonusEl.classList.remove('go'); void bonusEl.offsetWidth; bonusEl.classList.add('go');
-      tbox.classList.add('hit'); setTimeout(() => tbox.classList.remove('hit'), 600);
-      scoreEl.textContent = G.score; timeEl.textContent = G.time.toFixed(1);
-    }
-    if (D.paid && D.t > 0.8) {
-      // pull out and fly away along the socket's axis
+    const gap = 0.6 + d.s * 0.9;               // hover distance before the push
+    let off;
+    if (D.t < ALIGN) {
+      // swing square to the socket, hovering just in front of it
+      const k = Math.min(1, 7 * dt);
+      tmp.copy(dockPos).addScaledVector(nrm, gap);
+      player.position.lerp(tmp, k);
+      player.quaternion.slerp(u.quaternion, k);
+      player.scale.setScalar(THREE.MathUtils.lerp(player.scale.x, d.s, k));
+    } else if (D.t < ALIGN + PUSH) {
+      // the push: slow start, fast finish, straight down the axis
+      off = gap * (1 - easeIn((D.t - ALIGN) / PUSH));
+      player.position.copy(dockPos).addScaledVector(nrm, off);
+      player.quaternion.copy(u.quaternion); player.scale.setScalar(d.s);
+    } else if (D.t < ALIGN + PUSH + SEAT) {
+      if (!D.paid) {
+        // click: now it counts
+        D.paid = true; G.score++; G.time += BONUS;
+        sfx.plug();
+        burst(dockPos);
+        flash.classList.remove('go'); void flash.offsetWidth; flash.classList.add('go');
+        bonusEl.classList.remove('go'); void bonusEl.offsetWidth; bonusEl.classList.add('go');
+        tbox.classList.add('hit'); setTimeout(() => tbox.classList.remove('hit'), 600);
+        scoreEl.textContent = G.score; timeEl.textContent = G.time.toFixed(1);
+      }
+      const h = (D.t - ALIGN - PUSH) / SEAT;
+      // seated, with a mains buzz that fades out
+      const buzz = 0.035 * d.s * (1 - h);
+      player.position.copy(dockPos).add(vA.set((Math.random() - 0.5) * buzz, (Math.random() - 0.5) * buzz, (Math.random() - 0.5) * buzz));
+      player.quaternion.copy(u.quaternion);
+      // the socket kicks on impact and settles
+      sock.scale.setScalar(d.s * (1 + 0.16 * Math.exp(-h * 9) * Math.cos(h * 40)));
+      if (!D.spark2 && h > 0.45) { D.spark2 = true; burst(dockPos); }
+    } else if (D.t < ALIGN + PUSH + SEAT + PULL) {
+      sock.scale.setScalar(d.s);
+      off = gap * 0.8 * easeOut((D.t - ALIGN - PUSH - SEAT) / PULL);
+      player.position.copy(dockPos).addScaledVector(nrm, off);
+    } else {
+      // free again, flying away along the socket's axis
+      sock.scale.setScalar(d.s);
       G.q.setFromUnitVectors(vA.set(0, 0, -1), nrm);
-      player.position.addScaledVector(nrm, 0.8);
       G.dock = null;
       if (G.score % 3 === 0) goTo((fi + 1) % order.length);   // the formation reshuffles
       pickTarget();
     }
+    fwd.copy(nrm).negate();
   }
 
   function updatePlayer(dt) {
@@ -879,9 +906,20 @@
     const k = smooth(camBlend);
     if (inGame) {
       tmp.set(0, 1.3, 4.6).applyQuaternion(G.q).add(player.position);
-      chaseUp.lerp(vU.set(0, 1, 0).applyQuaternion(G.q), k < 1 ? 1 : 0.1).normalize();
-      chasePos.lerp(tmp, k < 1 ? 1 : 0.12);
-      chaseLook.copy(fwd).multiplyScalar(8).add(player.position);
+      if (G.dock) {
+        // plug-in close-up: swing round to the side so the pins are seen going into the holes
+        const ds = G.dock.u.userData.s;
+        vR.crossVectors(nrm, Math.abs(nrm.y) > 0.9 ? vA.set(1, 0, 0) : vA.set(0, 1, 0)).normalize();
+        vU.crossVectors(vR, nrm).normalize();
+        tmp.copy(dockPos).addScaledVector(nrm, 1.6 + ds).addScaledVector(vR, 2.2 + ds).addScaledVector(vU, 0.9);
+        chasePos.lerp(tmp, 0.14);
+        chaseLook.lerp(dockPos, 0.25);
+        chaseUp.lerp(vU, 0.12).normalize();
+      } else {
+        chaseUp.lerp(vU.set(0, 1, 0).applyQuaternion(G.q), k < 1 ? 1 : 0.1).normalize();
+        chasePos.lerp(tmp, k < 1 ? 1 : 0.12);
+        chaseLook.lerp(vA.copy(fwd).multiplyScalar(8).add(player.position), k < 1 ? 1 : 0.3);
+      }
       const A = SHOTS[shotA](clock);
       camera.position.lerpVectors(A.p, chasePos, k);
       look.lerpVectors(A.l, chaseLook, k);
