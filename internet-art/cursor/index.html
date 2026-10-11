@@ -1,0 +1,172 @@
+<title>Arrow Cursor</title>
+<style>
+  /* Layout: one full-bleed canvas, nothing else. Single dark look by choice. */
+  :root {
+    --void: #050506;
+    --grid: rgba(120, 122, 150, 0.16);
+    --ink: #ffffff;
+    --hint: rgba(255, 255, 255, 0.42);
+    --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+    color-scheme: dark;
+  }
+  html, body { height: 100%; margin: 0; background: var(--void); overflow: hidden; }
+  :root { padding: 0 !important; }
+  canvas { position: fixed; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; cursor: none; }
+  .hint {
+    position: fixed; left: 16px; bottom: calc(14px + env(safe-area-inset-bottom, 0px));
+    font: 11px/1.4 var(--mono); letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--hint); pointer-events: none; transition: opacity .8s ease;
+  }
+</style>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400&display=swap">
+
+<canvas id="c"></canvas>
+<div class="hint" id="hint">gerakkan kursor / sentuh layar</div>
+
+<script>
+(() => {
+  const cv = document.getElementById('c');
+  const ctx = cv.getContext('2d');
+  const hint = document.getElementById('hint');
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  let W = 0, H = 0, DPR = 1, cell = 200, arrows = [];
+  const target = { x: 0, y: 0 };   // where the pointer is
+  const head = { x: 0, y: 0 };     // eased cursor blob
+  const trail = [];                // ghost circles following the blob
+  let lastInput = -1e9, active = false;
+
+  function layout() {
+    DPR = Math.min(window.devicePixelRatio || 1, 2);
+    W = innerWidth; H = innerHeight;
+    cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR);
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+
+    const cols = Math.max(3, Math.round(W / 300));
+    cell = W / cols;
+    const rows = Math.ceil(H / cell) + 1;
+    const offY = (H - (rows - 1) * cell) / 2;
+    const old = arrows;
+    arrows = [];
+    for (let r = 0; r < rows; r++) {
+      // every other row shifts half a cell, like the reference staggering
+      const shift = (r % 2) * cell * 0.5;
+      for (let c = -1; c <= cols; c++) {
+        const x = c * cell + cell / 2 + shift - cell * 0.25;
+        if (x < -cell || x > W + cell) continue;
+        const prev = old[arrows.length];
+        arrows.push({ x, y: offY + r * cell, a: prev ? prev.a : Math.PI });
+      }
+    }
+    if (!active) { target.x = head.x = W / 2; target.y = head.y = H / 2; }
+  }
+
+  // Chunky block arrow pointing +x, centred on its own middle.
+  function arrowPath(s) {
+    const L = s * 0.82, hw = s * 0.36, tw = s * 0.17, hl = s * 0.42;
+    const x0 = -L / 2, x1 = L / 2, xn = x1 - hl;
+    ctx.beginPath();
+    ctx.moveTo(x1, 0);
+    ctx.lineTo(xn, -hw);
+    ctx.lineTo(xn, -tw);
+    ctx.lineTo(x0, -tw);
+    ctx.lineTo(x0, tw);
+    ctx.lineTo(xn, tw);
+    ctx.lineTo(xn, hw);
+    ctx.closePath();
+  }
+
+  function onPoint(x, y) {
+    target.x = x; target.y = y;
+    lastInput = performance.now();
+    if (!active) { active = true; hint.style.opacity = 0; }
+  }
+  addEventListener('pointermove', e => onPoint(e.clientX, e.clientY), { passive: true });
+  addEventListener('pointerdown', e => onPoint(e.clientX, e.clientY), { passive: true });
+  addEventListener('touchmove', e => { const t = e.touches[0]; if (t) onPoint(t.clientX, t.clientY); e.preventDefault(); }, { passive: false });
+  addEventListener('resize', layout);
+
+  let gridCanvas = null;
+  function bakeGrid() {
+    gridCanvas = document.createElement('canvas');
+    gridCanvas.width = cv.width; gridCanvas.height = cv.height;
+    const g = gridCanvas.getContext('2d');
+    // draw grid once into an offscreen layer
+    g.setTransform(DPR, 0, 0, DPR, 0, 0);
+    g.strokeStyle = 'rgba(120,122,150,0.16)'; g.lineWidth = 1; g.beginPath();
+    for (let x = 0.5; x < W; x += 22) { g.moveTo(x, 0); g.lineTo(x, H); }
+    for (let y = 0.5; y < H; y += 22) { g.moveTo(0, y); g.lineTo(W, y); }
+    g.stroke();
+  }
+
+  function frame(t) {
+    // idle drift when nobody is touching it
+    if (performance.now() - lastInput > 4000) {
+      const k = t / 1000;
+      target.x = W / 2 + Math.cos(k * 0.53) * W * 0.32;
+      target.y = H / 2 + Math.sin(k * 0.71) * H * 0.3;
+      if (active && performance.now() - lastInput > 9000) { active = false; hint.style.opacity = 1; }
+    }
+    const ease = reduce ? 1 : 0.16;
+    head.x += (target.x - head.x) * ease;
+    head.y += (target.y - head.y) * ease;
+
+    trail.unshift({ x: head.x, y: head.y });
+    if (trail.length > 70) trail.pop();
+
+    // background: black with a soft light pool around the cursor
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.fillStyle = '#050506';
+    ctx.fillRect(0, 0, W, H);
+    const pool = ctx.createRadialGradient(head.x, head.y, 0, head.x, head.y, Math.max(W, H) * 0.55);
+    pool.addColorStop(0, 'rgba(70,70,74,0.55)');
+    pool.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = pool; ctx.fillRect(0, 0, W, H);
+    ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.drawImage(gridCanvas, 0, 0); ctx.restore();
+
+    // ghost rings trailing behind the cursor
+    const R = cell * 0.36;
+    for (let i = trail.length - 1; i >= 3; i -= 3) {
+      const p = trail[i], f = 1 - i / trail.length;
+      ctx.strokeStyle = `rgba(255,255,255,${0.08 + f * 0.55})`;
+      ctx.lineWidth = 1 + f * 2.5;
+      ctx.beginPath(); ctx.arc(p.x, p.y, R * (0.9 + (1 - f) * 0.5), 0, Math.PI * 2); ctx.stroke();
+    }
+
+    // the arrows
+    const size = cell * 0.9;
+    ctx.fillStyle = '#fff';
+    ctx.shadowColor = 'rgba(255,255,255,0.85)';
+    ctx.shadowBlur = cell * 0.16;
+    for (const ar of arrows) {
+      const want = Math.atan2(head.y - ar.y, head.x - ar.x);
+      let d = want - ar.a;
+      d = Math.atan2(Math.sin(d), Math.cos(d));
+      ar.a += d * (reduce ? 1 : 0.14);
+      const dist = Math.hypot(head.x - ar.x, head.y - ar.y);
+      const s = size * (0.78 + 0.22 * Math.min(1, dist / (cell * 2.2)));
+      ctx.save();
+      ctx.translate(ar.x, ar.y);
+      ctx.rotate(ar.a);
+      arrowPath(s);
+      ctx.fill();
+      ctx.restore();
+    }
+    ctx.shadowBlur = 0;
+
+    // cursor disc inverts whatever it covers
+    ctx.globalCompositeOperation = 'difference';
+    ctx.fillStyle = '#fff';
+    ctx.beginPath(); ctx.arc(head.x, head.y, R, 0, Math.PI * 2); ctx.fill();
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.strokeStyle = 'rgba(255,255,255,0.9)'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(head.x, head.y, R + 3, 0, Math.PI * 2); ctx.stroke();
+
+    requestAnimationFrame(frame);
+  }
+
+  layout(); bakeGrid();
+  addEventListener('resize', bakeGrid);
+  requestAnimationFrame(frame);
+})();
+</script>
