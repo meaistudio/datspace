@@ -274,6 +274,13 @@ const ARCHIVE_PROJECTS = [
         artist: "DATs", 
         link: "/internet-art/squareclick/", 
         desc: "An interactive primary color box that transforms a dynamic box Grid into a live sound matrix." 
+    },
+   
+    {   
+        title: "FOLLOW ARROW CURSOR", 
+        artist: "DATs", 
+        link: "/internet-art/cursor/", 
+        desc: "Interactive web piece. A screen full of glowing arrows turns to follow your cursor wherever it goes." 
     }
 ];
 
