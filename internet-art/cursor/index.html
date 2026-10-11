@@ -1,4 +1,5 @@
 <!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Arrow Dodge</title>
 <style>
   /* One full-bleed canvas game on black; single dark look by choice. */
@@ -109,7 +110,7 @@
       boostGain = ctx.createGain(); boostGain.gain.value = 0;
       wn.connect(wf); wf.connect(boostGain); boostGain.connect(sfxBus); wn.start();
       // motion drone: detuned saws through a resonant lowpass that opens with your speed
-      droneF = ctx.createBiquadFilter(); droneF.type = 'lowpass'; droneF.Q.value = 9; droneF.frequency.value = 200;
+      droneF = ctx.createBiquadFilter(); droneF.type = 'lowpass'; droneF.Q.value = 3; droneF.frequency.value = 200;
       droneG = ctx.createGain(); droneG.gain.value = 0;
       droneOsc = [-9, 9, 1200].map(det => {
         const o = ctx.createOscillator(); o.type = det === 1200 ? 'square' : 'sawtooth'; o.detune.value = det;
@@ -117,7 +118,7 @@
       });
       const lfo = ctx.createOscillator(), lg = ctx.createGain(); lfo.frequency.value = 5.4; lg.gain.value = 120;
       lfo.connect(lg); lg.connect(droneF.frequency); lfo.start();
-      droneF.connect(droneG); droneG.connect(sfxBus); droneG.connect(delay);
+      droneF.connect(droneG); droneG.connect(sfxBus);
       shaper = ctx.createWaveShaper();
       const curve = new Float32Array(1024); for (let i = 0; i < 1024; i++) { const x = i / 512 - 1; curve[i] = Math.tanh(x * 4); }
       shaper.curve = curve; shaper.connect(sfxBus);
@@ -272,6 +273,7 @@
       f.connect(g); g.connect(o.dist ? shaper : sfxBus);
       if (o.echo) { const e = ctx.createGain(); e.gain.value = o.echo; g.connect(e); e.connect(delay); }
     }
+    let lastLock = 0;
     const sfx = {
       // laser zap: pitch dives as the arrow leaves the grid
       launch() {
@@ -281,7 +283,9 @@
       },
       // lock-on: resonant plucks that climb the current chord, one note per arrow
       lock() {
-        if (!live()) return; const t = ctx.currentTime, hz = chord[lockN++ % 5] * 2;
+        if (!live()) return; const t = ctx.currentTime;
+        if (t - lastLock < 0.15) return; lastLock = t;          // a salvo makes one sound, not three
+        const hz = chord[lockN++ % 5] * 2;
         synth(t, hz, { dur: 0.16, cut0: 5200, cut1: 500, q: 14, peak: 0.1, echo: 0.45 });
         synth(t + 0.08, hz * 2, { dur: 0.1, cut0: 4000, cut1: 600, q: 10, peak: 0.05, type: 'square', det: [0] });
       },
@@ -300,8 +304,8 @@
       // speed 0..1 opens the drone filter and raises its level
       motion(v) {
         if (!ctx || !droneG) return; const t = ctx.currentTime;
-        droneG.gain.setTargetAtTime(live() ? v * 0.07 : 0, t, 0.08);
-        droneF.frequency.setTargetAtTime(180 + v * v * 2600, t, 0.06);
+        droneG.gain.setTargetAtTime(live() ? v * 0.015 : 0, t, 0.15);
+        droneF.frequency.setTargetAtTime(160 + v * v * 900, t, 0.1);
       },
       // the plug seating: pins scrape, a solid clunk, then the mains hum + a spark
       plug() {
@@ -463,7 +467,7 @@
       [`SOUND : ${audio.on ? 'ON' : 'OFF'}`, () => { audio.toggle(); showMenu('main', sel); }]] }),
     howto: () => ({ title: 'HOW TO PLAY', info:
       'EVERY ARROW AIMS AT YOU.<br>A BLINKING ARROW IS ABOUT TO FIRE.<br>' +
-      (MOBILE ? 'DRAG ANYWHERE TO MOVE' : 'POINT THE MOUSE WHERE YOU WANT TO GO<br>(OR ARROW KEYS)') + '<br>' +
+      (MOBILE ? 'HOLD AND DRAG TO STEER' : 'POINT THE MOUSE WHERE YOU WANT TO GO<br>(OR ARROW KEYS)') + '<br>' +
       'FOLLOW THE POINTER TO THE RINGS : <b>+10</b><br>SURVIVE : +1 / SEC<br>3 HITS AND YOU ARE OUT',
       items: [['BACK', () => showMenu('main')]] }),
     score: () => ({ title: 'HIGH SCORE', info: `BEST : <b>${best}</b>` + (lastScore !== null ? `<br>LAST : ${lastScore}` : ''), items: [['BACK', () => showMenu('main')]] }),
@@ -513,21 +517,22 @@
 
   // ---------- input ----------
   let lastInput = -1e9, pointerSeen = false;
-  const drag = { id: null, x: 0, y: 0 };
+  const drag = { id: null, x: 0, y: 0, ox: 0, oy: 0 };
+  const STICK = () => Math.min(W, H) * 0.16;      // full-speed throw of the touch joystick
   const keys = {};
   addEventListener('pointermove', e => {
     if (e.pointerType === 'mouse') { mouse.x = e.clientX; mouse.y = e.clientY; pointerSeen = true; }
     else if (drag.id === e.pointerId && G.mode === 'play') {
-      // relative drag on touch: the disc follows the finger's motion and the world slides under it
-      const k = 1.35;
-      target.x += (e.clientX - drag.x) * k;
-      target.y += (e.clientY - drag.y) * k;
+      // floating joystick: where the finger sits relative to where it went down sets the heading
       drag.x = e.clientX; drag.y = e.clientY;
+      // drag the anchor along if the finger runs past the stick's reach
+      const dx = drag.x - drag.ox, dy = drag.y - drag.oy, d = Math.hypot(dx, dy), max = STICK() * 1.25;
+      if (d > max) { drag.ox = drag.x - dx / d * max; drag.oy = drag.y - dy / d * max; }
     }
     lastInput = performance.now();
   }, { passive: true });
   addEventListener('pointerdown', e => {
-    if (e.pointerType !== 'mouse' && drag.id === null) { drag.id = e.pointerId; drag.x = e.clientX; drag.y = e.clientY; }
+    if (e.pointerType !== 'mouse' && drag.id === null) { drag.id = e.pointerId; drag.x = drag.ox = e.clientX; drag.y = drag.oy = e.clientY; }
     lastInput = performance.now();
     if (G.mode === 'watch') toMain();
   });
@@ -565,6 +570,11 @@
       if (pointerSeen && !MOBILE) {
         const dx = mouse.x - W / 2, dy = mouse.y - H / 2, d = Math.hypot(dx, dy);
         const m = Math.max(0, Math.min(1, (d - R * 1.1) / (Math.min(W, H) * 0.32)));
+        if (d > 0) { target.x += dx / d * m * SPD * dt; target.y += dy / d * m * SPD * dt; }
+      }
+      if (drag.id !== null) {
+        const dx = drag.x - drag.ox, dy = drag.y - drag.oy, d = Math.hypot(dx, dy);
+        const m = Math.max(0, Math.min(1, (d - 6) / STICK()));
         if (d > 0) { target.x += dx / d * m * SPD * dt; target.y += dy / d * m * SPD * dt; }
       }
       const kx = (keys.ArrowRight || keys.KeyD ? 1 : 0) - (keys.ArrowLeft || keys.KeyA ? 1 : 0);
@@ -713,6 +723,16 @@
       ctx.restore();
     }
     ctx.restore();
+
+    // touch joystick: a faint base where the finger went down and a knob under it
+    if (drag.id !== null && playing) {
+      const S = STICK(), dx = drag.x - drag.ox, dy = drag.y - drag.oy, d = Math.hypot(dx, dy), k = d > S ? S / d : 1;
+      ctx.strokeStyle = 'rgba(255,255,255,0.35)'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(drag.ox, drag.oy, S, 0, Math.PI * 2); ctx.stroke();
+      ctx.globalCompositeOperation = 'difference'; ctx.fillStyle = '#fff';
+      ctx.beginPath(); ctx.arc(drag.ox + dx * k, drag.oy + dy * k, 22, 0, Math.PI * 2); ctx.fill();
+      ctx.globalCompositeOperation = 'source-over';
+    }
     requestAnimationFrame(frame);
   }
 
