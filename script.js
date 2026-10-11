@@ -287,6 +287,12 @@ const ARCHIVE_PROJECTS = [
         artist: "DATs", 
         link: "/internet-art/powersocket/", 
         desc: "An endless swarm of CMY power sockets drifts through black space, reshaping into helixes, tunnels and arches while the camera glides around them." 
+    },
+    {   
+        title: "Janus (2026)", 
+        artist: "tiengiungtong", 
+        link: "https://janus.trinon.org/", 
+        desc: "It‘s a web-based work that exists alongside a limited-edition circular artist’s book. I‘d rather not explain it. Please describe it however you experienced it. I’m curious how you‘ll see it!" 
     }
 ];
 
