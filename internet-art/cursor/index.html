@@ -1,172 +1,725 @@
-<title>Arrow Cursor</title>
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Arrow Dodge</title>
 <style>
-  /* Layout: one full-bleed canvas, nothing else. Single dark look by choice. */
-  :root {
-    --void: #050506;
-    --grid: rgba(120, 122, 150, 0.16);
-    --ink: #ffffff;
-    --hint: rgba(255, 255, 255, 0.42);
-    --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
-    color-scheme: dark;
-  }
-  html, body { height: 100%; margin: 0; background: var(--void); overflow: hidden; }
+  /* One full-bleed canvas game on black; single dark look by choice. */
+  :root { --void: #050506; --ink: #fff; --dim: rgba(255, 255, 255, .45); color-scheme: dark; }
+  html, body { height: 100%; margin: 0; background: var(--void); overflow: hidden; touch-action: none; overscroll-behavior: none;
+    -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; }
   :root { padding: 0 !important; }
   canvas { position: fixed; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; cursor: none; }
-  .hint {
-    position: fixed; left: 16px; bottom: calc(14px + env(safe-area-inset-bottom, 0px));
-    font: 11px/1.4 var(--mono); letter-spacing: 0.12em; text-transform: uppercase;
-    color: var(--hint); pointer-events: none; transition: opacity .8s ease;
-  }
+  .ui { position: fixed; font: 12px/1.4 "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: .12em; text-transform: uppercase; color: var(--ink); pointer-events: none; z-index: 2; }
+  #hud { mix-blend-mode: difference; top: calc(14px + env(safe-area-inset-top, 0px)); left: 16px; right: 16px; display: flex; gap: 28px; transition: opacity .4s;
+    font-family: "Press Start 2P", "JetBrains Mono", monospace; font-size: 9px; letter-spacing: .1em; line-height: 1; color: var(--dim); }
+  #hud span { color: var(--ink); font-size: 18px; letter-spacing: 0; display: block; margin-top: 8px; }
+  #hud .r { margin-left: auto; text-align: right; }
+  #hud .hit span { animation: hitflash .5s steps(2) 3; }
+  @keyframes hitflash { 50% { opacity: 0; } }
+  #plus { position: absolute; left: 0; top: 100%; font-size: 12px; color: var(--ink); opacity: 0; margin-top: 6px; }
+  #plus.go { animation: plus .8s ease-out; }
+  @keyframes plus { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-18px); } }
+  .s { position: relative; }
+  .hide { opacity: 0; }
+
+  /* minimal menu on a see-through black panel */
+  #menu { inset: 0; display: grid; place-items: center; padding: 16px; transition: opacity .4s; }
+  #menu.hide { visibility: hidden; }
+  .panel { pointer-events: auto; width: max-content; max-width: 100%; box-sizing: border-box;
+    padding: clamp(22px, 5vw, 40px) clamp(20px, 5vw, 44px); background: rgba(0, 0, 0, .72); letter-spacing: .06em; }
+  .panel .head { font-size: clamp(16px, 3.8vw, 22px); margin: 0 0 clamp(14px, 3vw, 22px); font-weight: 800; }
+  #items { list-style: none; margin: 0; padding: 0; font-size: clamp(17px, 4.4vw, 26px); line-height: 1.6; font-weight: 800; }
+  #items li { cursor: pointer; display: flex; align-items: center; width: max-content; max-width: 100%; color: var(--dim); }
+  #items li .ico { width: 1.5em; height: .9em; flex: none; margin-right: .4em; opacity: 0; }
+  #items li.sel { color: var(--ink); }
+  #items li.sel .ico { opacity: 1; animation: nudge .6s ease-in-out infinite alternate; }
+  @keyframes nudge { from { transform: translateX(-4px); } to { transform: translateX(2px); } }
+  #info { font-size: clamp(12px, 2.8vw, 14px); line-height: 1.75; font-weight: 800; }
+  #info:empty { display: none; }
+  #info + #items { margin-top: 14px; }
+  #info b { font-weight: 800; color: #000; background: var(--ink); padding: 0 .3em; }
+  #flash { inset: 0; background: #fff; opacity: 0; mix-blend-mode: difference; }
+  #flash.go { animation: fl .3s ease-out; }
+  @keyframes fl { from { opacity: .9; } to { opacity: 0; } }
 </style>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;800&family=Press+Start+2P&display=swap">
 
 <canvas id="c"></canvas>
-<div class="hint" id="hint">gerakkan kursor / sentuh layar</div>
+<div class="ui hide" id="hud">
+  <div class="s">score<span id="score">0</span><span id="plus">+10</span></div>
+  <div id="livesBox">lives<span id="lives">&#9632;&#9632;&#9632;</span></div>
+  <div class="r">best<span id="best">0</span></div>
+</div>
+<div class="ui" id="menu">
+  <div class="panel" role="menu" aria-label="Arrow Dodge menu">
+    <div class="head" id="mtitle">MENU</div>
+    <div id="info"></div>
+    <ul id="items"></ul>
+  </div>
+</div>
+<div class="ui" id="flash"></div>
 
 <script>
 (() => {
   const cv = document.getElementById('c');
   const ctx = cv.getContext('2d');
-  const hint = document.getElementById('hint');
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const MOBILE = matchMedia('(pointer: coarse)').matches;
+  const $ = id => document.getElementById(id);
 
-  let W = 0, H = 0, DPR = 1, cell = 200, arrows = [];
-  const target = { x: 0, y: 0 };   // where the pointer is
-  const head = { x: 0, y: 0 };     // eased cursor blob
-  const trail = [];                // ghost circles following the blob
-  let lastInput = -1e9, active = false;
+  // ---------- sound: a generative 'random modular' patch + synth SFX ----------
+  const audio = (() => {
+    let ctx = null, master, musicBus, musicFilter, sfxBus, noiseBuf, delay, boostGain, nextTime = 0, step = 0, timer = null;
+    let on = true;
+    try { on = localStorage.getItem('ps-sound') !== 'off'; } catch (e) {}
+    const BPM = 116, S16 = 60 / BPM / 4;
+    // everything is quantized to a minor pentatonic (+9) over a root that wanders
+    const mtof = m => 440 * Math.pow(2, (m - 69) / 12);
+    const SCALE = [0, 3, 5, 7, 10, 12, 14, 15, 17, 19, 22, 24, 26, 27];
+    const ROOTS = [50, 48, 53, 45, 55, 51];        // D, C, F, A, G, Eb
+    let rootM = 50;
+    const q = (v, oct = 0) => mtof(rootM + oct * 12 + SCALE[Math.min(SCALE.length - 1, Math.floor(v * SCALE.length))]);
+    // "Turing machine" style shift registers: random values that loop and slowly mutate
+    const rnd = Math.random;
+    const regA = Array.from({ length: 16 }, rnd), regB = Array.from({ length: 16 }, rnd);
+    let lenA = 8, lenB = 5, mutA = 0.08, dens = 0.7, ratio = 2, pingRot = 0, hatRot = 0;
+    const euclid = (k, n, i) => ((i % n) * k) % n < k;   // k hits spread evenly over n steps
+
+    function init() {
+      if (ctx) { if (on && ctx.state !== 'running') wake(); return; }
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return;
+      ctx = new AC();
+      master = ctx.createGain(); master.gain.value = on ? 0.8 : 0;
+      const comp = ctx.createDynamicsCompressor();
+      comp.threshold.value = -14; comp.ratio.value = 4; comp.attack.value = 0.004; comp.release.value = 0.2;
+      master.connect(comp); comp.connect(ctx.destination);
+      musicFilter = ctx.createBiquadFilter(); musicFilter.type = 'lowpass'; musicFilter.frequency.value = 900; musicFilter.Q.value = 0.7;
+      musicBus = ctx.createGain(); musicBus.gain.value = 0.55;
+      musicBus.connect(musicFilter); musicFilter.connect(master);
+      sfxBus = ctx.createGain(); sfxBus.gain.value = 0.9; sfxBus.connect(master);
+      // tape-ish echo whose time gets re-patched now and then
+      delay = ctx.createDelay(2); delay.delayTime.value = S16 * 3;
+      const fb = ctx.createGain(); fb.gain.value = 0.38;
+      const dl = ctx.createBiquadFilter(); dl.type = 'lowpass'; dl.frequency.value = 2600;
+      delay.connect(dl); dl.connect(fb); fb.connect(delay); dl.connect(musicBus);
+      noiseBuf = ctx.createBuffer(1, ctx.sampleRate, ctx.sampleRate);
+      const d = noiseBuf.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+      // continuous whoosh for the boost
+      const wn = noise(); wn.loop = true;
+      const wf = ctx.createBiquadFilter(); wf.type = 'bandpass'; wf.frequency.value = 900; wf.Q.value = 0.8;
+      boostGain = ctx.createGain(); boostGain.gain.value = 0;
+      wn.connect(wf); wf.connect(boostGain); boostGain.connect(sfxBus); wn.start();
+      // motion drone: detuned saws through a resonant lowpass that opens with your speed
+      droneF = ctx.createBiquadFilter(); droneF.type = 'lowpass'; droneF.Q.value = 9; droneF.frequency.value = 200;
+      droneG = ctx.createGain(); droneG.gain.value = 0;
+      droneOsc = [-9, 9, 1200].map(det => {
+        const o = ctx.createOscillator(); o.type = det === 1200 ? 'square' : 'sawtooth'; o.detune.value = det;
+        o.frequency.value = chord[0] / 2; o.connect(droneF); o.start(); return o;
+      });
+      const lfo = ctx.createOscillator(), lg = ctx.createGain(); lfo.frequency.value = 5.4; lg.gain.value = 120;
+      lfo.connect(lg); lg.connect(droneF.frequency); lfo.start();
+      droneF.connect(droneG); droneG.connect(sfxBus); droneG.connect(delay);
+      shaper = ctx.createWaveShaper();
+      const curve = new Float32Array(1024); for (let i = 0; i < 1024; i++) { const x = i / 512 - 1; curve[i] = Math.tanh(x * 4); }
+      shaper.curve = curve; shaper.connect(sfxBus);
+      nextTime = ctx.currentTime + 0.1;
+      timer = setInterval(schedule, 25);
+      if (!on) ctx.suspend();
+    }
+    let chord = [0, 3, 7, 10, 14].map(i => mtof(50 + i)), droneF = null, droneG = null, droneOsc = [], shaper = null, lockN = 0;
+    function setChord(r) {
+      chord = [0, 3, 7, 10, 14].map(i => mtof(r + i));
+      if (ctx) droneOsc.forEach(o => o.frequency.setTargetAtTime(chord[0] / 2, ctx.currentTime, 0.12));
+    }
+    function noise() { const n = ctx.createBufferSource(); n.buffer = noiseBuf; return n; }
+    function env(g, t, peak, a, dcy) {
+      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(peak, t + a);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + a + dcy);
+    }
+
+    // ---- modules ----
+    function out(node, pan) {
+      if (ctx.createStereoPanner) { const p = ctx.createStereoPanner(); p.pan.value = pan; node.connect(p); p.connect(musicBus); return p; }
+      node.connect(musicBus); return node;
+    }
+    // west-coast FM voice through a low-pass gate: the "bongo" pluck of a Buchla-ish patch
+    function lpgPluck(t, hz, bright, len, pan = 0, echo = 0.35) {
+      const car = ctx.createOscillator(), mod = ctx.createOscillator(), mg = ctx.createGain(), f = ctx.createBiquadFilter(), g = ctx.createGain();
+      mod.frequency.value = hz * ratio; car.frequency.value = hz;
+      mg.gain.setValueAtTime(hz * (1 + bright * 6), t); mg.gain.exponentialRampToValueAtTime(hz * 0.05 + 1, t + len * 0.7);
+      f.type = 'lowpass'; f.Q.value = 1.5;
+      f.frequency.setValueAtTime(600 + bright * 7000, t); f.frequency.exponentialRampToValueAtTime(140, t + len);
+      env(g, t, 0.16, 0.002, len);
+      mod.connect(mg); mg.connect(car.frequency); car.connect(f); f.connect(g);
+      out(g, pan); if (echo) { const e = ctx.createGain(); e.gain.value = echo; g.connect(e); e.connect(delay); }
+      car.start(t); mod.start(t); car.stop(t + len + 0.05); mod.stop(t + len + 0.05);
+    }
+    // high resonant square bleep, sometimes ratcheted
+    function bleep(t, hz, len, pan) {
+      const o = ctx.createOscillator(), f = ctx.createBiquadFilter(), g = ctx.createGain();
+      o.type = 'square'; o.frequency.value = hz;
+      f.type = 'bandpass'; f.Q.value = 12; f.frequency.setValueAtTime(hz * 3, t); f.frequency.exponentialRampToValueAtTime(hz, t + len);
+      env(g, t, 0.09, 0.001, len); o.connect(f); f.connect(g); out(g, pan); g.connect(delay);
+      o.start(t); o.stop(t + len + 0.03);
+    }
+    // slow gliding sub/triangle bass
+    function drone(t, hz, len) {
+      const o = ctx.createOscillator(), o2 = ctx.createOscillator(), f = ctx.createBiquadFilter(), g = ctx.createGain();
+      o.type = 'triangle'; o2.type = 'sawtooth'; o.frequency.value = hz; o2.frequency.value = hz; o2.detune.value = 7;
+      f.type = 'lowpass'; f.Q.value = 5; f.frequency.setValueAtTime(180, t); f.frequency.linearRampToValueAtTime(500 + rnd() * 900, t + len * 0.4); f.frequency.linearRampToValueAtTime(160, t + len);
+      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.22, t + 0.08); g.gain.exponentialRampToValueAtTime(0.0001, t + len);
+      o.connect(f); o2.connect(f); f.connect(g); out(g, 0); o.start(t); o2.start(t); o.stop(t + len + 0.05); o2.stop(t + len + 0.05);
+    }
+    // ring-modulated metal ping
+    function ping(t, hz, pan) {
+      const a = ctx.createOscillator(), b = ctx.createOscillator(), rm = ctx.createGain(), f = ctx.createBiquadFilter(), g = ctx.createGain();
+      a.type = 'square'; b.type = 'square'; a.frequency.value = hz; b.frequency.value = hz * 1.414;
+      rm.gain.value = 0; a.connect(rm); b.connect(rm.gain);
+      f.type = 'bandpass'; f.frequency.value = hz * 2.5; f.Q.value = 6;
+      env(g, t, 0.12, 0.001, 0.12); rm.connect(f); f.connect(g); out(g, pan); g.connect(delay);
+      a.start(t); b.start(t); a.stop(t + 0.16); b.stop(t + 0.16);
+    }
+    function tick(t, v, pan) {
+      const n = noise(), f = ctx.createBiquadFilter(), g = ctx.createGain();
+      f.type = 'highpass'; f.frequency.value = 6000 + rnd() * 3000;
+      env(g, t, 0.1 * v, 0.001, 0.02 + rnd() * 0.03); n.connect(f); f.connect(g); out(g, pan); n.start(t); n.stop(t + 0.08);
+    }
+    function thud(t, v) {
+      const o = ctx.createOscillator(), g = ctx.createGain(), hz = 70 + rnd() * 40;
+      o.frequency.setValueAtTime(hz * 2.2, t); o.frequency.exponentialRampToValueAtTime(hz * 0.6, t + 0.14);
+      env(g, t, 0.55 * v, 0.002, 0.22); o.connect(g); out(g, 0); o.start(t); o.stop(t + 0.3);
+    }
+
+    // one switch for the whole engine: suspended = silent and nothing queues up
+    let gen = 0;
+    function wake() {
+      const my = ++gen;
+      ctx.resume().then(() => {
+        if (my !== gen) return;
+        nextTime = ctx.currentTime + 0.06;       // restart the loop from now, never replay missed steps
+        master.gain.cancelScheduledValues(ctx.currentTime);
+        master.gain.setValueAtTime(0.0001, ctx.currentTime);
+        master.gain.linearRampToValueAtTime(0.8, ctx.currentTime + 0.15);
+      });
+    }
+    function sleep() {
+      const my = ++gen;
+      master.gain.cancelScheduledValues(ctx.currentTime);
+      master.gain.setTargetAtTime(0, ctx.currentTime, 0.03);
+      setTimeout(() => { if (my === gen) ctx.suspend(); }, 150);
+    }
+    function schedule() {
+      if (ctx.state !== 'running' || !on) return;
+      // a throttled timer (background tab, busy frame) must not dump a pile of late notes at once
+      if (nextTime < ctx.currentTime - 0.05) nextTime = ctx.currentTime + 0.05;
+      while (nextTime < ctx.currentTime + 0.12) { playStep(step, nextTime); nextTime += S16; step++; }
+    }
+    function playStep(s, t) {
+      // every 32 steps the patch gets re-knobbed: new lengths, ratio, density, sometimes a new root
+      if (s % 32 === 0) {
+        lenA = [5, 7, 8, 8, 11, 13, 16][Math.floor(rnd() * 7)]; lenB = [3, 5, 6, 7][Math.floor(rnd() * 4)];
+        ratio = [0.5, 1, 1.5, 2, 2.01, 3.5][Math.floor(rnd() * 6)];
+        dens = 0.45 + rnd() * 0.5; mutA = rnd() < 0.3 ? 0.25 : 0.06;
+        pingRot = Math.floor(rnd() * 16); hatRot = Math.floor(rnd() * 16);
+        if (s % 128 === 0 && s > 0) rootM = ROOTS[Math.floor(rnd() * ROOTS.length)];
+        const r = rootM;
+        setTimeout(() => setChord(r), Math.max(0, (t - ctx.currentTime) * 1000));
+        delay.delayTime.setTargetAtTime(S16 * [2, 3, 3, 5][Math.floor(rnd() * 4)], t, 0.5);
+      }
+      const jit = () => (rnd() - 0.5) * 0.012;            // a little analog clock slop
+      // A: the main sequence
+      const ia = s % lenA, va = regA[ia];
+      if (rnd() < mutA) regA[ia] = rnd();
+      if (va > 1 - dens) lpgPluck(t + jit(), q(va, -1), (va * 3) % 1, S16 * (1.5 + (va * 7) % 3), (va - 0.5) * 1.2);
+      // B: sparse high bleeps, sometimes ratcheted
+      const ib = s % lenB, vb = regB[ib];
+      if (rnd() < 0.1) regB[ib] = rnd();
+      if (vb > 0.72 && rnd() < dens) {
+        const reps = rnd() < 0.25 ? 2 + Math.floor(rnd() * 3) : 1;
+        for (let k = 0; k < reps; k++) bleep(t + k * S16 / reps, q(vb, 1), S16 * 0.8 / reps, (rnd() - 0.5) * 1.6);
+      }
+      // C: bass that moves rarely
+      if (s % 16 === 0 || (s % 16 === 10 && rnd() < 0.4)) drone(t, mtof(rootM - 24 + (rnd() < 0.3 ? 7 : 0)), S16 * (6 + rnd() * 6));
+      // percussion on rotated euclidean rhythms
+      if (euclid(3, 8, s)) thud(t, s % 16 === 0 ? 1 : 0.6);
+      if (euclid(5, 16, s + pingRot) && rnd() < dens + 0.2) ping(t + jit(), q(regB[(s + 3) % 16], 1), (rnd() - 0.5) * 1.4);
+      if (euclid(7, 16, s + hatRot) || rnd() < 0.15) tick(t + jit(), 0.4 + rnd() * 0.6, (rnd() - 0.5) * 1.8);
+    }
+
+    // ---- sound effects ----
+    function thump(t, from, to, v, len) {
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.frequency.setValueAtTime(from, t); o.frequency.exponentialRampToValueAtTime(to, t + len);
+      env(g, t, v, 0.002, len); o.connect(g); g.connect(sfxBus); o.start(t); o.stop(t + len + 0.05);
+    }
+    function click(t, v, hp = 2500, len = 0.03) {
+      const n = noise(), f = ctx.createBiquadFilter(), g = ctx.createGain();
+      f.type = 'highpass'; f.frequency.value = hp;
+      env(g, t, v, 0.0005, len); n.connect(f); f.connect(g); g.connect(sfxBus); n.start(t); n.stop(t + len + 0.02);
+    }
+    const live = () => ctx && on && ctx.state === 'running';
+    // one analog-style voice: two detuned oscillators -> resonant lowpass sweep -> envelope
+    function synth(t, hz, o = {}) {
+      const dur = o.dur || 0.2, g = ctx.createGain(), f = ctx.createBiquadFilter();
+      f.type = 'lowpass'; f.Q.value = o.q || 8;
+      f.frequency.setValueAtTime(o.cut0 || 4000, t); f.frequency.exponentialRampToValueAtTime(o.cut1 || 300, t + dur);
+      env(g, t, o.peak || 0.12, o.att || 0.003, dur);
+      for (const det of o.det || [-8, 8]) {
+        const v = ctx.createOscillator(); v.type = o.type || 'sawtooth'; v.detune.value = det;
+        v.frequency.setValueAtTime(hz, t);
+        if (o.glide) v.frequency.exponentialRampToValueAtTime(o.glide, t + (o.glideT || dur));
+        v.connect(f); v.start(t); v.stop(t + dur + 0.05);
+      }
+      f.connect(g); g.connect(o.dist ? shaper : sfxBus);
+      if (o.echo) { const e = ctx.createGain(); e.gain.value = o.echo; g.connect(e); e.connect(delay); }
+    }
+    const sfx = {
+      // laser zap: pitch dives as the arrow leaves the grid
+      launch() {
+        if (!live()) return; const t = ctx.currentTime;
+        synth(t, chord[4] * 4, { glide: chord[0] / 2, glideT: 0.2, dur: 0.24, cut0: 7000, cut1: 400, q: 12, peak: 0.13, type: 'square', det: [-15, 15], echo: 0.25 });
+        click(t, 0.12, 4000, 0.04);
+      },
+      // lock-on: resonant plucks that climb the current chord, one note per arrow
+      lock() {
+        if (!live()) return; const t = ctx.currentTime, hz = chord[lockN++ % 5] * 2;
+        synth(t, hz, { dur: 0.16, cut0: 5200, cut1: 500, q: 14, peak: 0.1, echo: 0.45 });
+        synth(t + 0.08, hz * 2, { dur: 0.1, cut0: 4000, cut1: 600, q: 10, peak: 0.05, type: 'square', det: [0] });
+      },
+      // hit: a distorted detuned chord stab that bends down
+      hit() {
+        if (!live()) return; const t = ctx.currentTime;
+        [0, 2, 4].forEach(i => synth(t, chord[i], { glide: chord[i] * 0.5, glideT: 0.35, dur: 0.45, cut0: 3000, cut1: 120, q: 6, peak: 0.16, det: [-25, 25], dist: true }));
+        thump(t, 120, 36, 0.9, 0.3); click(t, 0.4, 400, 0.08);
+      },
+      // ring: a fast rising arpeggio with echo
+      collect() {
+        if (!live()) return; const t = ctx.currentTime;
+        [0, 2, 4, 3, 4].forEach((n, i) => synth(t + i * 0.045, chord[n] * 4 * (i === 4 ? 2 : 1),
+          { dur: 0.14, cut0: 6000, cut1: 900, q: 6, peak: 0.07, type: 'square', det: [-6, 6], echo: 0.5 }));
+      },
+      // speed 0..1 opens the drone filter and raises its level
+      motion(v) {
+        if (!ctx || !droneG) return; const t = ctx.currentTime;
+        droneG.gain.setTargetAtTime(live() ? v * 0.07 : 0, t, 0.08);
+        droneF.frequency.setTargetAtTime(180 + v * v * 2600, t, 0.06);
+      },
+      // the plug seating: pins scrape, a solid clunk, then the mains hum + a spark
+      plug() {
+        if (!live()) return; const t = ctx.currentTime;
+        click(t, 0.35, 1800, 0.05);
+        click(t + 0.045, 0.9, 1200, 0.03);
+        thump(t + 0.045, 190, 55, 0.9, 0.16);
+        const h = ctx.createOscillator(), h2 = ctx.createOscillator(), hg = ctx.createGain(), hf = ctx.createBiquadFilter();
+        h.type = 'sawtooth'; h.frequency.value = 100; h2.type = 'square'; h2.frequency.value = 50;
+        hf.type = 'lowpass'; hf.frequency.value = 900;
+        hg.gain.setValueAtTime(0.0001, t + 0.06); hg.gain.exponentialRampToValueAtTime(0.16, t + 0.09); hg.gain.exponentialRampToValueAtTime(0.0001, t + 0.55);
+        h.connect(hf); h2.connect(hf); hf.connect(hg); hg.connect(sfxBus);
+        h.start(t + 0.06); h2.start(t + 0.06); h.stop(t + 0.6); h2.stop(t + 0.6);
+        const z = ctx.createOscillator(), zg = ctx.createGain(); z.type = 'square';
+        z.frequency.setValueAtTime(500, t + 0.07); z.frequency.exponentialRampToValueAtTime(2400, t + 0.2);
+        env(zg, t + 0.07, 0.07, 0.003, 0.14); z.connect(zg); zg.connect(sfxBus); z.start(t + 0.07); z.stop(t + 0.25);
+        for (let i = 0; i < 5; i++) click(t + 0.08 + Math.random() * 0.25, 0.18 + Math.random() * 0.2, 5000, 0.008);
+      },
+      tick() { if (!live()) return; synth(ctx.currentTime, chord[(lockN++ % 3) + 2] * 4, { dur: 0.06, cut0: 6000, cut1: 1500, q: 4, peak: 0.05, type: 'square', det: [0] }); },
+      select() {
+        if (!live()) return; const t = ctx.currentTime;
+        synth(t, chord[0] * 2, { dur: 0.22, cut0: 4500, cut1: 300, q: 10, peak: 0.1, echo: 0.4 });
+        synth(t + 0.06, chord[4] * 2, { dur: 0.2, cut0: 4500, cut1: 300, q: 10, peak: 0.08, echo: 0.4 });
+        thump(t, 160, 60, 0.5, 0.1);
+      },
+      powerDown() {
+        if (!live()) return; const t = ctx.currentTime;
+        const o = ctx.createOscillator(), g = ctx.createGain(), f = ctx.createBiquadFilter();
+        o.type = 'sawtooth'; o.frequency.setValueAtTime(420, t); o.frequency.exponentialRampToValueAtTime(40, t + 1.1);
+        [0, 2, 4].forEach(i => synth(t, chord[i], { glide: chord[i] / 8, glideT: 1.2, dur: 1.3, cut0: 3500, cut1: 80, q: 12, peak: 0.08, det: [-20, 20], echo: 0.3 }));
+        f.type = 'lowpass'; f.frequency.setValueAtTime(3000, t); f.frequency.exponentialRampToValueAtTime(120, t + 1.1);
+        g.gain.setValueAtTime(0.25, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 1.2);
+        o.connect(f); f.connect(g); g.connect(sfxBus); o.start(t); o.stop(t + 1.25);
+        click(t, 0.6, 1000, 0.04);
+      },
+      boost(onOff) { if (ctx) boostGain.gain.setTargetAtTime(onOff ? 0.12 : 0, ctx.currentTime, 0.08); }
+    };
+    return {
+      init, sfx,
+      get on() { return on; },
+      toggle() {
+        on = !on;
+        try { localStorage.setItem('ps-sound', on ? 'on' : 'off'); } catch (e) {}
+        if (ctx) on ? wake() : sleep();
+      },
+      // muffled in menus, wide open while playing
+      open(full) { if (ctx) musicFilter.frequency.setTargetAtTime(full ? 18000 : 900, ctx.currentTime, full ? 0.25 : 0.4); }
+    };
+  })();
+  const sfx = audio.sfx;
+  // browsers only allow audio after a gesture, so the engine starts on the first tap or key
+  addEventListener('pointerdown', audio.init, { capture: true });
+  addEventListener('keydown', audio.init, { capture: true });
+
+  // ---------- field ----------
+  // The disc lives in world space and the camera is locked to it, so the disc
+  // stays in the middle of the screen while the grid and arrows slide past.
+  let W = 0, H = 0, DPR = 1, cell = 200, arrows = [], PX = 0, PY = 0;
+  const target = { x: 0, y: 0 }, head = { x: 0, y: 0 }, trail = [];
+  const mouse = { x: 0, y: 0 };
+  let R = 60;                                   // player disc radius
 
   function layout() {
     DPR = Math.min(window.devicePixelRatio || 1, 2);
     W = innerWidth; H = innerHeight;
     cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR);
     ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
-
-    const cols = Math.max(3, Math.round(W / 300));
+    const cols = Math.max(3, Math.round(W / (MOBILE ? 130 : 200)));
     cell = W / cols;
-    const rows = Math.ceil(H / cell) + 1;
-    const offY = (H - (rows - 1) * cell) / 2;
-    const old = arrows;
+    R = cell * (MOBILE ? 0.24 : 0.2);
+    // a tile of the staggered lattice a little bigger than the screen; arrows wrap across it
+    const NC = cols + 4, NR = 2 * Math.ceil((Math.ceil(H / cell) + 4) / 2);
+    PX = NC * cell; PY = NR * cell;
     arrows = [];
-    for (let r = 0; r < rows; r++) {
-      // every other row shifts half a cell, like the reference staggering
-      const shift = (r % 2) * cell * 0.5;
-      for (let c = -1; c <= cols; c++) {
-        const x = c * cell + cell / 2 + shift - cell * 0.25;
-        if (x < -cell || x > W + cell) continue;
-        const prev = old[arrows.length];
-        arrows.push({ x, y: offY + r * cell, a: prev ? prev.a : Math.PI });
+    for (let r = 0; r < NR; r++) {
+      for (let c = 0; c < NC; c++) {
+        const x = head.x - PX / 2 + c * cell + (r % 2) * cell * 0.5, y = head.y - PY / 2 + r * cell;
+        arrows.push({ hx: x, hy: y, x, y, a: Math.PI, state: 'idle', t: 0, vx: 0, vy: 0, alpha: 1 });
       }
     }
-    if (!active) { target.x = head.x = W / 2; target.y = head.y = H / 2; }
   }
 
-  // Chunky block arrow pointing +x, centred on its own middle.
+  // keep an arrow's home within half a tile of the camera
+  function wrap(ar) {
+    let dx = 0, dy = 0;
+    while (ar.hx + dx - head.x > PX / 2) dx -= PX;
+    while (ar.hx + dx - head.x < -PX / 2) dx += PX;
+    while (ar.hy + dy - head.y > PY / 2) dy -= PY;
+    while (ar.hy + dy - head.y < -PY / 2) dy += PY;
+    if (dx || dy) { ar.hx += dx; ar.hy += dy; ar.x += dx; ar.y += dy; }
+  }
+  const onScreen = (x, y, m) => Math.abs(x - head.x) < W / 2 + m && Math.abs(y - head.y) < H / 2 + m;
+
+  // chunky block arrow pointing +x, centred on its own middle
   function arrowPath(s) {
     const L = s * 0.82, hw = s * 0.36, tw = s * 0.17, hl = s * 0.42;
     const x0 = -L / 2, x1 = L / 2, xn = x1 - hl;
     ctx.beginPath();
-    ctx.moveTo(x1, 0);
-    ctx.lineTo(xn, -hw);
-    ctx.lineTo(xn, -tw);
-    ctx.lineTo(x0, -tw);
-    ctx.lineTo(x0, tw);
-    ctx.lineTo(xn, tw);
-    ctx.lineTo(xn, hw);
-    ctx.closePath();
+    ctx.moveTo(x1, 0); ctx.lineTo(xn, -hw); ctx.lineTo(xn, -tw); ctx.lineTo(x0, -tw);
+    ctx.lineTo(x0, tw); ctx.lineTo(xn, tw); ctx.lineTo(xn, hw); ctx.closePath();
   }
 
-  function onPoint(x, y) {
-    target.x = x; target.y = y;
-    lastInput = performance.now();
-    if (!active) { active = true; hint.style.opacity = 0; }
+  // ---------- game state ----------
+  const G = { mode: 'menu', score: 0, lives: 3, invuln: 0, nextLaunch: 0, elapsed: 0, shake: 0, orb: null, secAcc: 0 };
+  let best = 0;
+  try { best = +localStorage.getItem('ad-best') || 0; } catch (e) {}
+  const hud = $('hud'), scoreEl = $('score'), livesEl = $('lives'), bestEl = $('best'), plusEl = $('plus'), livesBox = $('livesBox'), flash = $('flash');
+  bestEl.textContent = best;
+
+  const diff = () => {
+    const e = G.elapsed;
+    return {
+      every: Math.max(0.34, 1.6 - e * 0.02),
+      charge: Math.max(0.4, 0.9 - e * 0.007),
+      speed: (MOBILE ? 2.2 : 2.6) * cell * (1 + e * 0.018),
+      salvo: e > 40 ? 3 : e > 18 ? 2 : 1
+    };
+  };
+
+  function placeOrb() {
+    // any direction, anywhere from just on screen to well beyond it: follow the compass
+    const ang = Math.random() * Math.PI * 2;
+    const d = cell * (2.5 + Math.random() * 6.5);
+    G.orb = { x: head.x + Math.cos(ang) * d, y: head.y + Math.sin(ang) * d, t: 0 };
   }
-  addEventListener('pointermove', e => onPoint(e.clientX, e.clientY), { passive: true });
-  addEventListener('pointerdown', e => onPoint(e.clientX, e.clientY), { passive: true });
-  addEventListener('touchmove', e => { const t = e.touches[0]; if (t) onPoint(t.clientX, t.clientY); e.preventDefault(); }, { passive: false });
+
+  function launch() {
+    const D = diff();
+    const pool = arrows.filter(a => a.state === 'idle' && onScreen(a.hx, a.hy, -cell * 0.3) &&
+      Math.hypot(a.hx - head.x, a.hy - head.y) > cell * 2.1);
+    for (let n = 0; n < D.salvo && pool.length; n++) {
+      const a = pool.splice(Math.floor(Math.random() * pool.length), 1)[0];
+      a.state = 'charge'; a.t = 0; a.chargeFor = D.charge; a.speed = D.speed;
+      sfx.lock();
+    }
+  }
+
+  function hurt() {
+    G.lives--; G.invuln = 1.6; G.shake = 14;
+    sfx.hit();
+    flash.classList.remove('go'); void flash.offsetWidth; flash.classList.add('go');
+    livesBox.classList.remove('hit'); void livesBox.offsetWidth; livesBox.classList.add('hit');
+    livesEl.innerHTML = '&#9632;'.repeat(Math.max(0, G.lives)) + '<span style="display:inline;opacity:.25;margin:0">' + '&#9632;'.repeat(3 - Math.max(0, G.lives)) + '</span>';
+    if (G.lives <= 0) endGame();
+  }
+
+  function addScore(n, show) {
+    G.score += n; scoreEl.textContent = G.score;
+    if (show) { plusEl.textContent = '+' + n; plusEl.classList.remove('go'); void plusEl.offsetWidth; plusEl.classList.add('go'); }
+  }
+
+  // ---------- menu ----------
+  const mtitle = $('mtitle'), info = $('info'), itemsEl = $('items'), menu = $('menu');
+  let menuItems = [], sel = 0, screen = 'main', lastScore = null;
+  const ICON = '<svg class="ico" viewBox="0 0 30 18" aria-hidden="true"><path d="M30 9 L18 0 V5 H0 V13 H18 V18 Z" fill="#fff"/></svg>';
+  const SCREENS = {
+    main: () => ({ title: 'MENU', info: '', items: [
+      ['START GAME', startGame], ['HOW TO PLAY', () => showMenu('howto')], ['HIGH SCORE', () => showMenu('score')], ['WATCH MODE', watch],
+      [`SOUND : ${audio.on ? 'ON' : 'OFF'}`, () => { audio.toggle(); showMenu('main', sel); }]] }),
+    howto: () => ({ title: 'HOW TO PLAY', info:
+      'EVERY ARROW AIMS AT YOU.<br>A BLINKING ARROW IS ABOUT TO FIRE.<br>' +
+      (MOBILE ? 'DRAG ANYWHERE TO MOVE' : 'POINT THE MOUSE WHERE YOU WANT TO GO<br>(OR ARROW KEYS)') + '<br>' +
+      'FOLLOW THE POINTER TO THE RINGS : <b>+10</b><br>SURVIVE : +1 / SEC<br>3 HITS AND YOU ARE OUT',
+      items: [['BACK', () => showMenu('main')]] }),
+    score: () => ({ title: 'HIGH SCORE', info: `BEST : <b>${best}</b>` + (lastScore !== null ? `<br>LAST : ${lastScore}` : ''), items: [['BACK', () => showMenu('main')]] }),
+    over: () => ({ title: 'GAME OVER', info: `SCORE : <b>${G.score}</b><br>BEST&nbsp; : ${best}`, items: [['PLAY AGAIN', startGame], ['MAIN MENU', toMain]] }),
+    pause: () => ({ title: 'PAUSED', info: '', items: [['RESUME', resume], ['RESTART', startGame], ['MAIN MENU', toMain]] })
+  };
+  function showMenu(name, keep = 0) {
+    screen = name;
+    const S = SCREENS[name]();
+    mtitle.textContent = S.title; info.innerHTML = S.info;
+    menuItems = S.items; itemsEl.innerHTML = '';
+    menuItems.forEach(([label, fn], i) => {
+      const li = document.createElement('li');
+      li.innerHTML = ICON; li.append(label); li.setAttribute('role', 'menuitem');
+      li.addEventListener('pointerenter', () => { if (i !== sel) sfx.tick(); select(i); });
+      li.addEventListener('click', e => { e.stopPropagation(); sfx.select(); fn(); });
+      itemsEl.appendChild(li);
+    });
+    select(keep);
+    menu.classList.remove('hide');
+    cv.style.cursor = 'auto';
+    audio.open(false);
+  }
+  function select(i) { sel = (i + menuItems.length) % menuItems.length; [...itemsEl.children].forEach((li, k) => li.classList.toggle('sel', k === sel)); }
+  const hideMenu = () => { menu.classList.add('hide'); cv.style.cursor = MOBILE ? 'none' : 'crosshair'; };
+
+  function resetField() { arrows.forEach(a => { a.state = 'idle'; a.x = a.hx; a.y = a.hy; a.alpha = 1; }); }
+  function startGame() {
+    resetField();
+    G.mode = 'play'; G.score = 0; G.lives = 3; G.invuln = 1; G.elapsed = 0; G.nextLaunch = 1.2; G.secAcc = 0; G.shake = 0;
+    scoreEl.textContent = 0; livesEl.innerHTML = '&#9632;&#9632;&#9632;';
+    target.x = head.x; target.y = head.y;
+    placeOrb();
+    hideMenu(); hud.classList.remove('hide'); audio.open(true);
+  }
+  function endGame() {
+    G.mode = 'over'; lastScore = G.score;
+    if (G.score > best) { best = G.score; try { localStorage.setItem('ad-best', best); } catch (e) {} }
+    bestEl.textContent = best; G.orb = null;
+    sfx.powerDown();
+    showMenu('over');
+  }
+  function pause() { G.mode = 'pause'; showMenu('pause'); }
+  function resume() { G.mode = 'play'; hideMenu(); audio.open(true); }
+  function toMain() { G.mode = 'menu'; G.orb = null; resetField(); hud.classList.add('hide'); showMenu('main'); }
+  function watch() { G.mode = 'watch'; G.orb = null; hideMenu(); hud.classList.add('hide'); }
+
+  // ---------- input ----------
+  let lastInput = -1e9, pointerSeen = false;
+  const drag = { id: null, x: 0, y: 0 };
+  const keys = {};
+  addEventListener('pointermove', e => {
+    if (e.pointerType === 'mouse') { mouse.x = e.clientX; mouse.y = e.clientY; pointerSeen = true; }
+    else if (drag.id === e.pointerId && G.mode === 'play') {
+      // relative drag on touch: the disc follows the finger's motion and the world slides under it
+      const k = 1.35;
+      target.x += (e.clientX - drag.x) * k;
+      target.y += (e.clientY - drag.y) * k;
+      drag.x = e.clientX; drag.y = e.clientY;
+    }
+    lastInput = performance.now();
+  }, { passive: true });
+  addEventListener('pointerdown', e => {
+    if (e.pointerType !== 'mouse' && drag.id === null) { drag.id = e.pointerId; drag.x = e.clientX; drag.y = e.clientY; }
+    lastInput = performance.now();
+    if (G.mode === 'watch') toMain();
+  });
+  const lift = e => { if (drag.id === e.pointerId) drag.id = null; };
+  addEventListener('pointerup', lift); addEventListener('pointercancel', lift);
+  document.addEventListener('pointerout', e => { if (e.pointerType === 'mouse' && !e.relatedTarget) pointerSeen = false; });
+  addEventListener('blur', () => { pointerSeen = false; });
+  addEventListener('touchmove', e => e.preventDefault(), { passive: false });
+  addEventListener('keydown', e => {
+    keys[e.code] = true;
+    if (e.code === 'Space' || e.code.startsWith('Arrow')) e.preventDefault();
+    if (e.code === 'KeyM') { audio.toggle(); if (screen === 'main' && !menu.classList.contains('hide')) showMenu('main', sel); return; }
+    if (G.mode === 'watch') { toMain(); return; }
+    if (G.mode === 'play') { if (e.code === 'Escape') pause(); return; }
+    if (e.code === 'ArrowUp' || e.code === 'KeyW') { sfx.tick(); select(sel - 1); }
+    else if (e.code === 'ArrowDown' || e.code === 'KeyS') { sfx.tick(); select(sel + 1); }
+    else if (['ArrowRight', 'Enter', 'Space', 'KeyD'].includes(e.code)) { if (!e.repeat) { sfx.select(); menuItems[sel][1](); } }
+    else if (e.code === 'Escape' || e.code === 'ArrowLeft') {
+      if (G.mode === 'pause') resume();
+      else if (screen === 'howto' || screen === 'score') showMenu('main');
+    }
+  });
+  addEventListener('keyup', e => { keys[e.code] = false; });
   addEventListener('resize', layout);
 
-  let gridCanvas = null;
-  function bakeGrid() {
-    gridCanvas = document.createElement('canvas');
-    gridCanvas.width = cv.width; gridCanvas.height = cv.height;
-    const g = gridCanvas.getContext('2d');
-    // draw grid once into an offscreen layer
-    g.setTransform(DPR, 0, 0, DPR, 0, 0);
-    g.strokeStyle = 'rgba(120,122,150,0.16)'; g.lineWidth = 1; g.beginPath();
-    for (let x = 0.5; x < W; x += 22) { g.moveTo(x, 0); g.lineTo(x, H); }
-    for (let y = 0.5; y < H; y += 22) { g.moveTo(0, y); g.lineTo(W, y); }
-    g.stroke();
-  }
-
+  // ---------- loop ----------
+  let prev = performance.now(), speedSm = 0;
   function frame(t) {
-    // idle drift when nobody is touching it
-    if (performance.now() - lastInput > 4000) {
+    const dt = Math.max(0, Math.min(0.05, (t - prev) / 1000)); prev = t;
+    const playing = G.mode === 'play';
+
+    const SPD = cell * 4.5;                     // top cruising speed, px/s
+    if (playing) {
+      // mouse steers like a joystick: the further the pointer from the disc, the faster you go
+      if (pointerSeen && !MOBILE) {
+        const dx = mouse.x - W / 2, dy = mouse.y - H / 2, d = Math.hypot(dx, dy);
+        const m = Math.max(0, Math.min(1, (d - R * 1.1) / (Math.min(W, H) * 0.32)));
+        if (d > 0) { target.x += dx / d * m * SPD * dt; target.y += dy / d * m * SPD * dt; }
+      }
+      const kx = (keys.ArrowRight || keys.KeyD ? 1 : 0) - (keys.ArrowLeft || keys.KeyA ? 1 : 0);
+      const ky = (keys.ArrowDown || keys.KeyS ? 1 : 0) - (keys.ArrowUp || keys.KeyW ? 1 : 0);
+      if (kx || ky) { const l = Math.hypot(kx, ky); target.x += kx / l * SPD * 0.9 * dt; target.y += ky / l * SPD * 0.9 * dt; }
+    } else if (G.mode !== 'pause') {
+      // idle drift behind the menu: the field keeps sliding past, like the original piece
       const k = t / 1000;
-      target.x = W / 2 + Math.cos(k * 0.53) * W * 0.32;
-      target.y = H / 2 + Math.sin(k * 0.71) * H * 0.3;
-      if (active && performance.now() - lastInput > 9000) { active = false; hint.style.opacity = 1; }
+      target.x += Math.cos(k * 0.23) * cell * 0.9 * dt;
+      target.y += Math.sin(k * 0.31) * cell * 0.9 * dt;
     }
-    const ease = reduce ? 1 : 0.16;
-    head.x += (target.x - head.x) * ease;
-    head.y += (target.y - head.y) * ease;
+    if (G.mode !== 'pause') {
+      const ease = reduce ? 1 : (playing ? 0.3 : 0.16);
+      const px = head.x, py = head.y;
+      head.x += (target.x - head.x) * ease;
+      head.y += (target.y - head.y) * ease;
+      const v = dt > 0 ? Math.hypot(head.x - px, head.y - py) / dt / SPD : 0;
+      speedSm += (Math.min(1, v) - speedSm) * 0.15;
+      trail.unshift({ x: head.x, y: head.y });
+      if (trail.length > 70) trail.pop();
+    }
 
-    trail.unshift({ x: head.x, y: head.y });
-    if (trail.length > 70) trail.pop();
+    sfx.motion(playing ? speedSm : 0);
 
-    // background: black with a soft light pool around the cursor
-    ctx.globalCompositeOperation = 'source-over';
-    ctx.fillStyle = '#050506';
-    ctx.fillRect(0, 0, W, H);
-    const pool = ctx.createRadialGradient(head.x, head.y, 0, head.x, head.y, Math.max(W, H) * 0.55);
-    pool.addColorStop(0, 'rgba(70,70,74,0.55)');
-    pool.addColorStop(1, 'rgba(0,0,0,0)');
-    ctx.fillStyle = pool; ctx.fillRect(0, 0, W, H);
-    ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.drawImage(gridCanvas, 0, 0); ctx.restore();
+    // game logic
+    if (playing) {
+      G.elapsed += dt;
+      G.secAcc += dt;
+      if (G.secAcc >= 1) { G.secAcc -= 1; addScore(1, false); }
+      G.invuln = Math.max(0, G.invuln - dt);
+      G.nextLaunch -= dt;
+      if (G.nextLaunch <= 0) { launch(); G.nextLaunch = diff().every * (0.75 + Math.random() * 0.5); }
+      if (G.orb) {
+        G.orb.t += dt;
+        if (Math.hypot(G.orb.x - head.x, G.orb.y - head.y) < R + cell * 0.14) { addScore(10, true); sfx.collect(); placeOrb(); }
+      }
+    }
+    G.shake *= 0.86;
 
-    // ghost rings trailing behind the cursor
-    const R = cell * 0.36;
+    // background
+    ctx.save();
+    if (G.shake > 0.5) ctx.translate((Math.random() - 0.5) * G.shake, (Math.random() - 0.5) * G.shake);
+    ctx.fillStyle = '#050506'; ctx.fillRect(-20, -20, W + 40, H + 40);
+    const pool = ctx.createRadialGradient(W / 2, H / 2, 0, W / 2, H / 2, Math.max(W, H) * 0.55);
+    pool.addColorStop(0, 'rgba(70,70,74,0.55)'); pool.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = pool; ctx.fillRect(-20, -20, W + 40, H + 40);
+    // from here on everything is drawn in world space, with the disc at the centre of the screen
+    ctx.translate(W / 2 - head.x, H / 2 - head.y);
+    ctx.strokeStyle = 'rgba(120,122,150,0.16)'; ctx.lineWidth = 1; ctx.beginPath();
+    const gx0 = Math.floor((head.x - W / 2) / 22) * 22, gy0 = Math.floor((head.y - H / 2) / 22) * 22;
+    for (let x = gx0; x < head.x + W / 2 + 22; x += 22) { ctx.moveTo(x, head.y - H / 2 - 22); ctx.lineTo(x, head.y + H / 2 + 22); }
+    for (let y = gy0; y < head.y + H / 2 + 22; y += 22) { ctx.moveTo(head.x - W / 2 - 22, y); ctx.lineTo(head.x + W / 2 + 22, y); }
+    ctx.stroke();
+
+    // ghost rings trailing the disc
     for (let i = trail.length - 1; i >= 3; i -= 3) {
       const p = trail[i], f = 1 - i / trail.length;
-      ctx.strokeStyle = `rgba(255,255,255,${0.08 + f * 0.55})`;
-      ctx.lineWidth = 1 + f * 2.5;
+      ctx.strokeStyle = `rgba(255,255,255,${0.06 + f * 0.45})`;
+      ctx.lineWidth = 1 + f * 2;
       ctx.beginPath(); ctx.arc(p.x, p.y, R * (0.9 + (1 - f) * 0.5), 0, Math.PI * 2); ctx.stroke();
     }
 
-    // the arrows
+    // arrows
     const size = cell * 0.9;
     ctx.fillStyle = '#fff';
     ctx.shadowColor = 'rgba(255,255,255,0.85)';
-    ctx.shadowBlur = cell * 0.16;
     for (const ar of arrows) {
-      const want = Math.atan2(head.y - ar.y, head.x - ar.x);
-      let d = want - ar.a;
-      d = Math.atan2(Math.sin(d), Math.cos(d));
-      ar.a += d * (reduce ? 1 : 0.14);
-      const dist = Math.hypot(head.x - ar.x, head.y - ar.y);
-      const s = size * (0.78 + 0.22 * Math.min(1, dist / (cell * 2.2)));
-      ctx.save();
-      ctx.translate(ar.x, ar.y);
-      ctx.rotate(ar.a);
-      arrowPath(s);
-      ctx.fill();
+      if (ar.state !== 'fly') wrap(ar);
+      if (ar.state === 'gone') {
+        ar.t -= dt;
+        if (ar.t <= 0) { ar.state = 'idle'; ar.x = ar.hx; ar.y = ar.hy; ar.alpha = 0; }
+        continue;
+      }
+      if (ar.state === 'idle' || ar.state === 'charge') {
+        const want = Math.atan2(head.y - ar.y, head.x - ar.x);
+        let d = Math.atan2(Math.sin(want - ar.a), Math.cos(want - ar.a));
+        ar.a += d * (reduce ? 1 : (ar.state === 'charge' ? 0.3 : 0.14));
+        ar.alpha = Math.min(1, ar.alpha + dt * 2);
+      }
+      let s = size * (0.78 + 0.22 * Math.min(1, Math.hypot(head.x - ar.x, head.y - ar.y) / (cell * 2.2)));
+      let alpha = ar.alpha;
+      if (ar.state === 'charge') {
+        if (G.mode === 'pause') {} else ar.t += dt;
+        const p = ar.t / ar.chargeFor;
+        s *= 1 + p * 0.25;
+        alpha = (Math.floor(ar.t * (8 + p * 14)) % 2) ? 0.25 : 1;      // blinks faster as it is about to fire
+        // aim line
+        ctx.save(); ctx.globalAlpha = 0.15 + p * 0.35; ctx.strokeStyle = '#fff'; ctx.lineWidth = 1; ctx.setLineDash([3, 7]);
+        ctx.beginPath(); ctx.moveTo(ar.x, ar.y); ctx.lineTo(ar.x + Math.cos(ar.a) * cell * 3, ar.y + Math.sin(ar.a) * cell * 3); ctx.stroke(); ctx.restore();
+        if (p >= 1 && G.mode === 'play') {
+          ar.state = 'fly'; ar.vx = Math.cos(ar.a) * ar.speed; ar.vy = Math.sin(ar.a) * ar.speed; sfx.launch();
+        } else if (G.mode !== 'play' && G.mode !== 'pause') { ar.state = 'idle'; }
+      }
+      if (ar.state === 'fly') {
+        if (G.mode !== 'pause') { ar.x += ar.vx * dt; ar.y += ar.vy * dt; }
+        // motion streak
+        ctx.save(); ctx.globalAlpha = 0.35; ctx.strokeStyle = '#fff'; ctx.lineWidth = s * 0.2; ctx.lineCap = 'round';
+        ctx.beginPath(); ctx.moveTo(ar.x, ar.y); ctx.lineTo(ar.x - ar.vx * 0.09, ar.y - ar.vy * 0.09); ctx.stroke(); ctx.restore();
+        // hit test: the arrow's tip and body against the disc
+        if (G.mode === 'play' && G.invuln <= 0) {
+          const tx = ar.x + Math.cos(ar.a) * s * 0.41, ty = ar.y + Math.sin(ar.a) * s * 0.41;
+          if (Math.hypot(tx - head.x, ty - head.y) < R * 0.85 || Math.hypot(ar.x - head.x, ar.y - head.y) < R * 0.7) hurt();
+        }
+        if (!onScreen(ar.x, ar.y, cell * 2)) { ar.state = 'gone'; ar.t = 0.9; }
+      }
+      ctx.globalAlpha = alpha;
+      ctx.shadowBlur = cell * (ar.state === 'charge' ? 0.3 : 0.16);
+      ctx.save(); ctx.translate(ar.x, ar.y); ctx.rotate(ar.a); arrowPath(s); ctx.fill(); ctx.restore();
+    }
+    ctx.globalAlpha = 1; ctx.shadowBlur = 0;
+
+    // ring to collect: a thick band drawn in negative, so it inverts the arrows and grid under it
+    if (G.orb) {
+      const o = G.orb, r = cell * 0.17, pulse = 1 + Math.sin(o.t * 6) * 0.1, spin = o.t * 2;
+      ctx.globalCompositeOperation = 'difference';
+      ctx.strokeStyle = '#fff';
+      ctx.lineWidth = r * 0.55;
+      ctx.beginPath(); ctx.arc(o.x, o.y, r * pulse, 0, Math.PI * 2); ctx.stroke();
+      ctx.setLineDash([r * 0.35, r * 0.45]); ctx.lineWidth = r * 0.16;
+      ctx.beginPath(); ctx.arc(o.x, o.y, r * 1.85, spin, spin + Math.PI * 2); ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.globalCompositeOperation = 'source-over';
+    }
+
+    // the disc: inverts whatever it covers; blinks while invulnerable
+    if (!(G.invuln > 0 && Math.floor(G.invuln * 10) % 2)) {
+      ctx.globalCompositeOperation = 'difference';
+      ctx.fillStyle = '#fff';
+      ctx.beginPath(); ctx.arc(head.x, head.y, R, 0, Math.PI * 2); ctx.fill();
+      ctx.globalCompositeOperation = 'source-over';
+      ctx.strokeStyle = 'rgba(255,255,255,0.9)'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(head.x, head.y, R + 3, 0, Math.PI * 2); ctx.stroke();
+    }
+
+    // a single arrow on the disc's edge that points at the ring
+    if (G.orb && playing) {
+      const o = G.orb, dx = o.x - head.x, dy = o.y - head.y, dist = Math.hypot(dx, dy), ang = Math.atan2(dy, dx);
+      const r0 = Math.max(R, 26) + 6;
+      // needle: grows and pulses as you close in
+      const near = Math.max(0, 1 - dist / (Math.max(W, H) * 1.2));
+      const len = 40 + near * 14 + Math.sin(o.t * (6 + near * 10)) * 4;
+      ctx.save(); ctx.translate(head.x, head.y); ctx.rotate(ang);
+      ctx.fillStyle = '#fff'; ctx.shadowColor = 'rgba(255,255,255,0.9)'; ctx.shadowBlur = 10;
+      ctx.beginPath(); ctx.moveTo(r0 + 4 + len, 0); ctx.lineTo(r0, -14); ctx.lineTo(r0 + 11, 0); ctx.lineTo(r0, 14); ctx.closePath();
+      ctx.fill(); ctx.shadowBlur = 0; ctx.strokeStyle = '#050506'; ctx.lineWidth = 1.5; ctx.stroke();
       ctx.restore();
     }
-    ctx.shadowBlur = 0;
-
-    // cursor disc inverts whatever it covers
-    ctx.globalCompositeOperation = 'difference';
-    ctx.fillStyle = '#fff';
-    ctx.beginPath(); ctx.arc(head.x, head.y, R, 0, Math.PI * 2); ctx.fill();
-    ctx.globalCompositeOperation = 'source-over';
-    ctx.strokeStyle = 'rgba(255,255,255,0.9)'; ctx.lineWidth = 2;
-    ctx.beginPath(); ctx.arc(head.x, head.y, R + 3, 0, Math.PI * 2); ctx.stroke();
-
+    ctx.restore();
     requestAnimationFrame(frame);
   }
 
-  layout(); bakeGrid();
-  addEventListener('resize', bakeGrid);
+  layout();
+  showMenu('main');
   requestAnimationFrame(frame);
 })();
 </script>
+
+</body></html>
