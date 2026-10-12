@@ -1,3 +1,4 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1"><style>:root{color-scheme:light}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -6,6 +7,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
+/* one black-and-green terminal look by choice */
+:root{ --lab:64px; --cellH:min(46px, calc((100vw - var(--lab)) / 16)); }
 html,body{
     margin:0;
     padding:0;
@@ -28,28 +31,51 @@ canvas{
     z-index:20;
     user-select:none;
     -webkit-user-select:none;
+    touch-action:none;
 }
 
 .row{
     display:grid;
-    grid-template-columns:repeat(16,1fr);
+    grid-template-columns:var(--lab) repeat(16,1fr);
 }
 
+.rowLabel{
+    border:1px solid #0f0;
+    color:#0f0;
+    background:black;
+    font:11px monospace;
+    letter-spacing:.06em;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+    margin:0;
+    padding:0;
+}
+.rowLabel.muted{ color:#060; border-color:#060; text-decoration:line-through; }
+
 .cell{
-    aspect-ratio:1;
+    height:var(--cellH);
+    box-sizing:border-box;
     border:1px solid #0f0;
     cursor:pointer;
     user-select:none;
     -webkit-user-select:none;
 }
+/* every beat (4 steps) gets a slightly brighter left edge */
+.cell.beat{ border-left:2px solid #6f6; }
 
 .cell.active{
     background:#0f0;
 }
 
+.row.muted .cell.active{ background:#063; }
+
 .playing{
     outline:2px solid red;
+    outline-offset:-2px;
 }
+.cell.active.playing{ background:#fff; }
 
 .ui{
     position:fixed;
@@ -60,6 +86,8 @@ canvas{
     background:rgba(0,0,0,0.65);
     padding:10px;
     max-width:300px;
+    max-height:calc(100vh - 3 * var(--cellH) - 30px);
+    overflow:auto;
 }
 
 #uiToggle{
@@ -109,18 +137,22 @@ button{
     padding:7px 12px;
     cursor:pointer;
 }
+button.small{ font-size:13px; padding:5px 9px; }
 
 button:hover,
 select:hover,
-select:focus{
+select:focus,
+button:focus-visible{
     background:white;
     color:black;
     border-color:white;
     outline:none;
 }
+button.on{ background:#0f0; color:black; }
 
 input[type="range"]{
     width:260px;
+    accent-color:#0f0;
 }
 
 label{
@@ -216,7 +248,10 @@ select{
     display:none;
     font-size:20px;
     padding:10px 16px;
+    opacity:.25;
+    transition:opacity .3s;
 }
+#returnUI:hover{ opacity:1; }
 
 .hideInterface #returnUI{
     display:block;
@@ -228,7 +263,7 @@ select{
         top:8px;
         left:8px;
         max-width:210px;
-        max-height:72vh;
+        max-height:calc(100vh - 3 * var(--cellH) - 24px);
         overflow:auto;
         padding:8px;
         font-size:12px;
@@ -289,13 +324,8 @@ select{
         padding:4px 6px;
     }
 
-    .gridWrap{
-        bottom:0;
-    }
-
-    .cell{
-        border:1px solid #0f0;
-    }
+    :root{ --lab:40px; }
+    .rowLabel{ font-size:8px; }
 
     .noticeBox{
         width:calc(100vw - 36px);
@@ -347,9 +377,18 @@ select{
         <button id="stop">STOP</button>
         <button id="visualOnly">FULLSCREEN VISUAL</button>
 
+        <div>
+            <button class="small" id="randomPat">RANDOM</button>
+            <button class="small" id="clearPat">CLEAR</button>
+        </div>
+
         <label>BPM</label>
         <input type="range" min="80" max="160" value="120" id="bpm">
         <div id="bpmValue">120</div>
+
+        <label>SWING</label>
+        <input type="range" min="0" max="60" value="0" id="swing">
+        <div class="valueText" id="swingValue">0%</div>
 
         <label>BASS / KICK</label>
         <select id="kickSample"></select>
@@ -373,6 +412,7 @@ select{
         <div class="valueText" id="reverbDecayValue">4</div>
 
         <div class="status" id="sampleStatus">SAMPLES: NOT LOADED</div>
+        <div class="status">SPACE START/STOP &middot; F VISUAL &middot; R RANDOM</div>
     </div>
 </div>
 
@@ -403,20 +443,52 @@ select{
 <script>
 const canvas = document.getElementById("c");
 const g = canvas.getContext("2d");
+let W = innerWidth, H = innerHeight;
 
+// sharp on retina screens; drawing happens in CSS pixels
 function resize(){
-    canvas.width = innerWidth;
-    canvas.height = innerHeight;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    W = innerWidth; H = innerHeight;
+    canvas.width = W * dpr;
+    canvas.height = H * dpr;
+    canvas.style.width = W + "px";
+    canvas.style.height = H + "px";
+    g.setTransform(dpr, 0, 0, dpr, 0, 0);
 }
 resize();
 onresize = resize;
+
+// ================= SAVED STATE =================
+const SAVE_KEY = "dats-seq-v1";
+let saved = {};
+try{ saved = JSON.parse(localStorage.getItem(SAVE_KEY) || "{}") || {}; }catch(e){ saved = {}; }
+function save(){
+    try{
+        localStorage.setItem(SAVE_KEY, JSON.stringify({
+            data, muted,
+            bpm: bpmSlider.value,
+            swing: swingSlider.value,
+            kick: document.getElementById("kickSample").value,
+            snare: document.getElementById("snareSample").value,
+            hat: document.getElementById("hatSample").value,
+            reverbAmount: document.getElementById("reverbAmount").value,
+            reverbTime: document.getElementById("reverbTime").value,
+            reverbDecay: document.getElementById("reverbDecay").value
+        }));
+    }catch(e){}
+}
+let saveTimer = null;
+const saveSoon = () => { clearTimeout(saveTimer); saveTimer = setTimeout(save, 300); };
 
 // ================= AUDIO =================
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
 const master = audioCtx.createGain();
 master.gain.value = 0.9;
-master.connect(audioCtx.destination);
+const comp = audioCtx.createDynamicsCompressor();
+comp.threshold.value = -10; comp.ratio.value = 4;
+master.connect(comp);
+comp.connect(audioCtx.destination);
 
 const dryGain = audioCtx.createGain();
 dryGain.gain.value = 1.0;
@@ -452,6 +524,10 @@ function createImpulse(seconds, decay){
 
 convolver.buffer = createImpulse(5,4);
 
+// white noise for the synthesized fallback kit
+const noiseBuf = audioCtx.createBuffer(1, audioCtx.sampleRate, audioCtx.sampleRate);
+{ const d = noiseBuf.getChannelData(0); for(let i=0;i<d.length;i++) d[i] = Math.random()*2-1; }
+
 function updateReverb(){
     const amount = Number(document.getElementById("reverbAmount").value) / 100;
     const time = Number(document.getElementById("reverbTime").value);
@@ -474,12 +550,12 @@ function updateReverb(){
             convolver.buffer = createImpulse(time, decay);
         }, 80);
     }
+    saveSoon();
 }
 
 document.getElementById("reverbAmount").oninput = updateReverb;
 document.getElementById("reverbTime").oninput = updateReverb;
 document.getElementById("reverbDecay").oninput = updateReverb;
-updateReverb();
 
 // ================= SAMPLES =================
 const RAW_BASE = "https://raw.githubusercontent.com/tidalcycles/Dirt-Samples/c2db9a0dc4ffb911febc613cdb9726cae5175223";
@@ -521,6 +597,7 @@ const sampleBuffers = {
     snare:{},
     hat:{}
 };
+const sampleLoading = { kick:{}, snare:{}, hat:{} };
 
 function fillSelect(id, list){
     const sel = document.getElementById(id);
@@ -538,25 +615,23 @@ fillSelect("kickSample", sampleLists.kick);
 fillSelect("snareSample", sampleLists.snare);
 fillSelect("hatSample", sampleLists.hat);
 
-document.getElementById("kickSample").value = "BT0A0D0.wav";
-document.getElementById("snareSample").value = "ST0T0S3.wav";
-document.getElementById("hatSample").value = "000_drum1.wav";
+document.getElementById("kickSample").value = saved.kick || "BT0A0D0.wav";
+document.getElementById("snareSample").value = saved.snare || "ST0T0S3.wav";
+document.getElementById("hatSample").value = saved.hat || "000_drum1.wav";
 
-async function loadSample(type, filename){
-    if(sampleBuffers[type][filename]) return sampleBuffers[type][filename];
+// one request per file, however many steps ask for it while it loads
+function loadSample(type, filename){
+    if(sampleBuffers[type][filename]) return Promise.resolve(sampleBuffers[type][filename]);
+    if(sampleLoading[type][filename]) return sampleLoading[type][filename];
 
     const url = `${RAW_BASE}/${sampleFolders[type]}/${filename}`;
-    const res = await fetch(url);
-
-    if(!res.ok){
-        throw new Error("failed loading " + filename);
-    }
-
-    const arr = await res.arrayBuffer();
-    const buffer = await audioCtx.decodeAudioData(arr);
-    sampleBuffers[type][filename] = buffer;
-
-    return buffer;
+    const p = fetch(url)
+        .then(res => { if(!res.ok) throw new Error("failed loading " + filename); return res.arrayBuffer(); })
+        .then(arr => new Promise((ok, bad) => audioCtx.decodeAudioData(arr, ok, bad)))
+        .then(buffer => { sampleBuffers[type][filename] = buffer; return buffer; })
+        .finally(() => { delete sampleLoading[type][filename]; });
+    sampleLoading[type][filename] = p;
+    return p;
 }
 
 async function preloadDefaultSamples(){
@@ -572,8 +647,8 @@ async function preloadDefaultSamples(){
 
         status.innerText = "SAMPLES: DEFAULT CACHED";
     }catch(e){
-        console.error(e);
-        status.innerText = "SAMPLES: CACHE ERROR";
+        console.warn(e);
+        status.innerText = "SAMPLES: OFFLINE / SYNTH KIT";
     }
 }
 
@@ -592,56 +667,48 @@ async function loadSelectedSamples(){
 
         status.innerText = "SAMPLES: LOADED";
     }catch(e){
-        console.error(e);
-        status.innerText = "SAMPLES: ERROR";
- 
+        console.warn(e);
+        status.innerText = "SAMPLES: OFFLINE / SYNTH KIT";
     }
 }
 
-function fallbackDrum(type){
-    const now = audioCtx.currentTime;
-    const osc = audioCtx.createOscillator();
-    const gain = audioCtx.createGain();
-    const filter = audioCtx.createBiquadFilter();
+// synthesized kit, used when a sample is not (yet) available
+function fallbackDrum(type, when){
+    const t = when || audioCtx.currentTime;
+    const out = audioCtx.createGain();
+    out.connect(dryGain);
+    out.connect(wetGain);
 
     if(type === "kick"){
-        osc.type = "sine";
-        osc.frequency.setValueAtTime(150, now);
-        osc.frequency.exponentialRampToValueAtTime(50, now + 0.2);
-        gain.gain.setValueAtTime(1, now);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
-        filter.type = "lowpass";
-        filter.frequency.value = 900;
+        const o = audioCtx.createOscillator(), og = audioCtx.createGain();
+        o.frequency.setValueAtTime(160, t);
+        o.frequency.exponentialRampToValueAtTime(45, t + 0.14);
+        og.gain.setValueAtTime(1.2, t);
+        og.gain.exponentialRampToValueAtTime(0.001, t + 0.38);
+        o.connect(og); og.connect(out);
+        o.start(t); o.stop(t + 0.4);
     }
 
     if(type === "snare"){
-        osc.type = "triangle";
-        osc.frequency.value = 220;
-        gain.gain.setValueAtTime(0.5, now);
-        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
-        filter.type = "bandpass";
-        filter.frequency.value = 1600;
+        const n = audioCtx.createBufferSource(), f = audioCtx.createBiquadFilter(), ng = audioCtx.createGain();
+        n.buffer = noiseBuf; f.type = "bandpass"; f.frequency.value = 1800; f.Q.value = 0.8;
+        ng.gain.setValueAtTime(0.8, t); ng.gain.exponentialRampToValueAtTime(0.001, t + 0.2);
+        n.connect(f); f.connect(ng); ng.connect(out); n.start(t); n.stop(t + 0.22);
+        const o = audioCtx.createOscillator(), og = audioCtx.createGain();
+        o.type = "triangle"; o.frequency.setValueAtTime(240, t); o.frequency.exponentialRampToValueAtTime(170, t + 0.08);
+        og.gain.setValueAtTime(0.5, t); og.gain.exponentialRampToValueAtTime(0.001, t + 0.12);
+        o.connect(og); og.connect(out); o.start(t); o.stop(t + 0.15);
     }
 
     if(type === "hat"){
-        osc.type = "square";
-        osc.frequency.value = 6000;
-        gain.gain.setValueAtTime(0.3, now);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
-        filter.type = "highpass";
-        filter.frequency.value = 4000;
+        const n = audioCtx.createBufferSource(), f = audioCtx.createBiquadFilter(), ng = audioCtx.createGain();
+        n.buffer = noiseBuf; f.type = "highpass"; f.frequency.value = 7000;
+        ng.gain.setValueAtTime(0.45, t); ng.gain.exponentialRampToValueAtTime(0.001, t + 0.05);
+        n.connect(f); f.connect(ng); ng.connect(out); n.start(t); n.stop(t + 0.07);
     }
-
-    osc.connect(filter);
-    filter.connect(gain);
-    gain.connect(dryGain);
-    gain.connect(wetGain);
-
-    osc.start();
-    osc.stop(now + 0.35);
 }
 
-function playSample(type){
+function playSample(type, when){
     const selectId =
         type === "kick" ? "kickSample" :
         type === "snare" ? "snareSample" :
@@ -651,10 +718,9 @@ function playSample(type){
     const buffer = sampleBuffers[type][filename];
 
     if(!buffer){
-        loadSample(type, filename).then(()=>playSample(type)).catch(()=>{
-            fallbackDrum(type);
-        });
-        fallbackDrum(type);
+        // play the synth now, fetch the sample quietly for next time
+        fallbackDrum(type, when);
+        loadSample(type, filename).catch(()=>{});
         return;
     }
 
@@ -671,23 +737,19 @@ function playSample(type){
     gain.connect(dryGain);
     gain.connect(wetGain);
 
-    src.start();
+    src.start(when || 0);
 }
 
-document.getElementById("kickSample").onchange = ()=>{
-    loadSample("kick", document.getElementById("kickSample").value).catch(()=>{});
-};
-
-document.getElementById("snareSample").onchange = ()=>{
-    loadSample("snare", document.getElementById("snareSample").value).catch(()=>{});
-};
-
-document.getElementById("hatSample").onchange = ()=>{
-    loadSample("hat", document.getElementById("hatSample").value).catch(()=>{});
-};
+["kick","snare","hat"].forEach(type => {
+    document.getElementById(type + "Sample").onchange = ()=>{
+        loadSample(type, document.getElementById(type + "Sample").value).catch(()=>{});
+        saveSoon();
+    };
+});
 
 // ================= GRID + MOUSE / TOUCH DRAG =================
 const rows = ["kick","snare","hat"];
+const rowLabels = { kick:"KICK", snare:"SNARE", hat:"DRUM" };
 const steps = 16;
 
 const data = {
@@ -695,6 +757,9 @@ const data = {
     snare:Array(steps).fill(0),
     hat:Array(steps).fill(0)
 };
+const muted = { kick:false, snare:false, hat:false };
+if(saved.data) rows.forEach(r => { if(Array.isArray(saved.data[r])) data[r] = saved.data[r].slice(0, steps).map(v => v ? 1 : 0); });
+if(saved.muted) rows.forEach(r => { muted[r] = !!saved.muted[r]; });
 
 let isDragging = false;
 let dragValue = 1;
@@ -706,6 +771,7 @@ function setCellState(rowName, stepIndex, value){
     if(cells[stepIndex]){
         cells[stepIndex].classList.toggle("active", value === 1);
     }
+    saveSoon();
 }
 
 function getCellFromPoint(x,y){
@@ -721,72 +787,97 @@ function getCellFromPoint(x,y){
 rows.forEach(r=>{
     const el = document.querySelector("." + r);
 
+    // row label doubles as a mute switch
+    const lab = document.createElement("button");
+    lab.className = "rowLabel";
+    lab.textContent = rowLabels[r];
+    lab.title = "Mute / unmute";
+    lab.onclick = () => {
+        muted[r] = !muted[r];
+        lab.classList.toggle("muted", muted[r]);
+        el.classList.toggle("muted", muted[r]);
+        saveSoon();
+    };
+    lab.classList.toggle("muted", muted[r]);
+    el.classList.toggle("muted", muted[r]);
+    el.appendChild(lab);
+
     for(let i=0; i<steps; i++){
         const cell = document.createElement("div");
         cell.classList.add("cell");
+        if(i % 4 === 0 && i) cell.classList.add("beat");
         cell.dataset.row = r;
         cell.dataset.step = i;
-
-        cell.onmousedown = e=>{
-            e.preventDefault();
-
-            isDragging = true;
-            dragValue = data[r][i] ? 0 : 1;
-
-            setCellState(r, i, dragValue);
-        };
-
-        cell.onmouseenter = ()=>{
-            if(isDragging){
-                setCellState(r, i, dragValue);
-            }
-        };
-
-        cell.ontouchstart = e=>{
-            e.preventDefault();
-
-            isDragging = true;
-            dragValue = data[r][i] ? 0 : 1;
-
-            setCellState(r, i, dragValue);
-        };
-
-        cell.ontouchmove = e=>{
-            e.preventDefault();
-
-            const touch = e.touches[0];
-            const hit = getCellFromPoint(touch.clientX, touch.clientY);
-
-            if(hit){
-                setCellState(hit.row, hit.step, dragValue);
-            }
-        };
-
-        cell.onclick = e=>{
-            e.preventDefault();
-        };
-
+        if(data[r][i]) cell.classList.add("active");
         el.appendChild(cell);
     }
 });
 
-document.addEventListener("mouseup", ()=>{
-    isDragging = false;
+// pointer events cover mouse, pen and touch; dragging paints the first cell's new value
+const gridWrap = document.querySelector(".gridWrap");
+gridWrap.addEventListener("pointerdown", e=>{
+    const hit = getCellFromPoint(e.clientX, e.clientY);
+    if(!hit) return;
+    e.preventDefault();
+    audioCtx.resume();
+    isDragging = true;
+    dragValue = data[hit.row][hit.step] ? 0 : 1;
+    setCellState(hit.row, hit.step, dragValue);
+    // audition the sound when switching a step on while stopped
+    if(dragValue && !playing && !muted[hit.row]) playSample(hit.row);
 });
-
-document.addEventListener("touchend", ()=>{
-    isDragging = false;
+addEventListener("pointermove", e=>{
+    if(!isDragging) return;
+    const hit = getCellFromPoint(e.clientX, e.clientY);
+    if(hit && data[hit.row][hit.step] !== dragValue) setCellState(hit.row, hit.step, dragValue);
 });
+addEventListener("pointerup", ()=>{ isDragging = false; });
+addEventListener("pointercancel", ()=>{ isDragging = false; });
 
-// ================= BPM =================
+function randomPattern(){
+    rows.forEach(r => {
+        for(let i=0;i<steps;i++){
+            let on = 0;
+            if(r === "kick") on = (i === 0 || i === 8) ? 1 : (Math.random() < (i % 2 ? 0.08 : 0.22) ? 1 : 0);
+            if(r === "snare") on = (i === 4 || i === 12) ? 1 : (Math.random() < 0.08 ? 1 : 0);
+            if(r === "hat") on = Math.random() < (i % 2 ? 0.45 : 0.75) ? 1 : 0;
+            setCellState(r, i, on);
+        }
+    });
+}
+function clearPattern(){ rows.forEach(r => { for(let i=0;i<steps;i++) setCellState(r, i, 0); }); }
+document.getElementById("randomPat").onclick = randomPattern;
+document.getElementById("clearPat").onclick = clearPattern;
+
+// a first visit gets a groove to start from
+if(!saved.data){
+    [0,8,11].forEach(i => data.kick[i] = 1);
+    [4,12].forEach(i => data.snare[i] = 1);
+    [0,2,4,6,8,10,12,14,15].forEach(i => data.hat[i] = 1);
+    rows.forEach(r => document.querySelectorAll("." + r + " .cell").forEach((c,i) => c.classList.toggle("active", data[r][i] === 1)));
+}
+
+// ================= BPM / SWING =================
 const bpmSlider = document.getElementById("bpm");
 const bpmValue = document.getElementById("bpmValue");
+const swingSlider = document.getElementById("swing");
+const swingValue = document.getElementById("swingValue");
 
+if(saved.bpm) bpmSlider.value = saved.bpm;
+if(saved.swing) swingSlider.value = saved.swing;
+["reverbAmount","reverbTime","reverbDecay"].forEach(id => { if(saved[id]) document.getElementById(id).value = saved[id]; });
 bpmValue.innerText = bpmSlider.value;
+swingValue.innerText = swingSlider.value + "%";
 
 bpmSlider.oninput = ()=>{
     bpmValue.innerText = bpmSlider.value;
+    saveSoon();
 };
+swingSlider.oninput = ()=>{
+    swingValue.innerText = swingSlider.value + "%";
+    saveSoon();
+};
+updateReverb();
 
 // ================= VISUAL =================
 const vocab = [
@@ -798,9 +889,11 @@ const vocab = [
 ];
 
 function makeText(n){
+    // a random start in the vocabulary so every layout reads differently
+    const off = Math.floor(Math.random() * vocab.length);
     let t = [];
     for(let i=0; i<n; i++){
-        t.push(vocab[i % vocab.length]);
+        t.push(vocab[(off + i) % vocab.length]);
     }
     return t;
 }
@@ -810,8 +903,11 @@ let alignMode = 0;
 let wordCount = 40;
 let titleWords = ["DATA","SYSTEM","VISUAL"];
 let titleSize = 80;
-let scrollY = 0;
+let scrollY = 0, scrollTarget = 0;
 let kickCount = 0;
+let flash = 0;          // kick inversion, decays
+let shake = 0;          // snare jolt, decays
+let playStepVis = -1;   // step currently heard
 
 function generateLayout(){
     layout = [];
@@ -821,49 +917,56 @@ function generateLayout(){
     wordCount = Math.max(10, Math.min(200, wordCount));
 
     titleWords = makeText(3).map(w=>w.toUpperCase());
-    titleSize = 60 + Math.random() * 120;
+    titleSize = Math.min(W / 7, 60 + Math.random() * 120);
 
     const cols = 2 + (alignMode % 3);
-    const w = canvas.width / cols;
+    const w = W / cols;
 
     for(let i=0; i<cols; i++){
+        const words = makeText(wordCount);
         layout.push({
             x:i * w + 80,
-            words:makeText(wordCount),
-            highlights:[],
-            size:16 + Math.random() * 30
+            words:words.slice(),
+            source:words,           // what the scrambled glyphs decode back into
+            highlights:new Set(),
+            size:Math.max(12, Math.min(W / 30, 16 + Math.random() * 30))
         });
     }
 }
 
+// snare: every word becomes one random glyph, then decodes back over the next frames
 function transformText(){
     layout.forEach(b=>{
         b.words = b.words.map(()=>{
             return String.fromCharCode(33 + Math.floor(Math.random() * 94));
         });
     });
+    shake = 1;
 }
 
 function addBlock(){
     layout.forEach(b=>{
-        b.highlights = [];
+        b.highlights = new Set();
 
         for(let i=0; i<b.words.length; i++){
             if(Math.random() > 0.85){
-                b.highlights.push(i);
+                b.highlights.add(i);
             }
         }
     });
 }
 
 function draw(){
-    const w = canvas.width;
-    const h = canvas.height;
+    const w = W;
+    const h = H;
 
     g.fillStyle = "black";
     g.fillRect(0,0,w,h);
 
-    const margin = 80;
+    g.save();
+    if(shake > 0.02) g.translate((Math.random() - 0.5) * 14 * shake, (Math.random() - 0.5) * 6 * shake);
+
+    const margin = w < 600 ? 20 : 80;
     const contentWidth = w - margin * 2;
 
     let baseX = margin;
@@ -871,6 +974,7 @@ function draw(){
     if(alignMode === 1) baseX = w / 2 - contentWidth / 2;
     if(alignMode === 2) baseX = w - contentWidth - margin;
 
+    scrollY += (scrollTarget - scrollY) * 0.12;
     const yOffset = -scrollY;
 
     g.fillStyle = "white";
@@ -880,6 +984,11 @@ function draw(){
     let currentY = 200 + yOffset;
 
     layout.forEach(b=>{
+        // decode a few scrambled glyphs back into words every frame
+        for(let k=0; k<b.words.length; k++){
+            if(b.words[k] !== b.source[k] && Math.random() < 0.06) b.words[k] = b.source[k];
+        }
+
         g.font = b.size + "px monospace";
 
         let x = baseX;
@@ -894,7 +1003,7 @@ function draw(){
                 y += b.size + 10;
             }
 
-            if(b.highlights.includes(i)){
+            if(b.highlights.has(i)){
                 g.fillStyle = "white";
                 g.fillRect(x - 2, y - b.size, width + 4, b.size + 8);
                 g.fillStyle = "black";
@@ -909,66 +1018,121 @@ function draw(){
         currentY = y + 60;
     });
 
-    if(currentY > h){
-        scrollY += 30;
+    // keep scrolling down while the text runs past the screen
+    if(currentY > h && playing && scrollTarget < scrollY + 1) scrollTarget += 30;
+
+    g.restore();
+
+    // step ruler: shows the pattern and the playhead on the visual itself
+    const visualOnly = document.body.classList.contains("hideInterface");
+    const rulerY = visualOnly ? h - 30 : 12;
+    if(visualOnly || w > 900){
+        const cw = Math.min(18, (w * 0.4) / steps), x0 = visualOnly ? margin : w / 2 - (cw * steps) / 2;
+        for(let i=0;i<steps;i++){
+            const x = x0 + i * cw;
+            rows.forEach((r, k) => {
+                g.fillStyle = data[r][i] ? (i === playStepVis ? "#fff" : "#0f0") : "rgba(0,255,0,0.15)";
+                g.fillRect(x, rulerY + k * 5, cw - 2, 3);
+            });
+        }
     }
 
-    if(data.kick[step]){
+    if(flash > 0.01){
         g.globalCompositeOperation = "difference";
-        g.fillStyle = "white";
+        g.fillStyle = `rgba(255,255,255,${Math.min(1, flash)})`;
         g.fillRect(0,0,w,h);
         g.globalCompositeOperation = "source-over";
     }
+    flash *= 0.8;
+    shake *= 0.82;
 }
 
-// ================= SEQUENCER =================
+function frame(){
+    // fire the visual side of every step whose sound is now audible
+    while(visQueue.length && visQueue[0].time <= audioCtx.currentTime){
+        stepVisual(visQueue.shift());
+    }
+    draw();
+    requestAnimationFrame(frame);
+}
+
+// ================= SEQUENCER (audio-clock scheduler) =================
+// Steps are scheduled slightly ahead on the audio clock, so timing stays
+// tight even when the page is busy; visuals follow when each step is heard.
 let step = 0;
 let playing = false;
-let loopTimeout = null;
+let nextStepTime = 0;
+let schedTimer = null;
+const visQueue = [];
 
-function loop(){
-    if(!playing) return;
-
-    const bpm = Number(bpmSlider.value);
-    const interval = (60 / bpm) / 4;
-
-    document.querySelectorAll(".cell").forEach(c=>c.classList.remove("playing"));
-
+function scheduleStep(s, time){
+    const hits = {};
     rows.forEach(r=>{
-        const cells = document.querySelectorAll("." + r + " .cell");
-
-        if(cells[step]){
-            cells[step].classList.add("playing");
-        }
-
-        if(data[r][step]){
-            if(r === "kick"){
-                playSample("kick");
-                generateLayout();
-
-                kickCount++;
-
-                if(kickCount % 4 === 0){
-                    scrollY = 0;
-                }
-            }
-
-            if(r === "snare"){
-                playSample("snare");
-                transformText();
-            }
-
-            if(r === "hat"){
-                playSample("hat");
-                addBlock();
-            }
+        if(data[r][s] && !muted[r]){
+            playSample(r, time);
+            hits[r] = true;
         }
     });
+    visQueue.push({ step:s, time, hits });
+}
 
-    draw();
+function stepVisual(ev){
+    playStepVis = ev.step;
+    document.querySelectorAll(".cell.playing").forEach(c=>c.classList.remove("playing"));
+    rows.forEach(r=>{
+        const cells = document.querySelectorAll("." + r + " .cell");
+        if(cells[ev.step]) cells[ev.step].classList.add("playing");
+    });
 
-    step = (step + 1) % steps;
-    loopTimeout = setTimeout(loop, interval * 1000);
+    if(ev.hits.kick){
+        generateLayout();
+        flash = 1;
+        kickCount++;
+        if(kickCount % 4 === 0){
+            scrollTarget = 0;
+        }
+    }
+    if(ev.hits.snare) transformText();
+    if(ev.hits.hat) addBlock();
+}
+
+function scheduler(){
+    if(!playing) return;
+    const S16 = (60 / Number(bpmSlider.value)) / 4;
+    const swing = Number(swingSlider.value) / 100;
+    if(nextStepTime < audioCtx.currentTime - 0.05) nextStepTime = audioCtx.currentTime + 0.05;   // never dump a backlog
+    while(nextStepTime < audioCtx.currentTime + 0.12){
+        // swing pushes every off-beat 16th later
+        const t = nextStepTime + (step % 2 ? swing * S16 * 0.66 : 0);
+        scheduleStep(step, t);
+        nextStepTime += S16;
+        step = (step + 1) % steps;
+    }
+}
+
+async function startSeq(){
+    await audioCtx.resume();
+    loadSelectedSamples();
+    if(!playing){
+        playing = true;
+        scrollTarget = scrollY = 0;
+        kickCount = 0;
+        step = 0;
+        nextStepTime = audioCtx.currentTime + 0.08;
+        generateLayout();
+        scheduler();
+        schedTimer = setInterval(scheduler, 25);
+        document.getElementById("start").classList.add("on");
+    }
+}
+function stopSeq(){
+    playing = false;
+    clearInterval(schedTimer);
+    visQueue.length = 0;
+    step = 0;
+    playStepVis = -1;
+    document.getElementById("start").classList.remove("on");
+    document.querySelectorAll(".cell").forEach(c=>c.classList.remove("playing"));
 }
 
 // ================= ESP CONTROL =================
@@ -1145,6 +1309,12 @@ function updateESPSelectionHover(){
             label.classList.add("espSelectedLabel");
         }
     });
+
+    // the row the keypad currently edits lights up too
+    rows.forEach((r, i) => {
+        const lab = document.querySelector("." + r + " .rowLabel");
+        if(lab) lab.classList.toggle("espSelected", espControl === i + 1);
+    });
 }
 
 function updateEspInfo(){
@@ -1194,6 +1364,7 @@ function changeSampleRelative(type, direction){
     if(nextIndex !== sel.selectedIndex){
         sel.selectedIndex = nextIndex;
         loadSample(type, sel.value).catch(()=>{});
+        saveSoon();
     }
 }
 
@@ -1252,6 +1423,7 @@ function handlePotsFromDATs(){
         const value = clamp(mapValue(espPotB, 0, 4095, 80, 161), 80, 160);
         bpmSlider.value = value;
         bpmValue.innerText = value;
+        saveSoon();
     }
 
     if(espControl === 1){
@@ -1298,10 +1470,7 @@ function handleKeyFromDATs(k){
     const stepIndex = keyToStep[k];
     const rowName = rows[espControl - 1];
 
-    data[rowName][stepIndex] ^= 1;
-
-    const cells = document.querySelectorAll("." + rowName + " .cell");
-    cells[stepIndex].classList.toggle("active", data[rowName][stepIndex] === 1);
+    setCellState(rowName, stepIndex, data[rowName][stepIndex] ^ 1);
 }
 
 function releaseKeyFromDATs(k){
@@ -1340,6 +1509,14 @@ function handleDATsDisconnected(){
     port = null;
 }
 
+if("serial" in navigator){
+    navigator.serial.addEventListener("disconnect", event=>{
+        if(port && event.target === port){
+            handleDATsDisconnected();
+        }
+    });
+}
+
 async function connectDATs(){
     await audioCtx.resume();
 
@@ -1352,26 +1529,20 @@ async function connectDATs(){
         port = await navigator.serial.requestPort();
         await port.open({ baudRate:115200 });
 
-        navigator.serial.addEventListener("disconnect", event=>{
-            if(port && event.target === port){
-                handleDATsDisconnected();
-            }
-        });
-
         const encoder = new TextEncoderStream();
-        encoder.readable.pipeTo(port.writable);
+        encoder.readable.pipeTo(port.writable).catch(()=>{});
         writer = encoder.writable.getWriter();
 
         await writer.write("PAIR\n");
 
         pingTimer = setInterval(()=>{
             if(writer){
-                writer.write("PING\n");
+                writer.write("PING\n").catch(()=>{});
             }
         },700);
 
         const decoder = new TextDecoderStream();
-        port.readable.pipeTo(decoder.writable);
+        port.readable.pipeTo(decoder.writable).catch(()=>{});
         reader = decoder.readable.getReader();
 
         espConnected = true;
@@ -1456,42 +1627,19 @@ document.getElementById("noticeContinue").onclick = async ()=>{
     await connectDATs();
 };
 
-document.getElementById("start").onclick = async ()=>{
-    await audioCtx.resume();
-    await loadSelectedSamples();
+document.getElementById("start").onclick = startSeq;
+document.getElementById("stop").onclick = stopSeq;
 
-    if(!playing){
-        playing = true;
-        scrollY = 0;
-        kickCount = 0;
-        generateLayout();
-        loop();
-    }
-};
-
-document.getElementById("stop").onclick = ()=>{
-    playing = false;
-    clearTimeout(loopTimeout);
-    step = 0;
-
-    document.querySelectorAll(".cell").forEach(c=>c.classList.remove("playing"));
-};
-
-document.getElementById("visualOnly").onclick = async ()=>{
+async function enterVisual(){
     document.body.classList.add("hideInterface");
-
-    if(document.documentElement.requestFullscreen){
-        await document.documentElement.requestFullscreen();
-    }
-};
-
-document.getElementById("returnUI").onclick = async ()=>{
+    try{ if(document.documentElement.requestFullscreen) await document.documentElement.requestFullscreen(); }catch(e){}
+}
+async function leaveVisual(){
     document.body.classList.remove("hideInterface");
-
-    if(document.fullscreenElement){
-        await document.exitFullscreen();
-    }
-};
+    try{ if(document.fullscreenElement) await document.exitFullscreen(); }catch(e){}
+}
+document.getElementById("visualOnly").onclick = enterVisual;
+document.getElementById("returnUI").onclick = leaveVisual;
 
 document.getElementById("uiToggle").onclick = ()=>{
     document.getElementById("mainUI").classList.toggle("collapsed");
@@ -1502,19 +1650,17 @@ document.getElementById("espToggle").onclick = ()=>{
 };
 
 document.addEventListener("keydown", async e=>{
-    if(e.key.toLowerCase() === "f"){
-        document.body.classList.toggle("hideInterface");
+    if(e.target.tagName === "SELECT" || e.target.tagName === "INPUT") return;
+    const k = e.key.toLowerCase();
 
-        if(document.body.classList.contains("hideInterface")){
-            if(document.documentElement.requestFullscreen){
-                await document.documentElement.requestFullscreen();
-            }
-        }else{
-            if(document.fullscreenElement){
-                await document.exitFullscreen();
-            }
-        }
+    if(k === "f"){
+        if(document.body.classList.contains("hideInterface")) leaveVisual(); else enterVisual();
     }
+    if(e.key === " "){
+        e.preventDefault();
+        if(playing) stopSeq(); else startSeq();
+    }
+    if(k === "r") randomPattern();
 
     if(e.key === "Escape"){
         document.body.classList.remove("hideInterface");
@@ -1523,9 +1669,11 @@ document.addEventListener("keydown", async e=>{
 
 preloadDefaultSamples();
 generateLayout();
-draw();
 updateEspInfo();
+requestAnimationFrame(frame);
 </script>
 
 </body>
 </html>
+
+</body></html>
