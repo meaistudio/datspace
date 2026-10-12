@@ -1,319 +1,409 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1"><style>:root{color-scheme:light}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
 <!DOCTYPE html>
 <html>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Own Modular Generate</title>
 <style>
-html,body{
-    margin:0;
-    padding:0;
-    overflow:hidden;
-    background:#0b0b0b;
-    touch-action:none;
-}
-canvas{ display:block; }
+/* one dark patch-panel look by choice */
+html, body { margin: 0; padding: 0; overflow: hidden; background: #0b0b0b; touch-action: none;
+  -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; }
+canvas { display: block; }
+#hud { position: fixed; top: calc(10px + env(safe-area-inset-top, 0px)); left: 12px; z-index: 2;
+  font: 11px/1.4 ui-monospace, Menlo, Consolas, monospace; letter-spacing: .08em; color: rgba(255,255,255,.38); }
+#hud button { font: inherit; letter-spacing: inherit; color: rgba(255,255,255,.55); background: none; border: 0; padding: 6px 8px 6px 0;
+  margin-right: 8px; cursor: pointer; }
+#hud button:hover, #hud button:focus-visible { color: #fff; outline: none; }
+#hud .stat { padding-right: 14px; }
 </style>
 </head>
 <body>
+<div id="hud"><span class="stat" id="stat">PATCH 0/16</span><button id="bRand">RANDOM</button><button id="bClear">CLEAR</button><button id="bSound">SOUND ON</button></div>
 <canvas id="c"></canvas>
 
 <script>
+(() => {
 const canvas = document.getElementById("c");
 const ctx = canvas.getContext("2d");
+const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || matchMedia('(pointer: coarse)').matches;
+const MAX_CABLES = 16;
 
 /* =========================
-   RESPONSIVE CANVAS
+   RESPONSIVE CANVAS + GRID
 ========================= */
-
-function resizeCanvas(){
-    const dpr = window.devicePixelRatio || 1;
-    canvas.width = window.innerWidth * dpr;
-    canvas.height = window.innerHeight * dpr;
-    canvas.style.width = window.innerWidth + "px";
-    canvas.style.height = window.innerHeight + "px";
-    ctx.setTransform(dpr,0,0,dpr,0,0);
-
-    updateGridSize();
-}
-window.addEventListener("resize",resizeCanvas);
-
-/* =========================
-   UI SCALE
-========================= */
-
-const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-
-let gridSize;
-let jackRadiusOuter;
-let jackRadiusInner;
+let W = 0, H = 0, gridSize = 30, jackRadiusOuter, jackRadiusInner, cols = 0, rows = 0;
 
 function updateGridSize(){
-
-    if(isMobile){
-        // minimal 8 x 14 lubang
-        const sizeByWidth  = window.innerWidth / 14;
-        const sizeByHeight = window.innerHeight / 8;
-        gridSize = Math.min(sizeByWidth, sizeByHeight);
-    }else{
-        gridSize = 30;
-    }
-
-    jackRadiusOuter = gridSize * 0.2;
-    jackRadiusInner = gridSize * 0.07;
+  if(isMobile){
+    // at least 8 x 14 holes
+    gridSize = Math.min(innerWidth / 14, innerHeight / 8, Math.max(innerWidth, innerHeight) / 14);
+    gridSize = Math.max(gridSize, 26);
+  } else {
+    gridSize = 30;
+  }
+  jackRadiusOuter = gridSize * 0.2;
+  jackRadiusInner = gridSize * 0.07;
+  cols = Math.floor(W / gridSize);
+  rows = Math.floor(H / gridSize);
 }
-
-/* =========================
-   COLOR GENERATOR
-========================= */
-
-function randomCableColor(){
-    const hue = Math.floor(Math.random() * 360);
-    return `hsl(${hue}, 90%, 55%)`;
+function resizeCanvas(){
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  W = innerWidth; H = innerHeight;
+  canvas.width = W * dpr; canvas.height = H * dpr;
+  canvas.style.width = W + "px"; canvas.style.height = H + "px";
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  updateGridSize();
+  // cables whose jacks fell off the panel are pulled
+  cables = cables.filter(c => inPanel(c.a) && inPanel(c.b));
+  cables.forEach(c => { c.a.x = c.a.gx * gridSize; c.a.y = c.a.gy * gridSize; c.b.x = c.b.gx * gridSize; c.b.y = c.b.gy * gridSize; layRope(c); });
 }
-
-/* =========================
-   DATA
-========================= */
-
-let cables = [];
-let dragging = null;
+const inPanel = j => j.gx >= 1 && j.gx <= cols - 2 && j.gy >= 2 && j.gy <= rows - 2;
 
 /* =========================
    MAGNETIC GRID
 ========================= */
+function getNearestGridJack(x, y, reach = 0.42){
+  const gx = Math.round(x / gridSize), gy = Math.round(y / gridSize);
+  const j = { gx, gy, x: gx * gridSize, y: gy * gridSize };
+  if(!inPanel(j)) return null;
+  const d = Math.hypot(j.x - x, j.y - y);
+  return d < gridSize * reach ? j : null;
+}
+const sameJack = (a, b) => a && b && a.gx === b.gx && a.gy === b.gy;
+const jackTaken = (j, except) => cables.some(c => c !== except && (sameJack(c.a, j) || sameJack(c.b, j)));
 
-function getNearestGridJack(x,y){
+/* =========================
+   CABLES: verlet ropes that sag and swing
+========================= */
+let cables = [];
+let dragging = null;          // { cable, end: 'a'|'b', fresh }
+const SEG = 16;
 
-    const gx = Math.round(x / gridSize);
-    const gy = Math.round(y / gridSize);
-
-    const snapX = gx * gridSize;
-    const snapY = gy * gridSize;
-
-    const dx = snapX - x;
-    const dy = snapY - y;
-    const dist = dx*dx + dy*dy;
-
-    const snapDistance = gridSize * 0.35;
-
-    if(dist < snapDistance * snapDistance){
-        return {x:snapX,y:snapY};
+function randomCableHue(){ return Math.floor(Math.random() * 360); }
+function newCable(a, hue){
+  const c = { a, b: { x: a.x, y: a.y, gx: a.gx, gy: a.gy }, hue, pts: [], pulses: [], glow: 0, plugged: false, voice: null };
+  layRope(c);
+  return c;
+}
+function layRope(c){
+  c.pts = [];
+  for(let i = 0; i < SEG; i++){
+    const t = i / (SEG - 1);
+    const x = c.a.x + (c.b.x - c.a.x) * t, y = c.a.y + (c.b.y - c.a.y) * t;
+    c.pts.push({ x, y, px: x, py: y });
+  }
+}
+function stepRope(c, dt){
+  const len = Math.hypot(c.b.x - c.a.x, c.b.y - c.a.y);
+  const rest = (len * 1.12 + gridSize * 2.2) / (SEG - 1);    // slack so it hangs
+  const g = 1400 * dt * dt;
+  const P = c.pts;
+  for(let i = 1; i < SEG - 1; i++){
+    const p = P[i], vx = (p.x - p.px) * 0.985, vy = (p.y - p.py) * 0.985;
+    p.px = p.x; p.py = p.y;
+    p.x += vx; p.y += vy + g;
+  }
+  P[0].x = c.a.x; P[0].y = c.a.y; P[SEG - 1].x = c.b.x; P[SEG - 1].y = c.b.y;
+  for(let k = 0; k < 6; k++){
+    for(let i = 0; i < SEG - 1; i++){
+      const p = P[i], q = P[i + 1];
+      const dx = q.x - p.x, dy = q.y - p.y, d = Math.hypot(dx, dy) || 0.001;
+      const diff = (d - rest) / d * 0.5;
+      if(i > 0){ p.x += dx * diff; p.y += dy * diff; }
+      if(i + 1 < SEG - 1){ q.x -= dx * diff; q.y -= dy * diff; }
     }
-    return null;
+  }
+}
+function pointOnRope(c, t){
+  const f = t * (SEG - 1), i = Math.min(SEG - 2, Math.floor(f)), u = f - i;
+  const p = c.pts[i], q = c.pts[i + 1];
+  return { x: p.x + (q.x - p.x) * u, y: p.y + (q.y - p.y) * u };
 }
 
 /* =========================
-   AUDIO ENGINE (HP SAFE + RANDOM GATE)
+   AUDIO: every patched cable is a voice in a 16-step sequencer
+   - where it starts sets its rhythm (euclidean hits + rotation)
+   - where it ends sets its note; its length sets octave and decay
+   - its colour sets the instrument
+   The original random gate drone keeps running underneath as the clock.
 ========================= */
-
-let audioCtx = null;
-let osc, filter, master;
-let gateInterval = null;
+let audioCtx = null, master, comp, echo, droneOsc, droneFilter, droneGain;
+let soundOn = true, step = 0, nextTime = 0, timer = null;
+const BPM = 125, S16 = 60 / BPM / 4;   // 120 ms, the original gate tempo
+const SCALE = [0, 3, 5, 7, 10, 12, 15, 17, 19, 22, 24];
+const mtof = m => 440 * Math.pow(2, (m - 69) / 12);
 
 function initAudio(){
-    if(audioCtx) return;
-
-    audioCtx = new (window.AudioContext || window.webkitAudioContext)({
-        latencyHint: "interactive"
-    });
-
-    master = audioCtx.createGain();
-    master.gain.value = 0; // mulai 0, akan dibuka saat unlock
-    master.connect(audioCtx.destination);
-
-    osc = audioCtx.createOscillator();
-    osc.type = "sawtooth";
-    osc.frequency.value = 120;
-
-    filter = audioCtx.createBiquadFilter();
-    filter.type = "lowpass";
-    filter.frequency.value = 1200;
-    filter.Q.value = 8;
-
-    osc.connect(filter);
-    filter.connect(master);
-
-    osc.start();
-
-    startRandomGate();
+  if(audioCtx) return;
+  audioCtx = new (window.AudioContext || window.webkitAudioContext)({ latencyHint: "interactive" });
+  comp = audioCtx.createDynamicsCompressor(); comp.threshold.value = -14; comp.ratio.value = 5;
+  master = audioCtx.createGain(); master.gain.value = 0;
+  master.connect(comp); comp.connect(audioCtx.destination);
+  // echo send
+  echo = audioCtx.createGain(); echo.gain.value = 0.22;
+  const d = audioCtx.createDelay(1); d.delayTime.value = S16 * 3;
+  const fb = audioCtx.createGain(); fb.gain.value = 0.38;
+  const lp = audioCtx.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 2200;
+  echo.connect(d); d.connect(lp); lp.connect(fb); fb.connect(d); lp.connect(master);
+  // the original gated saw drone
+  droneOsc = audioCtx.createOscillator(); droneOsc.type = "sawtooth"; droneOsc.frequency.value = 55;
+  droneFilter = audioCtx.createBiquadFilter(); droneFilter.type = "lowpass"; droneFilter.frequency.value = 600; droneFilter.Q.value = 8;
+  droneGain = audioCtx.createGain(); droneGain.gain.value = 0;
+  droneOsc.connect(droneFilter); droneFilter.connect(droneGain); droneGain.connect(master);
+  droneOsc.start();
+  nextTime = audioCtx.currentTime + 0.1;
+  timer = setInterval(schedule, 25);
 }
-
-/* ===== UNLOCK AUDIO (WAJIB UNTUK HP) ===== */
-
 function unlockAudio(){
+  initAudio();
+  if(audioCtx.state === "suspended" && soundOn) audioCtx.resume();
+  master.gain.setTargetAtTime(soundOn ? 0.8 : 0, audioCtx.currentTime, 0.05);
+}
+document.addEventListener("pointerdown", unlockAudio, { passive: false });
 
-    if(!audioCtx){
-        initAudio();
-    }
-
-    if(audioCtx.state === "suspended"){
-        audioCtx.resume();
-    }
-
-    // buka volume setelah resume
-    master.gain.setTargetAtTime(
-        0.35,
-        audioCtx.currentTime,
-        0.05
-    );
+function schedule(){
+  if(!audioCtx || audioCtx.state !== "running") return;
+  if(nextTime < audioCtx.currentTime - 0.05) nextTime = audioCtx.currentTime + 0.05;   // never dump a backlog
+  while(nextTime < audioCtx.currentTime + 0.12){ tick(step, nextTime); nextTime += S16; step++; }
 }
 
-document.addEventListener("pointerdown", unlockAudio, {passive:false});
-document.addEventListener("touchstart", unlockAudio, {passive:false});
+// euclidean rhythm: k hits spread over n steps
+const euclid = (k, n, i) => ((i % n) * k) % n < k;
 
-/* =========================
-   RANDOM TECHNO GATE + CUTOFF
-========================= */
-
-function startRandomGate(){
-
-    if(gateInterval) return;
-
-    gateInterval = setInterval(()=>{
-
-        if(!audioCtx) return;
-
-        const now = audioCtx.currentTime;
-
-        // random cutoff sweep
-        const randomCutoff = 300 + Math.random()*2000;
-
-        filter.frequency.setTargetAtTime(
-            randomCutoff,
-            now,
-            0.03
-        );
-
-        // gate on
-        master.gain.setTargetAtTime(
-            0.35,
-            now,
-            0.01
-        );
-
-        // gate off cepat (patah-patah)
-        master.gain.setTargetAtTime(
-            0.0,
-            now + 0.08,
-            0.02
-        );
-
-    }, 120); // tempo techno feel
-
+function cableVoice(c){
+  const len = Math.hypot(c.b.x - c.a.x, c.b.y - c.a.y) / gridSize;   // in holes
+  return {
+    hits: 1 + (c.a.gy + c.a.gx * 2) % 7,
+    rot: c.a.gx % 16,
+    note: 45 + SCALE[(c.b.gy * 3 + c.b.gx) % SCALE.length] + (2 - Math.min(2, Math.floor(len / 6))) * 12,
+    decay: 0.07 + Math.min(1.2, len * 0.035),
+    kind: Math.floor(c.hue / 90),                 // 0 saw pluck, 1 square, 2 FM bell, 3 low thump
+    pan: Math.max(-0.9, Math.min(0.9, ((c.a.x + c.b.x) / 2 / W) * 2 - 1))
+  };
 }
+
+function tick(s, t){
+  const live = cables.filter(c => c.plugged);
+  // the drone gate: a stab each 16th, filter swept at random (more cables, brighter)
+  const open = 300 + Math.random() * (900 + live.length * 160);
+  droneFilter.frequency.setTargetAtTime(open, t, 0.03);
+  droneGain.gain.setTargetAtTime(live.length ? 0.12 : 0.06, t, 0.01);
+  droneGain.gain.setTargetAtTime(0, t + 0.07, 0.02);
+
+  live.forEach(c => {
+    const v = c.voice;
+    if(!euclid(v.hits, 16, s + v.rot)) return;
+    play(v, t, s % 4 === 0 ? 1 : 0.7);
+    // light it up when the sound actually happens
+    setTimeout(() => { c.glow = 1; c.pulses.push(0); }, Math.max(0, (t - audioCtx.currentTime) * 1000));
+  });
+}
+
+function play(v, t, vel){
+  const out = audioCtx.createGain();
+  const pan = audioCtx.createStereoPanner ? audioCtx.createStereoPanner() : null;
+  if(pan){ pan.pan.value = v.pan; out.connect(pan); pan.connect(master); pan.connect(echo); }
+  else { out.connect(master); out.connect(echo); }
+  const f = mtof(v.note), dec = v.decay, oscs = [];
+  const env = peak => { out.gain.setValueAtTime(0.0001, t); out.gain.exponentialRampToValueAtTime(peak * vel, t + 0.003); out.gain.exponentialRampToValueAtTime(0.0001, t + dec); };
+  if(v.kind === 0){
+    const o = audioCtx.createOscillator(), lp = audioCtx.createBiquadFilter();
+    o.type = "sawtooth"; o.frequency.value = f; lp.type = "lowpass"; lp.Q.value = 10;
+    lp.frequency.setValueAtTime(f * 12, t); lp.frequency.exponentialRampToValueAtTime(f * 1.2, t + dec);
+    o.connect(lp); lp.connect(out); oscs.push(o); env(0.16);
+  } else if(v.kind === 1){
+    const o = audioCtx.createOscillator(); o.type = "square"; o.frequency.value = f * 2;
+    const lp = audioCtx.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 2600;
+    o.connect(lp); lp.connect(out); oscs.push(o); env(0.07);
+  } else if(v.kind === 2){
+    const o = audioCtx.createOscillator(), m = audioCtx.createOscillator(), mg = audioCtx.createGain();
+    o.frequency.value = f * 2; m.frequency.value = f * 2 * 3.5;
+    mg.gain.setValueAtTime(f * 4, t); mg.gain.exponentialRampToValueAtTime(1, t + dec);
+    m.connect(mg); mg.connect(o.frequency); o.connect(out); oscs.push(o, m); env(0.11);
+  } else {
+    const o = audioCtx.createOscillator();
+    o.frequency.setValueAtTime(f, t); o.frequency.exponentialRampToValueAtTime(f / 4, t + 0.12);
+    o.connect(out); oscs.push(o); env(0.5);
+  }
+  oscs.forEach(o => { o.start(t); o.stop(t + dec + 0.05); });
+}
+
+// a short plug clunk for patching and pulling
+function clunk(inOut){
+  if(!audioCtx || !soundOn) return;
+  const t = audioCtx.currentTime, o = audioCtx.createOscillator(), g = audioCtx.createGain();
+  o.frequency.setValueAtTime(inOut ? 320 : 180, t); o.frequency.exponentialRampToValueAtTime(inOut ? 90 : 60, t + 0.06);
+  g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.4, t + 0.002); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.09);
+  o.connect(g); g.connect(master); o.start(t); o.stop(t + 0.1);
+}
+
 /* =========================
    POINTER EVENTS
+   - drag from an empty jack to pull a new cable
+   - grab a plugged end to repatch it; drop it on empty space to remove the cable
 ========================= */
+function local(e){ const r = canvas.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; }
+let hoverJack = null;
 
-canvas.addEventListener("pointerdown", e=>{
-    unlockAudio();
-    const rect = canvas.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-
-    const jack = getNearestGridJack(x,y);
-    if(jack){
-        dragging = {
-            start:jack,
-            end:{x,y},
-            color:randomCableColor()
-        };
-        cables.push(dragging);
+canvas.addEventListener("pointerdown", e => {
+  unlockAudio();
+  const p = local(e);
+  const j = getNearestGridJack(p.x, p.y, 0.5);
+  if(!j) return;
+  canvas.setPointerCapture(e.pointerId);
+  // an end already sitting in this jack? pick it up
+  for(const c of cables){
+    for(const end of ["b", "a"]){
+      if(sameJack(c[end], j)){
+        if(end === "a"){ const t = c.a; c.a = c.b; c.b = t; c.pts.reverse(); }   // always carry end b
+        c.plugged = false; c.b = { x: p.x, y: p.y, gx: -1, gy: -1 };
+        dragging = { cable: c, id: e.pointerId };
+        clunk(false); updateHud();
+        return;
+      }
     }
+  }
+  if(cables.length >= MAX_CABLES) return;
+  const c = newCable(j, randomCableHue());
+  c.b.x = p.x; c.b.y = p.y; c.b.gx = -1;
+  cables.push(c);
+  dragging = { cable: c, id: e.pointerId };
 });
 
-canvas.addEventListener("pointermove", e=>{
-    if(!dragging) return;
-    const rect = canvas.getBoundingClientRect();
-    dragging.end.x = e.clientX - rect.left;
-    dragging.end.y = e.clientY - rect.top;
+canvas.addEventListener("pointermove", e => {
+  const p = local(e);
+  hoverJack = getNearestGridJack(p.x, p.y);
+  if(!dragging || e.pointerId !== dragging.id) return;
+  const c = dragging.cable;
+  // the plug gets pulled into a free jack when close enough
+  const j = getNearestGridJack(p.x, p.y);
+  if(j && !jackTaken(j, c) && !sameJack(j, c.a)){ c.b.x += (j.x - c.b.x) * 0.5; c.b.y += (j.y - c.b.y) * 0.5; }
+  else { c.b.x = p.x; c.b.y = p.y; }
 });
 
-canvas.addEventListener("pointerup", e=>{
-    if(!dragging) return;
+function drop(e){
+  if(!dragging || e.pointerId !== dragging.id) return;
+  const c = dragging.cable, p = local(e);
+  const j = getNearestGridJack(p.x, p.y);
+  if(j && !jackTaken(j, c) && !sameJack(j, c.a)){
+    c.b = j; c.plugged = true; c.voice = cableVoice(c); c.glow = 1;
+    clunk(true);
+    // like the original: patching retunes the drone
+    if(audioCtx) droneOsc.frequency.setTargetAtTime(mtof(c.voice.note - 24), audioCtx.currentTime, 0.03);
+  } else {
+    cables.splice(cables.indexOf(c), 1);
+  }
+  dragging = null;
+  updateHud();
+}
+canvas.addEventListener("pointerup", drop);
+canvas.addEventListener("pointercancel", drop);
 
-    const rect = canvas.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-
-    const jack = getNearestGridJack(x,y);
-
-    if(jack){
-        dragging.end = jack;
-
-        osc.frequency.setTargetAtTime(
-            80 + Math.random()*250,
-            audioCtx.currentTime,
-            0.03
-        );
-
-        filter.frequency.setTargetAtTime(
-            400 + Math.random()*1200,
-            audioCtx.currentTime,
-            0.05
-        );
-
-    }else{
-        cables.pop();
-    }
-
-    dragging = null;
+/* =========================
+   HUD
+========================= */
+const stat = document.getElementById("stat"), bSound = document.getElementById("bSound");
+function updateHud(){ stat.textContent = `PATCH ${cables.filter(c => c.plugged).length}/${MAX_CABLES}`; }
+document.getElementById("bClear").onclick = () => { cables = []; clunk(false); updateHud(); };
+document.getElementById("bRand").onclick = () => {
+  unlockAudio();
+  cables = [];
+  const n = 5 + Math.floor(Math.random() * 5);
+  for(let k = 0; k < n * 4 && cables.length < n; k++){
+    const a = { gx: 1 + Math.floor(Math.random() * (cols - 2)), gy: 2 + Math.floor(Math.random() * (rows - 3)) };
+    const b = { gx: Math.max(1, Math.min(cols - 2, a.gx + Math.round((Math.random() - 0.5) * 16))), gy: Math.max(2, Math.min(rows - 2, a.gy + Math.round((Math.random() - 0.5) * 10))) };
+    [a, b].forEach(j => { j.x = j.gx * gridSize; j.y = j.gy * gridSize; });
+    if(sameJack(a, b) || jackTaken(a) || jackTaken(b)) continue;
+    const c = newCable(a, randomCableHue()); c.b = b; layRope(c);
+    c.plugged = true; c.voice = cableVoice(c);
+    cables.push(c);
+  }
+  clunk(true); updateHud();
+};
+bSound.onclick = () => {
+  soundOn = !soundOn; bSound.textContent = soundOn ? "SOUND ON" : "SOUND OFF";
+  unlockAudio();
+  if(audioCtx){ if(soundOn) audioCtx.resume(); else setTimeout(() => { if(!soundOn) audioCtx.suspend(); }, 120); }
+};
+addEventListener("keydown", e => {
+  if(e.key === "c" || e.key === "C") document.getElementById("bClear").click();
+  if(e.key === "r" || e.key === "R") document.getElementById("bRand").click();
+  if(e.key === "m" || e.key === "M") bSound.click();
 });
 
 /* =========================
    DRAW LOOP
 ========================= */
+let prev = performance.now();
+function draw(now){
+  const dt = Math.min(1 / 30, (now - prev) / 1000); prev = now;
+  ctx.clearRect(0, 0, W, H);
 
-function draw(){
-
-    ctx.clearRect(0,0,canvas.width,canvas.height);
-
-    const cols = Math.floor(window.innerWidth / gridSize);
-    const rows = Math.floor(window.innerHeight / gridSize);
-
-    // draw jacks
-    for(let y=1;y<rows-1;y++){
-        for(let x=1;x<cols-1;x++){
-            const px = x * gridSize;
-            const py = y * gridSize;
-
-            ctx.beginPath();
-            ctx.arc(px,py,jackRadiusOuter,0,Math.PI*2);
-            ctx.fillStyle="#444";
-            ctx.fill();
-
-            ctx.beginPath();
-            ctx.arc(px,py,jackRadiusInner,0,Math.PI*2);
-            ctx.fillStyle="#111";
-            ctx.fill();
-        }
+  // jacks: which ones are in use, and where the dragged plug would land
+  const used = new Map();
+  cables.forEach(c => { if(c.plugged || c !== (dragging && dragging.cable)) used.set(c.a.gx + "," + c.a.gy, c); if(c.plugged) used.set(c.b.gx + "," + c.b.gy, c); });
+  const target = dragging ? getNearestGridJack(dragging.cable.b.x, dragging.cable.b.y) : null;
+  for(let y = 2; y <= rows - 2; y++){
+    for(let x = 1; x <= cols - 2; x++){
+      const px = x * gridSize, py = y * gridSize;
+      const c = used.get(x + "," + y);
+      ctx.beginPath(); ctx.arc(px, py, jackRadiusOuter, 0, Math.PI * 2);
+      ctx.fillStyle = c ? `hsl(${c.hue},90%,${30 + c.glow * 35}%)` : "#444"; ctx.fill();
+      ctx.beginPath(); ctx.arc(px, py, jackRadiusInner, 0, Math.PI * 2);
+      ctx.fillStyle = "#111"; ctx.fill();
     }
+  }
+  const hl = target || (!dragging && hoverJack);
+  if(hl){
+    ctx.beginPath(); ctx.arc(hl.x, hl.y, jackRadiusOuter + 4, 0, Math.PI * 2);
+    ctx.strokeStyle = "rgba(255,255,255,.7)"; ctx.lineWidth = 1.5; ctx.stroke();
+  }
 
-    // cables (CURVE)
-    for(let c of cables){
-
-        ctx.beginPath();
-        ctx.lineWidth = gridSize * 0.12;
-        ctx.lineCap = "round";
-        ctx.strokeStyle = c.color;
-
-        const dx = (c.end.x - c.start.x) * 0.5;
-
-        ctx.moveTo(c.start.x,c.start.y);
-        ctx.bezierCurveTo(
-            c.start.x + dx, c.start.y + 80,
-            c.end.x - dx,   c.end.y - 80,
-            c.end.x,        c.end.y
-        );
-
-        ctx.stroke();
+  // cables
+  for(const c of cables){
+    stepRope(c, dt);
+    c.glow = Math.max(0, c.glow - dt * 3);
+    const lw = gridSize * 0.12;
+    // body: a darker core under a coloured jacket
+    ctx.lineCap = "round"; ctx.lineJoin = "round";
+    ctx.beginPath(); ctx.moveTo(c.pts[0].x, c.pts[0].y);
+    for(let i = 1; i < SEG - 1; i++){ const p = c.pts[i], q = c.pts[i + 1]; ctx.quadraticCurveTo(p.x, p.y, (p.x + q.x) / 2, (p.y + q.y) / 2); }
+    ctx.lineTo(c.pts[SEG - 1].x, c.pts[SEG - 1].y);
+    ctx.strokeStyle = "rgba(0,0,0,.55)"; ctx.lineWidth = lw + 3; ctx.stroke();
+    ctx.strokeStyle = `hsl(${c.hue},90%,${55 + c.glow * 20}%)`; ctx.lineWidth = lw;
+    if(c.glow > 0.05){ ctx.shadowColor = `hsl(${c.hue},100%,60%)`; ctx.shadowBlur = 14 * c.glow; }
+    ctx.stroke(); ctx.shadowBlur = 0;
+    // signal pulses running from the source jack to the destination
+    c.pulses = c.pulses.filter(t => t < 1);
+    for(let k = 0; k < c.pulses.length; k++){
+      c.pulses[k] += dt * 2.6;
+      const p = pointOnRope(c, Math.min(1, c.pulses[k]));
+      ctx.beginPath(); ctx.arc(p.x, p.y, lw * 0.9, 0, Math.PI * 2); ctx.fillStyle = "#fff"; ctx.fill();
     }
+    // plugs
+    for(const end of [c.a, c.b]){
+      ctx.beginPath(); ctx.arc(end.x, end.y, jackRadiusOuter * 1.25, 0, Math.PI * 2);
+      ctx.fillStyle = "#1c1c1c"; ctx.fill();
+      ctx.lineWidth = 2; ctx.strokeStyle = `hsl(${c.hue},90%,55%)`; ctx.stroke();
+    }
+  }
 
-    requestAnimationFrame(draw);
+  // empty-panel hint
+  if(!cables.length){
+    ctx.fillStyle = "rgba(255,255,255,.28)"; ctx.font = "11px ui-monospace, Menlo, Consolas, monospace";
+    ctx.textAlign = "center"; ctx.fillText("DRAG FROM A JACK TO PATCH A CABLE", W / 2, (rows - 1) * gridSize + gridSize * 0.6);
+  }
+  requestAnimationFrame(draw);
 }
 
 resizeCanvas();
-draw();
+addEventListener("resize", resizeCanvas);
+updateHud();
+requestAnimationFrame(draw);
+})();
 </script>
 </body>
 </html>
+
+</body></html>
