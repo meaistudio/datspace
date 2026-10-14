@@ -5,213 +5,325 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>DNA MOBILE DATA</title>
 <style>
-html,body{
-    margin:0;
-    padding:0;
-    overflow:hidden;
-    background:#000;
-    font-family: monospace;
-}
-canvas{display:block;}
+/* one black lab-screen look by choice */
+html, body { margin: 0; padding: 0; overflow: hidden; background: #000; font-family: monospace; touch-action: none;
+  -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; }
+canvas { display: block; }
+.hud { position: fixed; z-index: 2; color: rgba(255,255,255,.55); font: 11px/1.5 monospace; letter-spacing: .08em; pointer-events: none; }
+#top { top: calc(12px + env(safe-area-inset-top, 0px)); left: 14px; }
+#top b { color: #fff; font-weight: normal; }
+#seq { left: 0; right: 0; bottom: calc(12px + env(safe-area-inset-bottom, 0px)); text-align: center; white-space: nowrap; overflow: hidden; font-size: 12px; }
+#seq span { display: inline-block; width: 1.1em; }
+#sound { position: fixed; z-index: 3; top: calc(8px + env(safe-area-inset-top, 0px)); right: 10px; background: none; border: 1px solid rgba(255,255,255,.35);
+  color: rgba(255,255,255,.7); font: 11px monospace; letter-spacing: .08em; padding: 6px 10px; cursor: pointer; }
+#sound:hover, #sound:focus-visible { color: #000; background: #fff; outline: none; }
 </style>
 </head>
 <body>
 <canvas id="c"></canvas>
+<div class="hud" id="top"><b>DNA MOBILE DATA</b><br><span id="stat"></span></div>
+<div class="hud" id="seq"></div>
+<button id="sound">SOUND OFF</button>
 
 <script>
+(() => {
 const canvas = document.getElementById("c");
 const ctx = canvas.getContext("2d");
+const isMobile = window.innerWidth < 768 || matchMedia("(pointer: coarse)").matches;
 
-// lebih ringan dari sebelumnya
-canvas.style.filter = "contrast(1.05) saturate(1.1)";
-
-let w,h;
+let w, h, dpr;
 function resize(){
-    w = canvas.width = window.innerWidth;
-    h = canvas.height = window.innerHeight;
+  dpr = Math.min(window.devicePixelRatio || 1, isMobile ? 1.5 : 2);
+  w = innerWidth; h = innerHeight;
+  canvas.width = w * dpr; canvas.height = h * dpr;
+  canvas.style.width = w + "px"; canvas.style.height = h + "px";
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.fillStyle = "#000"; ctx.fillRect(0, 0, w, h);
 }
-window.addEventListener("resize", resize);
+addEventListener("resize", resize);
 resize();
 
+/* =========================
+   THE MOLECULE
+   N base pairs on a double helix. Each rung holds a pair (A-T or C-G),
+   coloured in primaries: A red, T yellow, C blue, G white.
+========================= */
+const N = isMobile ? 120 : 190;
+const BASES = { A: [235, 30, 35], T: [255, 220, 0], C: [20, 80, 255], G: [255, 255, 255] };
+const PAIR = { A: "T", T: "A", C: "G", G: "C" };
+const randBase = () => "ATCG"[Math.floor(Math.random() * 4)];
+const rungs = Array.from({ length: N }, () => ({ b: randBase(), flash: 0, open: 0, side: 0 }));
+
+const TWIST = 0.32;          // radians per base pair
+let rotY = 0, rotX = -0.25;  // spin and tilt
+let spinV = 0.35, tiltV = 0; // velocities (rad/s)
+let zoom = 1, targetZoom = 1;
+let scroll = 0;              // data stream: pairs drift upward and get rewritten at the bottom
 let t = 0;
 
-// interaction
-let mouse = {x:w/2,y:h/2};
-let targetMouse = {x:w/2,y:h/2};
+/* =========================
+   INTERACTION
+   - drag: spin / tilt the helix (with inertia)
+   - hold: unzip the strands around the finger
+   - tap: mutate the nearby base pairs
+   - wheel / pinch: zoom
+========================= */
+const pointers = new Map();
+let pinch0 = 0, zoom0 = 1;
+let hold = null;             // {x, y, down, moved}
+let bursts = [];
 
-let isDown = false;
-let dragForce = 0;
-
-const isMobile = window.innerWidth < 768 || 'ontouchstart' in window;
-
-let zoom = isMobile ? 1 : 3;
-let targetZoom = zoom;
-
-let burst = 0;
-
-// mouse
-window.addEventListener("mousemove", e=>{
-    targetMouse.x = e.clientX;
-    targetMouse.y = e.clientY;
-    if(isDown) dragForce = 1;
+canvas.addEventListener("pointerdown", e => {
+  canvas.setPointerCapture(e.pointerId);
+  pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  if(pointers.size === 2){
+    const [a, b] = [...pointers.values()];
+    pinch0 = Math.hypot(a.x - b.x, a.y - b.y); zoom0 = targetZoom; hold = null;
+  } else {
+    hold = { x: e.clientX, y: e.clientY, down: performance.now(), moved: 0 };
+  }
 });
-
-// touch (mobile)
-window.addEventListener("touchmove", e=>{
-    targetMouse.x = e.touches[0].clientX;
-    targetMouse.y = e.touches[0].clientY;
-    if(isDown) dragForce = 1;
+canvas.addEventListener("pointermove", e => {
+  const p = pointers.get(e.pointerId);
+  if(!p) return;
+  const dx = e.clientX - p.x, dy = e.clientY - p.y;
+  p.x = e.clientX; p.y = e.clientY;
+  if(pointers.size === 2){
+    const [a, b] = [...pointers.values()];
+    targetZoom = clamp(zoom0 * Math.hypot(a.x - b.x, a.y - b.y) / pinch0, 0.5, 4);
+    return;
+  }
+  if(hold){
+    hold.x = e.clientX; hold.y = e.clientY; hold.moved += Math.abs(dx) + Math.abs(dy);
+    spinV = dx * 0.35;
+    tiltV = dy * 0.25;
+    rotY += dx * 0.006;
+    rotX = clamp(rotX + dy * 0.004, -1.2, 1.2);
+  }
 });
+function up(e){
+  pointers.delete(e.pointerId);
+  if(hold && hold.moved < 8 && performance.now() - hold.down < 260) mutate(hold.x, hold.y);
+  if(pointers.size === 0) hold = null;
+}
+canvas.addEventListener("pointerup", up);
+canvas.addEventListener("pointercancel", up);
+addEventListener("wheel", e => { targetZoom = clamp(targetZoom * Math.pow(1.0015, -e.deltaY), 0.5, 4); }, { passive: true });
 
-window.addEventListener("touchstart", ()=>{
-    isDown = true;
-    burst = 8;
-});
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const lerp = (a, b, n) => a + (b - a) * n;
 
-window.addEventListener("touchend", ()=> isDown = false);
-
-// mouse click
-window.addEventListener("mousedown", ()=>{
-    isDown = true;
-    burst = 8;
-});
-window.addEventListener("mouseup", ()=> isDown = false);
-
-// zoom
-window.addEventListener("wheel", e=>{
-    targetZoom += e.deltaY * -0.001;
-    targetZoom = Math.max(0.7, Math.min(10, targetZoom));
-});
-
-function lerp(a,b,n){ return a+(b-a)*n; }
-
-// warna lebih soft
-function rgbColor(i){
-    return `rgb(${Math.sin(i)*90+150}, ${Math.sin(i+2)*90+150}, ${Math.sin(i+4)*90+150})`;
+/* =========================
+   PROJECTION
+========================= */
+let proj = [];               // per rung: projected points of both strands
+const FOV = 900;
+function project(x, y, z){
+  // tilt around the x axis, then perspective
+  const cy = Math.cos(rotX), sy = Math.sin(rotX);
+  const y2 = y * cy - z * sy, z2 = y * sy + z * cy;
+  const s = FOV / (FOV + z2) * zoom;
+  return { x: w / 2 + x * s, y: h / 2 + y2 * s, z: z2, s };
 }
 
-function cmykToRgb(c,m,y,k){
-    let r = 255*(1-c)*(1-k);
-    let g = 255*(1-m)*(1-k);
-    let b = 255*(1-y)*(1-k);
-    return `rgb(${r},${g},${b})`;
+function mutate(px, py){
+  let hits = 0;
+  proj.forEach((p, i) => {
+    const d = Math.min(Math.hypot(p.a.x - px, p.a.y - py), Math.hypot(p.b.x - px, p.b.y - py));
+    if(d < 70 * zoom){ rungs[i].b = randBase(); rungs[i].flash = 1; hits++; blip(rungs[i].b, i, 0.7); }
+  });
+  bursts.push({ x: px, y: py, r: 0, a: 1 });
+  mutations += hits;
 }
+let mutations = 0;
 
-function draw(){
+/* =========================
+   SOUND (optional): base pairs crossing the front of the helix sing their letter
+========================= */
+let ac = null, soundOn = false, master;
+const NOTE = { A: 0, C: 3, G: 7, T: 10 };      // a minor-ish chord of letters
+function audio(){
+  if(ac) return ac;
+  const AC = window.AudioContext || window.webkitAudioContext;
+  if(!AC) return null;
+  ac = new AC();
+  master = ac.createGain(); master.gain.value = 0.5;
+  const d = ac.createDelay(1); d.delayTime.value = 0.33;
+  const fb = ac.createGain(); fb.gain.value = 0.35;
+  master.connect(ac.destination); master.connect(d); d.connect(fb); fb.connect(d); d.connect(ac.destination);
+  return ac;
+}
+function blip(base, i, vel = 0.4){
+  if(!soundOn || !ac) return;
+  const tt = ac.currentTime;
+  const m = 57 + NOTE[base] + 12 * Math.floor((1 - i / N) * 2.99);
+  const o = ac.createOscillator(), g = ac.createGain();
+  o.type = base === "G" ? "triangle" : "sine";
+  o.frequency.value = 440 * Math.pow(2, (m - 69) / 12);
+  g.gain.setValueAtTime(0.0001, tt); g.gain.exponentialRampToValueAtTime(0.12 * vel, tt + 0.004); g.gain.exponentialRampToValueAtTime(0.0001, tt + 0.5);
+  o.connect(g); g.connect(master); o.start(tt); o.stop(tt + 0.55);
+}
+const soundBtn = document.getElementById("sound");
+soundBtn.onclick = () => {
+  audio(); soundOn = !soundOn;
+  if(ac && ac.state === "suspended") ac.resume();
+  soundBtn.textContent = soundOn ? "SOUND ON" : "SOUND OFF";
+};
 
-    mouse.x = lerp(mouse.x,targetMouse.x,0.12);
-    mouse.y = lerp(mouse.y,targetMouse.y,0.12);
-    zoom = lerp(zoom,targetZoom,0.08);
-    dragForce = lerp(dragForce,0,0.06);
+/* =========================
+   HUD
+========================= */
+const statEl = document.getElementById("stat"), seqEl = document.getElementById("seq");
+function hud(){
+  const gc = rungs.filter(r => r.b === "G" || r.b === "C").length;
+  statEl.textContent = `BP ${N} · GC ${Math.round(gc / N * 100)}% · MUT ${mutations} · ZOOM ${zoom.toFixed(2)}`;
+  // the readout follows the pairs passing the middle of the screen
+  const mid = Math.floor(((N / 2 + scrollIdx) % N + N) % N);
+  const span = isMobile ? 14 : 30;
+  let html = "";
+  for(let k = -span; k <= span; k++){
+    const r = rungs[((mid + k) % N + N) % N];
+    const c = BASES[r.b];
+    html += `<span style="color:rgb(${c})${k === 0 ? ";background:rgba(255,255,255,.15)" : ""}">${r.b}</span>`;
+  }
+  seqEl.innerHTML = html;
+}
+let scrollIdx = 0;
 
-    // trail (lebih stabil di HP)
-    ctx.globalCompositeOperation = "diferrence";
-    ctx.fillStyle="rgba(0,0,0,0.6)";
-    ctx.fillRect(0,0,w,h);
+/* =========================
+   DRAW
+========================= */
+let prev = performance.now(), hudT = 0;
+function draw(now){
+  const dt = Math.min(0.05, (now - prev) / 1000); prev = now;
+  t += dt;
+  zoom = lerp(zoom, targetZoom, 0.1);
 
-    // blending
-    ctx.globalCompositeOperation = "add";
+  // inertia: back toward a slow idle spin, tilt eases home
+  if(!hold){
+    rotY += spinV * dt;
+    spinV = lerp(spinV, 0.35, 0.02);
+    rotX = lerp(rotX, -0.25, 0.01);
+  }
 
-    ctx.save();
-    ctx.translate(w/2,h/2);
-    ctx.scale(zoom,zoom);
-    ctx.translate(-w/2,-h/2);
+  // the data stream: pairs drift upward; a pair leaving the top is rewritten at the bottom
+  const SP = Math.max(5.5, (h * 1.25) / N);     // rise per base pair
+  const prevIdx = Math.floor(scroll);
+  scroll += dt * 1.6;
+  if(Math.floor(scroll) !== prevIdx){
+    const i = ((prevIdx % N) + N) % N;
+    rungs[i].b = randBase(); rungs[i].flash = 0.6;
+  }
+  scrollIdx = scroll;
 
-    let centerX = w/2;
-    let centerY = h/2;
+  // motion trail
+  ctx.globalCompositeOperation = "source-over";
+  ctx.fillStyle = "rgba(0,0,0,0.42)";
+  ctx.fillRect(0, 0, w, h);
 
-    for(let i=0;i<240;i++){ // dikurangi biar ringan
+  const R = Math.min(w, h) * (isMobile ? 0.28 : 0.2);
+  const total = N * SP;
+  proj = new Array(N);
+  const items = [];
 
-        let angle = i*0.22 + t;
-        let radius = 260 + Math.sin(t+i*0.1)*25;
+  for(let i = 0; i < N; i++){
+    const r = rungs[i];
+    // position along the axis, wrapped so the stream is endless
+    let y = ((i * SP - (scroll % N) * SP) % total + total) % total - total / 2;
+    const th = i * TWIST + rotY;
 
-        let x1 = centerX + Math.cos(angle)*radius;
-        let y1 = centerY + i*4 - 450;
-
-        let x2 = centerX + Math.cos(angle+Math.PI)*radius;
-        let y2 = y1;
-
-        let dx = (mouse.x-centerX)*0.002;
-        let dy = (mouse.y-centerY)*0.002;
-
-        x1 += dx*i*(2+dragForce*15);
-        x2 -= dx*i*(2+dragForce*15);
-
-        y1 += Math.sin(t+i*0.1+dy*5)*(8+dragForce*20);
-        y2 += Math.cos(t+i*0.1+dy*5)*(8+dragForce*20);
-
-        let rgb = rgbColor(i*0.1+t);
-
-        let cmyk = cmykToRgb(
-            (Math.sin(i+t)+1)/2,
-            (Math.sin(i+t+2)+1)/2,
-            (Math.sin(i+t+4)+1)/2,
-            0.1
-        );
-
-        ctx.strokeStyle = i%2 ? rgb : cmyk;
-        ctx.lineWidth = 2;
-
-        ctx.beginPath();
-        ctx.moveTo(x1,y1);
-        ctx.lineTo(x2,y2);
-        ctx.stroke();
-
-        // nodes
-        ctx.fillStyle = rgb;
-        ctx.beginPath();
-        ctx.arc(x1,y1,3,0,Math.PI*2);
-        ctx.fill();
-
-        ctx.fillStyle = cmyk;
-        ctx.beginPath();
-        ctx.arc(x2,y2,3,0,Math.PI*2);
-        ctx.fill();
-
-        // ===== TEXT DIFFERENCE + FAKE LUMINANCE =====
-        if(i % 4 === 0){
-
-            let text1 = `${Math.round(x1)},${Math.round(y1)}`;
-            let text2 = `${Math.round(x2)},${Math.round(y2)}`;
-
-            // fake luminance (ringan)
-            let lum1 = (Math.sin(i*0.2 + t) + 1) * 10;
-            let lum2 = (Math.cos(i*0.2 + t) + 1) * 10;
-
-            ctx.save();
-            ctx.globalCompositeOperation = "difference";
-            ctx.fillStyle = "white";
-            ctx.font = "30px monospace";
-
-            // redup di area "gelap"
-            ctx.globalAlpha = lum1 * 1000;
-            ctx.fillText(text1, x1+5, y1-1);
-
-            ctx.globalAlpha = lum2 * 1000;
-            ctx.fillText(text2, x2+5, y2-1);
-
-            ctx.restore();
-        }
-
-        // burst
-        if(burst>0){
-            ctx.strokeStyle="rgba(255,255,255,100)";
-            ctx.beginPath();
-            ctx.arc(x1,y1,burst*8,0,Math.PI*2);
-            ctx.stroke();
-        }
+    // unzip: a held finger pries the strands apart near its height
+    let openTarget = 0;
+    if(hold && pointers.size === 1){
+      const py = (hold.y - h / 2) / zoom;
+      openTarget = Math.max(0, 1 - Math.abs(y - py) / (R * 0.9));
     }
+    r.open = lerp(r.open, openTarget, 0.12);
+    r.flash = Math.max(0, r.flash - dt * 1.5);
 
-    ctx.restore();
+    const RR = R * (1 + r.open * 0.9);
+    const wob = Math.sin(t * 1.3 + i * 0.15) * 6;
+    const a = project(Math.cos(th) * RR, y + wob, Math.sin(th) * RR);
+    const b = project(Math.cos(th + Math.PI) * RR, y - wob, Math.sin(th + Math.PI) * RR);
+    proj[i] = { a, b, y };
 
-    if(burst>0) burst*=0.9;
+    // sonify pairs crossing the front, near the middle of the screen
+    const side = Math.sin(th) < 0 ? -1 : 1;
+    if(r.side && side !== r.side && Math.abs(a.y - h / 2) < h * 0.12 && side < 0){ blip(r.b, i); r.flash = Math.max(r.flash, 0.5); }
+    r.side = side;
 
-    t += 0.003;
+    items.push({ kind: "rung", i, z: (a.z + b.z) / 2 });
+  }
+  // backbone segments between neighbours (skip the wrap seam)
+  for(let i = 0; i < N - 1; i++){
+    const j = i + 1;
+    if(Math.abs(proj[j].y - proj[i].y) > SP * 3) continue;
+    items.push({ kind: "bone", i, j, s: "a", z: (proj[i].a.z + proj[j].a.z) / 2 });
+    items.push({ kind: "bone", i, j, s: "b", z: (proj[i].b.z + proj[j].b.z) / 2 });
+  }
+  items.sort((p, q) => q.z - p.z);                // far first
 
-    requestAnimationFrame(draw);
+  const depthA = z => clamp(0.25 + (R - z) / (R * 2) * 0.85, 0.12, 1);
+  ctx.lineCap = "round";
+  for(const it of items){
+    if(it.kind === "bone"){
+      const p = proj[it.i][it.s], q = proj[it.j][it.s];
+      const al = depthA(it.z);
+      ctx.strokeStyle = `rgba(230,230,230,${al})`;
+      ctx.lineWidth = 3.2 * p.s;
+      ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(q.x, q.y); ctx.stroke();
+    } else {
+      const r = rungs[it.i], P = proj[it.i];
+      const ca = BASES[r.b], cb = BASES[PAIR[r.b]];
+      const al = depthA(it.z);
+      const mx = (P.a.x + P.b.x) / 2, my = (P.a.y + P.b.y) / 2;
+      // an opened pair breaks in the middle
+      const gap = r.open * 0.5;
+      const ax = lerp(mx, P.a.x, gap), ay = lerp(my, P.a.y, gap), bx = lerp(mx, P.b.x, gap), by = lerp(my, P.b.y, gap);
+      ctx.lineWidth = 2.2 * (P.a.s + P.b.s) / 2 * (1 + r.flash);
+      ctx.strokeStyle = `rgba(${ca},${al})`; ctx.beginPath(); ctx.moveTo(P.a.x, P.a.y); ctx.lineTo(ax, ay); ctx.stroke();
+      ctx.strokeStyle = `rgba(${cb},${al})`; ctx.beginPath(); ctx.moveTo(P.b.x, P.b.y); ctx.lineTo(bx, by); ctx.stroke();
+      // nucleotide nodes
+      ctx.fillStyle = `rgba(${ca},${al})`;
+      ctx.beginPath(); ctx.arc(P.a.x, P.a.y, (3 + r.flash * 5) * P.a.s, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = `rgba(${cb},${al})`;
+      ctx.beginPath(); ctx.arc(P.b.x, P.b.y, (3 + r.flash * 5) * P.b.s, 0, Math.PI * 2); ctx.fill();
+    }
+  }
+
+  // data labels in difference mode: letters on the front, coordinates every few pairs
+  ctx.globalCompositeOperation = "difference";
+  ctx.fillStyle = "#fff";
+  const fs = isMobile ? 9 : 11;
+  ctx.font = `${fs}px monospace`;
+  for(let i = 0; i < N; i++){
+    const P = proj[i], r = rungs[i];
+    if(P.a.z < 0){ ctx.globalAlpha = 0.9; ctx.fillText(r.b, P.a.x + 6, P.a.y + 3); }
+    if(P.b.z < 0){ ctx.globalAlpha = 0.9; ctx.fillText(PAIR[r.b], P.b.x + 6, P.b.y + 3); }
+    if(i % 6 === 0){
+      const front = P.a.z < P.b.z ? P.a : P.b;
+      ctx.globalAlpha = clamp(0.25 + (-front.z / R) * 0.6, 0.12, 0.85);
+      ctx.fillText(`${Math.round(front.x)},${Math.round(front.y)},${Math.round(front.z)}`, front.x + 16, front.y - 4);
+    }
+  }
+  ctx.globalAlpha = 1;
+  ctx.globalCompositeOperation = "source-over";
+
+  // mutation bursts
+  bursts = bursts.filter(b => b.a > 0.02);
+  for(const b of bursts){
+    b.r += dt * 260; b.a *= 0.92;
+    ctx.strokeStyle = `rgba(255,255,255,${b.a})`; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2); ctx.stroke();
+    ctx.beginPath(); ctx.arc(b.x, b.y, b.r * 0.6, 0, Math.PI * 2); ctx.stroke();
+  }
+
+  hudT -= dt;
+  if(hudT <= 0){ hud(); hudT = 0.12; }
+  requestAnimationFrame(draw);
 }
-
-draw();
+requestAnimationFrame(draw);
+})();
 </script>
 </body>
 </html>
